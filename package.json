@@ -1,0 +1,41 @@
+{
+  "name": "di-mcp-server",
+  "version": "0.0.16",
+  "description": "",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc && chmod 755 build/index.js",
+    "start": "node build/index.js",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DecisionsDev/di-mcp-server.git"
+  },
+  "author": "",
+  "license": "",
+  "homepage": "https://github.com/DecisionsDev/di-mcp-server",
+  "dependencies": {
+    "@babel/preset-env": "^7.28.0",
+    "@modelcontextprotocol/sdk": "^1.15.1",
+    "axios": "^1.10.0",
+    "babel-jest": "^30.0.4",
+    "jest": "^30.0.4",
+    "json-schema-to-zod": "^2.6.1",
+    "ts-jest": "^29.4.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@babel/preset-typescript": "^7.27.1",
+    "@types/jest": "^30.0.0",
+    "typescript": "^5.8.3"
+  },
+  "type": "module",
+  "module": "./build/index.js",
+  "bin": {
+    "di-mcp-server": "build/index.js"
+  },
+  "files": [
+    "build/**"
+  ]
+}
