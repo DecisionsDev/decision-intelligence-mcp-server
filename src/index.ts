@@ -28,7 +28,7 @@ function executeDecision(apikey:string, baseURL:string, decisionId:string, opera
         "apikey": apikey
     };
 
-    return axios.post(url, "{}", { headers: headers })
+    return axios.post(url, input, { headers: headers })
         .then(function (response) {          
             return JSON.stringify(response.data);
       });
@@ -108,7 +108,7 @@ console.error("operationJsonSchema", JSON.stringify(operationJsonSchema));
 
 // hack to ensure z which is used by the eval fct is present in the translated js
 z.number;
-var operationZodSchema = eval(jsonSchemaToZod(operationJsonSchema));
+var operationZodSchema = evalTS(jsonSchemaToZod(operationJsonSchema));
 
 server.registerTool(
     "LoanValidation",
