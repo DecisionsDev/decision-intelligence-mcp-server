@@ -39,23 +39,21 @@ var decisionOpenAPI = await getDecisionOpenapi(apikey, baseURL, decisionId);
 console.error("openapi", JSON.stringify(decisionOpenAPI));
 
 var operationJsonSchemaStr = await getDecisionOperationJsonSchema(apikey, baseURL, decisionId, operation);
-operationJsonSchemaStr = operationJsonSchemaStr.replaceAll(",{\"type\":\"null\"}", "");
 
-// hack to remove the oneof that is not supported by the api converting jsschema to zod
-const regex = /{\"oneOf\":\[([^\]]*)]}/g;
-operationJsonSchemaStr = operationJsonSchemaStr.replaceAll(regex,"$1");
+const operationJsonSchema = JSON.parse(operationJsonSchemaStr);
+console.error("operationJsonSchema", JSON.stringify(operationJsonSchema, null, " "));
 
-const operationName = JSON.parse(operationJsonSchemaStr).decisionOperation;
+const operationName = operationJsonSchema.decisionOperation;
 console.error("operationName", operationName);
 
-var operationJsonSchema = JSON.parse(operationJsonSchemaStr).inputSchema;
-console.error("operationJsonSchema", JSON.stringify(operationJsonSchema));
+var operationJsonInputSchema = operationJsonSchema.inputSchema;
+console.error("operationJsonInputSchema", JSON.stringify(operationJsonInputSchema));
 
-operationJsonSchema = expandJSONSchemaDefinition(operationJsonSchema)
+operationJsonInputSchema = expandJSONSchemaDefinition(operationJsonInputSchema)
 
 // hack to ensure z which is used by the eval fct is present in the translated js
 z.number;
-var operationZodSchema = evalTS(jsonSchemaToZod(operationJsonSchema));
+var operationZodSchema = evalTS(jsonSchemaToZod(operationJsonInputSchema));
 
 console.error("decisionOpenAPI.info.title", decisionOpenAPI.info.title);
 
