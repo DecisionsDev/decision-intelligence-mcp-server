@@ -50,10 +50,12 @@ var operationJsonInputSchema = operationJsonSchema.inputSchema;
 console.error("operationJsonInputSchema", JSON.stringify(operationJsonInputSchema));
 
 operationJsonInputSchema = expandJSONSchemaDefinition(operationJsonInputSchema)
+console.error("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
 
 // hack to ensure z which is used by the eval fct is present in the translated js
 z.number;
 var operationZodSchema = evalTS(jsonSchemaToZod(operationJsonInputSchema));
+console.error("operationZodSchema", JSON.stringify(operationZodSchema, null, " "));
 
 console.error("decisionOpenAPI.info.title", decisionOpenAPI.info.title);
 
@@ -67,7 +69,7 @@ server.registerTool(
         description: decisionOpenAPI.info.description,
         inputSchema: { input: operationZodSchema }
     },
-    async ({ input }) => {
+    async ({input}) => {
         var str = await executeDecision(apikey, baseURL, decisionId, operation, input);
         return {
             content: [{ type: "text", text: str}]
