@@ -20,11 +20,33 @@ function walk(schema: any, defs: any, history: any): void {
                     }
 
                     delete(property['$ref'])
+                } else {
+                    walk(property, defs, [...history, ref]);                
                 }
-                walk(property, defs, [...history, key]);
-                
             }   
         }
+    } else if (schema.oneOf) {
+        for (let i = 0; i < schema.oneOf.length; i++) {
+            var item = schema.oneOf[i];
+            if (item['$ref']) {
+                var canonicalRef = schema.oneOf[i]['$ref'];
+
+                var paths = canonicalRef.split('/');
+                var ref = paths[2];
+
+                if (history.includes(ref)) {
+                    console.error("Circular reference detected for " + ref + " in history: " + history);
+                } else {
+                    schema.oneOf[i] = defs[ref];
+                }
+            } else {
+                walk(item, defs, [...history, ref]);                
+            }
+        }               
+
+        // replace oneOf by anyOf which deserves a better support in schemaToZod...
+        schema["anyOf"] = schema.oneOf;
+        delete(schema.oneOf);
     }
 }
 
