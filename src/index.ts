@@ -3,73 +3,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { jsonSchemaToZod } from "json-schema-to-zod";
-import axios from 'axios';
 import { z } from 'zod';
 import * as ts from "typescript";
 import { expandJSONSchemaDefinition } from './jsonschema.js';
+import { executeDecision, getDecisionOpenapi, getDecisionOperationJsonSchema } from './diruntimeclient.js';
 
 function evalTS(code:string) {
     const result = ts.transpile(code);
     return eval(result);
-}
-
-function executeDecision(apikey:string, baseURL:string, decisionId:string, operation:string, input:any) {
-  var url = baseURL + "/deploymentSpaces/development/decisions/" 
-      + encodeURIComponent(decisionId) 
-      + "/operations/" 
-      + encodeURIComponent(operation)
-      +"/execute";
-
-    console.error("URL=" + url);
-
-    var headers = {
-        "Content-Type": "application/json",
-        "accept": "application/json",
-        "apikey": apikey
-    };
-
-    return axios.post(url, input, { headers: headers })
-        .then(function (response) {          
-            return JSON.stringify(response.data);
-      });
-}
-
-function getDecisionOpenapi(apikey:string, baseURL:string, decisionId:string) {
-  var url = baseURL + "/deploymentSpaces/development/decisions/" 
-      + encodeURIComponent(decisionId) 
-      + "/openapi";
-
-    console.error("URL=" + url);
-
-    var headers = {
-        "accept": "application/json",
-        "apikey": apikey
-    };
-
-    return axios.get(url, { headers: headers })
-        .then(function (response) {          
-            return JSON.stringify(response.data);
-      });
-}
-
-function getDecisionOperationJsonSchema(apikey:string, baseURL:string, decisionId:string, operation:string) {
-    var url = baseURL + "/deploymentSpaces/development/decisions/"
-      + encodeURIComponent(decisionId)
-      + "/operations/"
-      + encodeURIComponent(operation)
-      + "/schemas?format=JSON_SCHEMA";
-
-    console.error("URL=" + url);
-
-    var headers = {
-        "accept": "application/json",
-        "apikey": apikey
-    };
-
-    return axios.get(url, { headers: headers })
-        .then(function (response) {          
-            return JSON.stringify(response.data);
-      });
 }
 
 const server = new McpServer({
@@ -94,27 +35,38 @@ console.error("BASEURL=" + baseURL);
 console.error("DECISION_ID=" + decisionId);
 console.error("OPERATION=" + operation);
 
+var decisionOpenAPI = await getDecisionOpenapi(apikey, baseURL, decisionId);
+console.error("openapi", JSON.stringify(decisionOpenAPI));
+
 var operationJsonSchemaStr = await getDecisionOperationJsonSchema(apikey, baseURL, decisionId, operation);
 operationJsonSchemaStr = operationJsonSchemaStr.replaceAll(",{\"type\":\"null\"}", "");
 
 // hack to remove the oneof that is not supported by the api converting jsschema to zod
 const regex = /{\"oneOf\":\[([^\]]*)]}/g;
 operationJsonSchemaStr = operationJsonSchemaStr.replaceAll(regex,"$1");
-console.error(operationJsonSchemaStr);
+
+const operationName = JSON.parse(operationJsonSchemaStr).decisionOperation;
+console.error("operationName", operationName);
 
 var operationJsonSchema = JSON.parse(operationJsonSchemaStr).inputSchema;
-operationJsonSchema = expandJSONSchemaDefinition(operationJsonSchema)
 console.error("operationJsonSchema", JSON.stringify(operationJsonSchema));
+
+operationJsonSchema = expandJSONSchemaDefinition(operationJsonSchema)
 
 // hack to ensure z which is used by the eval fct is present in the translated js
 z.number;
 var operationZodSchema = evalTS(jsonSchemaToZod(operationJsonSchema));
 
+console.error("decisionOpenAPI.info.title", decisionOpenAPI.info.title);
+
+// WO does not support white spaces for tool names
+const toolName = (decisionOpenAPI.info.title + " " + operationName).replaceAll(" ", "_");
+
 server.registerTool(
-    "LoanValidation",
+    toolName,
     {
-        title: "LoanValidation",
-        description: "LoanValidation",
+        title: decisionOpenAPI.info.title + " " + operationName,
+        description: decisionOpenAPI.info.description,
         inputSchema: { input: operationZodSchema }
     },
     async ({ input }) => {
