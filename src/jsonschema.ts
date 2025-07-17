@@ -7,7 +7,6 @@ function walk(schema: any, defs: any, history: any): void {
                 var property = schema.properties[key];
 
                 if (property.oneOf) {
-                    console.error("find oneOf");
                     var arr:any = [];
                     for (let i = 0; i < property.oneOf.length; i++) {
                         var subType = property.oneOf[i];
@@ -39,8 +38,6 @@ function walk(schema: any, defs: any, history: any): void {
                     delete(property['$ref'])
                     property = schema.properties[key];
                 }
-
-                console.error(property, null, " ");
 
                 if (property["type"] && Array.isArray(property.type) && property.type.length == 2 && property.type[1] === "null") {
                     property.type = property.type[0];
