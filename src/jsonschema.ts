@@ -4,7 +4,23 @@ function walk(schema: any, defs: any, history: any): void {
         if (schema.properties) {
             for (const key in schema.properties) {
 
-                const property = schema.properties[key];
+                var property = schema.properties[key];
+
+                if (property.oneOf) {
+                    console.error("find oneOf");
+                    var arr:any = [];
+                    for (let i = 0; i < property.oneOf.length; i++) {
+                        var subType = property.oneOf[i];
+                        if (subType.type !== "null") {
+                            arr.push(subType);
+                        }
+                    }        
+                    if (arr.length == 1) {
+                        delete(property.oneOf);
+                        schema.properties[key] = arr[0];
+                        property = schema.properties[key]
+                    }
+                }
 
                 if (property['$ref']) {
                     var canonicalRef = property['$ref'];
@@ -15,13 +31,21 @@ function walk(schema: any, defs: any, history: any): void {
                     if (history.includes(ref)) {
                         console.error("Circular reference detected for " + ref + " in history: " + history);
                         delete(schema['properties'][key]);
+                        continue ;
                     } else {
                         schema.properties[key] = defs[ref];
                     }
 
                     delete(property['$ref'])
+                    property = schema.properties[key];
+                }
+
+                console.error(property, null, " ");
+
+                if (property["type"] && Array.isArray(property.type) && property.type.length == 2 && property.type[1] === "null") {
+                    property.type = property.type[0];
                 } else {
-                    walk(property, defs, [...history, ref]);                
+                    walk(property, defs, history);                
                 }
             }   
         }
@@ -40,7 +64,7 @@ function walk(schema: any, defs: any, history: any): void {
                     schema.oneOf[i] = defs[ref];
                 }
             } else {
-                walk(item, defs, [...history, ref]);                
+                walk(item, defs, [...history]);                
             }
         }               
 
@@ -70,3 +94,4 @@ export function expandJSONSchemaDefinition(schema: any): object {
 
     return outSchema;
 }
+

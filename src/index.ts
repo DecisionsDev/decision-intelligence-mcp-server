@@ -13,6 +13,22 @@ function evalTS(code:string) {
     return eval(result);
 }
 
+type parametersType = {[key: string]: any};
+
+function getParameters(jsonSchema:any): parametersType {
+    var params:any = {}
+
+    for (const propName in jsonSchema.properties) {
+        var jsonSchemaProp = jsonSchema.properties[propName];
+        var code = jsonSchemaToZod(jsonSchemaProp);
+        var zodSchema = evalTS(code);
+
+        params[propName] = zodSchema;
+    }
+
+    return params;
+}
+
 const server = new McpServer({
     name: "di-mcp-server",
     version: "0.0.0"
@@ -55,22 +71,25 @@ console.error("operationJsonSchema after expand", JSON.stringify(operationJsonIn
 // hack to ensure z which is used by the eval fct is present in the translated js
 z.number;
 var operationZodSchema = evalTS(jsonSchemaToZod(operationJsonInputSchema));
-console.error("operationZodSchema", JSON.stringify(operationZodSchema, null, " "));
 
 console.error("decisionOpenAPI.info.title", decisionOpenAPI.info.title);
 
 // WO does not support white spaces for tool names
 const toolName = (decisionOpenAPI.info.title + " " + operationName).replaceAll(" ", "_");
 
+const inputParameters:any = getParameters(operationJsonInputSchema);
+
 server.registerTool(
     toolName,
     {
         title: decisionOpenAPI.info.title + " " + operationName,
         description: decisionOpenAPI.info.description,
-        inputSchema: { input: operationZodSchema }
+        inputSchema: inputParameters
     },
-    async ({input}) => {
-        var str = await executeDecision(apikey, baseURL, decisionId, operation, input);
+    async (input, n) => {
+        var decInput = input;
+        console.error("Execute decision with", JSON.stringify(decInput, null, " "))
+        var str = await executeDecision(apikey, baseURL, decisionId, operation, decInput);
         return {
             content: [{ type: "text", text: str}]
         };
