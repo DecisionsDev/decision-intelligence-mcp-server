@@ -3,15 +3,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { jsonSchemaToZod } from "json-schema-to-zod";
-import { z } from 'zod';
-import * as ts from "typescript";
 import { expandJSONSchemaDefinition } from './jsonschema.js';
 import { executeDecision, getDecisionOpenapi, getDecisionOperationJsonSchema } from './diruntimeclient.js';
-
-function evalTS(code:string) {
-    const result = ts.transpile(code);
-    return eval(result);
-}
+import { evalTS } from "./ts.js";
+import { debug } from "./debug.js";
 
 type parametersType = {[key: string]: any};
 
@@ -29,9 +24,11 @@ function getParameters(jsonSchema:any): parametersType {
     return params;
 }
 
+const version = String(process.env.npm_package_version);
+
 const server = new McpServer({
     name: "di-mcp-server",
-    version: "0.0.0"
+    version: version
 });
 
 var args = process.argv.slice(2);
@@ -46,33 +43,29 @@ var baseURL = args[1];
 var decisionId = args[2];
 var operation = args[3];
 
-console.error("APIKEY=" + apikey);
-console.error("BASEURL=" + baseURL);
-console.error("DECISION_ID=" + decisionId);
-console.error("OPERATION=" + operation);
+debug("APIKEY=" + apikey);
+debug("BASEURL=" + baseURL);
+debug("DECISION_ID=" + decisionId);
+debug("OPERATION=" + operation);
 
 var decisionOpenAPI = await getDecisionOpenapi(apikey, baseURL, decisionId);
-console.error("openapi", JSON.stringify(decisionOpenAPI));
+debug("openapi", JSON.stringify(decisionOpenAPI));
 
 var operationJsonSchemaStr = await getDecisionOperationJsonSchema(apikey, baseURL, decisionId, operation);
 
 const operationJsonSchema = JSON.parse(operationJsonSchemaStr);
-console.error("operationJsonSchema", JSON.stringify(operationJsonSchema, null, " "));
+debug("operationJsonSchema", JSON.stringify(operationJsonSchema, null, " "));
 
 const operationName = operationJsonSchema.decisionOperation;
-console.error("operationName", operationName);
+debug("operationName", operationName);
 
 var operationJsonInputSchema = operationJsonSchema.inputSchema;
-console.error("operationJsonInputSchema", JSON.stringify(operationJsonInputSchema));
+debug("operationJsonInputSchema", JSON.stringify(operationJsonInputSchema));
 
 operationJsonInputSchema = expandJSONSchemaDefinition(operationJsonInputSchema)
-console.error("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
+debug("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
 
-// hack to ensure z which is used by the eval fct is present in the translated js
-z.number;
-var operationZodSchema = evalTS(jsonSchemaToZod(operationJsonInputSchema));
-
-console.error("decisionOpenAPI.info.title", decisionOpenAPI.info.title);
+debug("decisionOpenAPI.info.title", decisionOpenAPI.info.title);
 
 // WO does not support white spaces for tool names
 const toolName = (decisionOpenAPI.info.title + " " + operationName).replaceAll(" ", "_");
@@ -88,7 +81,7 @@ server.registerTool(
     },
     async (input, n) => {
         var decInput = input;
-        console.error("Execute decision with", JSON.stringify(decInput, null, " "))
+        debug("Execute decision with", JSON.stringify(decInput, null, " "))
         var str = await executeDecision(apikey, baseURL, decisionId, operation, decInput);
         return {
             content: [{ type: "text", text: str}]
@@ -98,4 +91,4 @@ server.registerTool(
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-console.error("DI MCP Server running on stdio");
+debug("IBM Decision Intelligence MCP Server version", version, "running on stdio");
