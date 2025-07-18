@@ -3,7 +3,19 @@
 A Model Context Protocol server enabling AI assistant to access the decisions
 from IBM Decision Intelligence.
 
-```diagram
+```mermaid
+block-beta
+    
+    block:MCP_HOST
+        client space:1 server
+    end
+
+    client["MCP Client"] --"mcp/stdio"--> server["Decision Intelligence MCP Server"]
+
+    server space:1 runtime
+    server --"https"--> runtime["Decision Intelligence Runtime"]   
+
+    runtime
 ```
 
 ## Getting started
