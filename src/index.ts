@@ -7,6 +7,7 @@ import { expandJSONSchemaDefinition } from './jsonschema.js';
 import { executeLastDeployedDecisionService, getDecisionServiceIds, getDecisionServiceOpenAPI, getMetadata } from './diruntimeclient.js';
 import { evalTS } from "./ts.js";
 import { debug } from "./debug.js";
+import { runHTPServer } from "./httpserver.js";
 
 type parametersType = {[key: string]: any};
 
@@ -85,16 +86,18 @@ const server = new McpServer({
 
 var args = process.argv.slice(2);
 
-if (args.length != 2) {
-    console.error("USAGE: <APIKEY> <BASE_URL>");
+if (args.length != 3) {
+    console.error("USAGE: <APIKEY> <BASE_URL> <STDIO|HTTP>");
     process.exit(1);
 }
   
 var apikey = args[0];
 var baseURL = args[1];
+var transportMode = args[2]
 
 debug("APIKEY=" + apikey);
 debug("BASEURL=" + baseURL);
+debug("transportMode=" + transportMode);
 
 const spaceMetadata = await getMetadata(apikey, baseURL, "development");
 debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
@@ -108,6 +111,11 @@ for (const serviceId of serviceIds) {
     registerTool(server, apikey, baseURL, openapi, serviceId, toolNames);
 }
 
-const transport = new StdioServerTransport();
-await server.connect(transport);
-debug("IBM Decision Intelligence MCP Server version", version, "running on stdio");
+if (transportMode === "HTTP") {
+    debug("IBM Decision Intelligence MCP Server version", version, "running on http");
+    runHTPServer(server);
+} else {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    debug("IBM Decision Intelligence MCP Server version", version, "running on stdio");
+}

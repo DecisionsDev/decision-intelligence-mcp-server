@@ -25,7 +25,7 @@ The MCP server is available as a NPM package in the free NPM registry: https://w
 It can be easily ran with `npx` to expose the operations of the last deployed version of all decisions as MCP tools:
 
 ```
-npx -y mcp-server <APIKEY> <DECISION_RUNTIME_BASEURL>
+npx -y mcp-server <APIKEY> <DECISION_RUNTIME_BASEURL> <STDIO|HTTP>
 ```
 
 Where:
@@ -37,7 +37,7 @@ Where:
 Example:
 
 ```
-npx -y di-mcp-server azI6ZTViZDAAJDNMAtMDA1OS00NzVkLTg0YTctOGNiNzRkZjJmNzkyOlpnUHNMb0VCb0tBcDBsSnZhdTZXLy96N3ppWEwxM2Z4WHRJcDNlNXZVWlk9 https://ibm.decision-dev-us-south.decision.saas.ibm.com/ads/runtime/api/v1 
+npx -y di-mcp-server azI6ZTViZDAAJDNMAtMDA1OS00NzVkLTg0YTctOGNiNzRkZjJmNzkyOlpnUHNMb0VCb0tBcDBsSnZhdTZXLy96N3ppWEwxM2Z4WHRJcDNlNXZVWlk9 https://ibm.decision-dev-us-south.decision.saas.ibm.com/ads/runtime/api/v1 STDIO
 ```
 
 ## IBM Watson Orchestrate
@@ -77,7 +77,8 @@ In the Claude configuration directory, edit (or create it if does not exist) the
                 "-y",
                 "di-mcp-server",
                 "<APIKEY>",
-                "https://<TENANT_NAME>.decision-dev-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
+                "https://<TENANT_NAME>.decision-dev-us-south.decision.saas.ibm.com/ads/runtime/api/v1",
+                "STDIO"
             ]
         }
     }
