@@ -5,25 +5,6 @@ function walk(schema: any, defs: any, history: any): void {
         if (schema.properties) {
             for (const key in schema.properties) {
                 var property = schema.properties[key];
-
-                if (property['$ref']) {
-                    var canonicalRef = property['$ref'];
-
-                    var paths = canonicalRef.split('/');
-                    var ref = paths[3];
-
-                    if (history.includes(ref)) {
-                        console.error("Circular reference detected for " + ref + " in history: " + history);
-                        delete(schema['properties'][key]);
-                        continue ;
-                    } else {
-                        schema.properties[key] = defs[ref];
-                        history = [...history, ref]                                                                                                                                                                                                                                        ;
-                        delete(property['$ref'])
-                        property = schema.properties[key];
-                    }                                                                               
-                }
-
                 walk(property, defs, history);
             }   
         }
@@ -35,6 +16,7 @@ function walk(schema: any, defs: any, history: any): void {
 
         if (history.includes(ref)) {
             console.error("Circular reference detected for " + ref + " in history: " + history);
+            delete(schema["$ref"]);
         } else {
             var def = defs[ref];
             for (const k in def) {

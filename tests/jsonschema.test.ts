@@ -2,12 +2,12 @@ import { expandJSONSchemaDefinition } from '../src/jsonschema';
 import { expect, test } from '@jest/globals';
 
 test('expandJSONSchemaDefinition returns empty object for empty input', () => {
-    expect(expandJSONSchemaDefinition({})).toEqual({});
+    expect(expandJSONSchemaDefinition({}, {})).toEqual({});
 });
 
 test('expandJSONSchemaDefinition returns the same object for simple schema', () => {
     const schema = { type: 'string' };
-    expect(expandJSONSchemaDefinition(schema)).toEqual(schema);
+    expect(expandJSONSchemaDefinition(schema, {})).toEqual(schema);
 });
 
 test('expandJSONSchemaDefinition returns the same object for nested schema', () => {
@@ -18,7 +18,7 @@ test('expandJSONSchemaDefinition returns the same object for nested schema', () 
             age: { type: 'number' }
         }
     };
-    expect(expandJSONSchemaDefinition(schema)).toEqual(schema);
+    expect(expandJSONSchemaDefinition(schema, {})).toEqual(schema);
 });
 
 test('expandJSONSchemaDefinition returns the same object for array schema', () => {
@@ -26,40 +26,41 @@ test('expandJSONSchemaDefinition returns the same object for array schema', () =
         type: 'array',
         items: { type: 'integer' }
     };
-    expect(expandJSONSchemaDefinition(schema)).toEqual(schema);
+    expect(expandJSONSchemaDefinition(schema, {})).toEqual(schema);
 });
 
-test('expandJSONSchemaDefinition returns the same object for schema with definitions', () => {
+test('expandJSONSchemaDefinition returns the same object for schema', () => {
     const schema = {
-        definitions: {
-            address: {
-                type: 'object',
-                properties: {
-                    street: { type: 'string' }
-                }
+        address: {
+            type: 'object',
+            properties: {
+                street: { type: 'string' }
             }
         }
     };
-    expect(expandJSONSchemaDefinition(schema)).toEqual(schema);
+    expect(expandJSONSchemaDefinition(schema, {})).toEqual(schema);
 });
 
-test('expandJSONSchemaDefinition $ref using definitions', () => {
+test('expandJSONSchemaDefinition $ref using definitions for properties', () => {
+    const defs = {
+        person: {
+            type: 'object',
+            properties: {
+                name: { type: 'string' },
+                age: { type: 'integer' }
+            }
+        }
+    };
+    
+
     const schema = {
         type: 'object',
         properties: {
             person: {
-                $ref: '#/$defs/person'
+                $ref: '#/components/schemas/person'
             }
         },
-        "$defs": {
-            person: {
-                type: 'object',
-                properties: {
-                    name: { type: 'string' },
-                    age: { type: 'integer' }
-                }
-            }
-        }
+        
     };
     const schemaRef = {
         type: 'object',
@@ -73,6 +74,6 @@ test('expandJSONSchemaDefinition $ref using definitions', () => {
             }
         }
     };
-    expect(expandJSONSchemaDefinition(schema)).toEqual(schemaRef);
+    expect(expandJSONSchemaDefinition(schema, defs)).toEqual(schemaRef);
 });
 
