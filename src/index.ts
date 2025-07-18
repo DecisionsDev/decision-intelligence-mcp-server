@@ -24,7 +24,7 @@ function getParameters(jsonSchema:any): parametersType {
     return params;
 }
 
-function registerTool(server: McpServer, apikey: string, baseURL: string, decisionOpenAPI: any, decisionServiceId: string) {
+function registerTool(server: McpServer, apikey: string, baseURL: string, decisionOpenAPI: any, decisionServiceId: string, toolNames: string[]) {
     for (const key in decisionOpenAPI.paths) {
         const value = decisionOpenAPI.paths[key];
         const operationId = value.post.operationId;
@@ -40,10 +40,20 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
         var operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, decisionOpenAPI.components.schemas)
         debug("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
 
+        const serviceName = decisionOpenAPI.info["x-ibm-ads-decision-service-name"];
+        debug("decisionServiceName", serviceName);
+
         // WO does not support white spaces for tool names
-        var toolName = (decisionServiceId + " " + operationId).replaceAll(" ", "_");
-        // WO does not support /
-        toolName = toolName.replaceAll("/", "_");
+        // Claude does not support /
+        var toolName = (serviceName + " " + operationId).replaceAll(" ", "_").replaceAll("/", "_");
+        
+        if (toolNames.includes(toolName)) {
+            debug("toolName clash");
+            toolName = (decisionServiceId + " " + operationId).replaceAll(" ", "_").replaceAll("/", "_");
+        }
+        debug("toolName", toolName, toolNames);
+
+        toolNames.push(toolName);
 
         const inputParameters:any = getParameters(operationJsonInputSchema);
 
@@ -91,10 +101,11 @@ debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
 const serviceIds = getDecisionServiceIds(spaceMetadata);
 debug("serviceIds", JSON.stringify(serviceIds, null, " "));
 
+var toolNames: string[] = [];
 for (const serviceId of serviceIds) {
     debug("serviceId", serviceId);
     const openapi = await getDecisionServiceOpenAPI(apikey, baseURL, serviceId);
-    registerTool(server, apikey, baseURL, openapi, serviceId);
+    registerTool(server, apikey, baseURL, openapi, serviceId, toolNames);
 }
 
 const transport = new StdioServerTransport();
