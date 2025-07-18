@@ -1,6 +1,6 @@
 # MCP Server for IBM Decision Intelligence
 
-A Model Context Protocol server enabling AI assistant to access the decision
+A Model Context Protocol server enabling AI assistant to access the decisions
 from IBM Decision Intelligence.
 
 ```diagram
