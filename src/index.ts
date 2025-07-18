@@ -4,7 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { jsonSchemaToZod } from "json-schema-to-zod";
 import { expandJSONSchemaDefinition } from './jsonschema.js';
-import { executeDecision, getDecisionOpenapi, getDecisionOperationJsonSchema } from './diruntimeclient.js';
+import { executeDecision, getDecisionOpenapi } from './diruntimeclient.js';
 import { evalTS } from "./ts.js";
 import { debug } from "./debug.js";
 
