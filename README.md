@@ -79,9 +79,9 @@ In the Claude configuration directory, edit (or create it if does not exist) the
 
 The location of Claude configuration directory depends on your OS:
 
-- macOS: ~/Library/Application\ Support/Claude/claude_desktop_config.json
-- Windows: %APPDATA%\Claude\claude_desktop_config.json
-- Linux: $/.config/Claude
+- macOS: `~/Library/Application\ Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- Linux: `${HOME}/.config/Claude`
 
 More information at https://modelcontextprotocol.io/quickstart/user.
 
