@@ -1,6 +1,6 @@
 {
   "name": "di-mcp-server",
-  "version": "0.0.26",
+  "version": "0.0.28",
   "description": "",
   "main": "build/index.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "url": "git+https://github.com/DecisionsDev/di-mcp-server.git"
   },
   "author": "",
-  "license": "",
+  "license": "Apache-2.0",
   "homepage": "https://github.com/DecisionsDev/di-mcp-server",
   "dependencies": {
     "@babel/preset-env": "^7.28.0",
