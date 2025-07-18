@@ -4,7 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { jsonSchemaToZod } from "json-schema-to-zod";
 import { expandJSONSchemaDefinition } from './jsonschema.js';
-import { executeDecision, getDecisionOpenapi } from './diruntimeclient.js';
+import { executeLastDeployedDecisionService, getDecisionServiceIds, getDecisionServiceOpenAPI, getMetadata } from './diruntimeclient.js';
 import { evalTS } from "./ts.js";
 import { debug } from "./debug.js";
 
@@ -24,10 +24,7 @@ function getParameters(jsonSchema:any): parametersType {
     return params;
 }
 
-async function registerTool(server: McpServer, apikey: string, baseURL: string, decisionId: string) {
-    var decisionOpenAPI = await getDecisionOpenapi(apikey, baseURL, decisionId);
-    debug("openapi", JSON.stringify(decisionOpenAPI, null, " "));
-
+function registerTool(server: McpServer, apikey: string, baseURL: string, decisionOpenAPI: any, decisionServiceId: string) {
     for (const key in decisionOpenAPI.paths) {
         const value = decisionOpenAPI.paths[key];
         const operationId = value.post.operationId;
@@ -44,7 +41,9 @@ async function registerTool(server: McpServer, apikey: string, baseURL: string, 
         debug("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
 
         // WO does not support white spaces for tool names
-        const toolName = (value.post.summary + " " + operationId).replaceAll(" ", "_");
+        var toolName = (decisionServiceId + " " + operationId).replaceAll(" ", "_");
+        // WO does not support /
+        toolName = toolName.replaceAll("/", "_");
 
         const inputParameters:any = getParameters(operationJsonInputSchema);
 
@@ -58,7 +57,7 @@ async function registerTool(server: McpServer, apikey: string, baseURL: string, 
             async (input, n) => {
                 var decInput = input;
                 debug("Execute decision with", JSON.stringify(decInput, null, " "))
-                var str = await executeDecision(apikey, baseURL, decisionId, operationId, decInput);
+                var str = await executeLastDeployedDecisionService(apikey, baseURL, decisionServiceId, operationId, decInput);
                 return {
                     content: [{ type: "text", text: str}]
                 };
@@ -76,20 +75,27 @@ const server = new McpServer({
 
 var args = process.argv.slice(2);
 
-if (args.length != 3) {
-    console.error("USAGE: <APIKEY> <BASE_URL> <DECISION_ID>");
+if (args.length != 2) {
+    console.error("USAGE: <APIKEY> <BASE_URL>");
     process.exit(1);
 }
   
 var apikey = args[0];
 var baseURL = args[1];
-var decisionId = args[2];
 
 debug("APIKEY=" + apikey);
 debug("BASEURL=" + baseURL);
-debug("DECISION_ID=" + decisionId);
 
-await registerTool(server, apikey, baseURL, decisionId);
+const spaceMetadata = await getMetadata(apikey, baseURL, "development");
+debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
+const serviceIds = getDecisionServiceIds(spaceMetadata);
+debug("serviceIds", JSON.stringify(serviceIds, null, " "));
+
+for (const serviceId of serviceIds) {
+    debug("serviceId", serviceId);
+    const openapi = await getDecisionServiceOpenAPI(apikey, baseURL, serviceId);
+    registerTool(server, apikey, baseURL, openapi, serviceId);
+}
 
 const transport = new StdioServerTransport();
 await server.connect(transport);

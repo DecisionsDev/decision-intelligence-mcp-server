@@ -22,26 +22,22 @@ block-beta
 
 The MCP server is available as a NPM package in the free NPM registry: https://www.npmjs.com/package/di-mcp-server.
 
-It can be easily ran with `npx` to expose all operations of a given decision as tools:
+It can be easily ran with `npx` to expose the operations of the last deployed version of all decisions as MCP tools:
 
 ```
-npx -y mcp-server <APIKEY> <DECISION_RUNTIME_BASEURL> <DECISION_ID>
+npx -y mcp-server <APIKEY> <DECISION_RUNTIME_BASEURL>
 ```
 
 Where:
 
 - APIKEY: is the API key to access the Decision Runtime
 - DECISION_RUNTIME_BASEURL: is the baseurl of the REST API of the Decision Runtime. The pattern is: https://<TENANT_NAME>.decision-dev-us-south.decision.saas.ibm.com/ads/runtime/api/v1 where TENANT_NAME is the name of the tenant
-- DECISION_ID: is the decision id of the decision
 
-The decision id can be retrieved from the deploy panel of the decision UI:
-
-![](doc/get_decisionid.png)
 
 Example:
 
 ```
-npx -y di-mcp-server azI6ZTViZDAAJDNMAtMDA1OS00NzVkLTg0YTctOGNiNzRkZjJmNzkyOlpnUHNMb0VCb0tBcDBsSnZhdTZXLy96N3ppWEwxM2Z4WHRJcDNlNXZVWlk9 https://ibm.decision-dev-us-south.decision.saas.ibm.com/ads/runtime/api/v1 _643005eidi/loanvalidation/loan_approval/loanApprovalDecisionService/3-2025-06-19T10:33:52.182Z
+npx -y di-mcp-server azI6ZTViZDAAJDNMAtMDA1OS00NzVkLTg0YTctOGNiNzRkZjJmNzkyOlpnUHNMb0VCb0tBcDBsSnZhdTZXLy96N3ppWEwxM2Z4WHRJcDNlNXZVWlk9 https://ibm.decision-dev-us-south.decision.saas.ibm.com/ads/runtime/api/v1 
 ```
 
 ## IBM Watson Orchestrate
@@ -81,8 +77,7 @@ In the Claude configuration directory, edit (or create it if does not exist) the
                 "-y",
                 "di-mcp-server",
                 "<APIKEY>",
-                "https://<TENANT_NAME>.decision-dev-us-south.decision.saas.ibm.com/ads/runtime/api/v1",
-                "<DECISION_ID>"
+                "https://<TENANT_NAME>.decision-dev-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
             ]
         }
     }
