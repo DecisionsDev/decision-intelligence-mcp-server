@@ -1,7 +1,6 @@
 import { debug } from "./debug.js";
 
 function walk(schema: any, defs: any, history: any): void {
-    debug("walk", schema, history)
     if (schema["type"] === 'object') {
         if (schema.properties) {
             for (const key in schema.properties) {

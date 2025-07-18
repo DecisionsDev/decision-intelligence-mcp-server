@@ -31,6 +31,7 @@ async function registerTool(server: McpServer, apikey: string, baseURL: string, 
     for (const key in decisionOpenAPI.paths) {
         const value = decisionOpenAPI.paths[key];
         const operationId = value.post.operationId;
+        debug("path info", value);
 
         if (operationId === operationName) {
             debug("Found operationName", key);
@@ -43,8 +44,6 @@ async function registerTool(server: McpServer, apikey: string, baseURL: string, 
             var operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, decisionOpenAPI.components.schemas)
             debug("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
 
-            debug("decisionOpenAPI.info.title", decisionOpenAPI.info.title);
-
             // WO does not support white spaces for tool names
             const toolName = (decisionOpenAPI.info.title + " " + operationName).replaceAll(" ", "_");
 
@@ -53,8 +52,8 @@ async function registerTool(server: McpServer, apikey: string, baseURL: string, 
             server.registerTool(
                 toolName,
                 {
-                    title: decisionOpenAPI.info.title + " " + operationName,
-                    description: decisionOpenAPI.info.description,
+                    title: value.post.summary,
+                    description: value.post.description,
                     inputSchema: inputParameters
                 },
                 async (input, n) => {
