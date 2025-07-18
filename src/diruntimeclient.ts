@@ -34,7 +34,7 @@ export function getDecisionOpenapi(apikey:string, baseURL:string, decisionId:str
     return axios.get(url, { headers: headers })
         .then(function (response) {          
             return response.data;
-      });
+        });
 }
 
 export function getDecisionOperationJsonSchema(apikey:string, baseURL:string, decisionId:string, operation:string) {

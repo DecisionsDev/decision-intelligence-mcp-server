@@ -24,47 +24,50 @@ function getParameters(jsonSchema:any): parametersType {
     return params;
 }
 
-async function registerTool(server: McpServer, apikey: string, baseURL: string, decisionId: string, operation: string) {
+async function registerTool(server: McpServer, apikey: string, baseURL: string, decisionId: string, operationName: string) {
     var decisionOpenAPI = await getDecisionOpenapi(apikey, baseURL, decisionId);
-    debug("openapi", JSON.stringify(decisionOpenAPI));
+    debug("openapi", JSON.stringify(decisionOpenAPI, null, " "));
 
-    var operationJsonSchemaStr = await getDecisionOperationJsonSchema(apikey, baseURL, decisionId, operation);
+    for (const key in decisionOpenAPI.paths) {
+        const value = decisionOpenAPI.paths[key];
+        const operationId = value.post.operationId;
 
-    const operationJsonSchema = JSON.parse(operationJsonSchemaStr);
-    debug("operationJsonSchema", JSON.stringify(operationJsonSchema, null, " "));
+        if (operationId === operationName) {
+            debug("Found operationName", key);
 
-    const operationName = operationJsonSchema.decisionOperation;
-    debug("operationName", operationName);
+            var operation = value.post.requestBody.content["application/json"];
+            var inputSchema = operation.schema;
+            debug("operation", operation);
+            debug("inputSchema", inputSchema);
 
-    var operationJsonInputSchema = operationJsonSchema.inputSchema;
-    debug("operationJsonInputSchema", JSON.stringify(operationJsonInputSchema));
+            var operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, decisionOpenAPI.components.schemas)
+            debug("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
 
-    operationJsonInputSchema = expandJSONSchemaDefinition(operationJsonInputSchema)
-    debug("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
+            debug("decisionOpenAPI.info.title", decisionOpenAPI.info.title);
 
-    debug("decisionOpenAPI.info.title", decisionOpenAPI.info.title);
+            // WO does not support white spaces for tool names
+            const toolName = (decisionOpenAPI.info.title + " " + operationName).replaceAll(" ", "_");
 
-    // WO does not support white spaces for tool names
-    const toolName = (decisionOpenAPI.info.title + " " + operationName).replaceAll(" ", "_");
+            const inputParameters:any = getParameters(operationJsonInputSchema);
 
-    const inputParameters:any = getParameters(operationJsonInputSchema);
-
-    server.registerTool(
-        toolName,
-        {
-            title: decisionOpenAPI.info.title + " " + operationName,
-            description: decisionOpenAPI.info.description,
-            inputSchema: inputParameters
-        },
-        async (input, n) => {
-            var decInput = input;
-            debug("Execute decision with", JSON.stringify(decInput, null, " "))
-            var str = await executeDecision(apikey, baseURL, decisionId, operation, decInput);
-            return {
-                content: [{ type: "text", text: str}]
-            };
+            server.registerTool(
+                toolName,
+                {
+                    title: decisionOpenAPI.info.title + " " + operationName,
+                    description: decisionOpenAPI.info.description,
+                    inputSchema: inputParameters
+                },
+                async (input, n) => {
+                    var decInput = input;
+                    debug("Execute decision with", JSON.stringify(decInput, null, " "))
+                    var str = await executeDecision(apikey, baseURL, decisionId, operationName, decInput);
+                    return {
+                        content: [{ type: "text", text: str}]
+                    };
+                }
+            );
         }
-    );
+    }
 }
 
 const version = String(process.env.npm_package_version);
