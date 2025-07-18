@@ -22,6 +22,8 @@ block-beta
 
 The MCP server is available as a NPM package in the free NPM registry: https://www.npmjs.com/package/di-mcp-server.
 
+It supports both STDIO and HTTP Streamable transports for local or remote deployments to support any MCP clients.
+
 It can be easily ran with `npx` to expose the operations of the last deployed version of all decisions as MCP tools:
 
 ```
