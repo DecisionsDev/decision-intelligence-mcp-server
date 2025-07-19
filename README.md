@@ -6,28 +6,31 @@
 A Model Context Protocol server enabling AI assistant to access the decisions
 from IBM Decision Intelligence.
 
-```mermaid
-block-beta
-    
-    block:MCP_HOST
-        client space:1 server
-    end
-
-    client["MCP Client"] --"mcp/stdio"--> server["Decision Intelligence MCP Server"]
-
-    server space:1 runtime
-    server --"https"--> runtime["Decision Intelligence Runtime"]   
-
-    runtime
-```
-
-## Getting started
-
 The MCP server is available as a NPM package in the free NPM registry: https://www.npmjs.com/package/di-mcp-server.
 
 It supports both STDIO and HTTP Streamable transports for local or remote deployments to support any MCP clients.
 
-It can be easily ran with `npx` to expose the operations of the last deployed version of all decisions as MCP tools:
+```mermaid
+flowchart LR
+    subgraph MCP Host 
+        client["MCP Client"] <-- MCP/STDIO --> server("DI MCP Server")
+    end
+
+    server -- HTTPS --> runtime("DI Runtime")
+
+    subgraph Decision Intelligence SaaS
+        runtime
+    end
+
+
+    client <-- MCP/HTTP --> server2("DI MCP Server") -- HTTPS --> runtime
+
+```
+
+## Getting started
+
+
+The MCP server can be easily ran with `npx` to expose the operations of the last deployed version of all decisions as MCP tools:
 
 ```
 npx -y mcp-server <APIKEY> <DECISION_RUNTIME_BASEURL> <STDIO|HTTP>
