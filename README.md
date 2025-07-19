@@ -1,10 +1,6 @@
 # MCP Server for IBM Decision Intelligence
 
-[![Build and test](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml/badge.svg)](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml)
-
-![GitHub last commit (branch)](https://img.shields.io/github/last-commit/DecisionsDev/di-mcp-server/main.svg)](https://github.com/DecisionsDev/di-mcp-server)
-
-[![GitHub release](https://img.shields.io/github/release/DecisionsDev/di-mcp-server)](https://github.com/DecisionsDev/di-mcp-server/releases) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Build and test](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml/badge.svg)](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 
 A Model Context Protocol server enabling AI assistant to access the decisions
