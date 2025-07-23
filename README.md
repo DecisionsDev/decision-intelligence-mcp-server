@@ -7,10 +7,13 @@ A Model Context Protocol (MCP) server that empowers AI assistants with access to
 
 The MCP server is available as a NPM package in the free NPM registry: https://www.npmjs.com/package/di-mcp-server.
 
-It supports both STDIO and HTTP Streamable transports for local or remote deployments to support any MCP clients.
+It supports both STDIO and HTTP Streamable transports for local or remote deployments in order to support any MCP clients.
 
 ```mermaid
 flowchart LR
+    github["di-mcp-server github repository"] -- publish --> registry
+    registry["NPM registry"] -- npx -y di-mcp-server--> server
+
     subgraph MCP Host 
         client["MCP Client"] <-- MCP/STDIO --> server("DI MCP Server")
     end
@@ -29,7 +32,7 @@ flowchart LR
 ## Getting started
 
 
-The MCP server can be easily ran with `npx` to expose the operations of the last deployed version of all decisions as MCP tools:
+The MCP server can be easily ran with `npx` to expose as MCP tools the operations of the last deployed version of all decision services:
 
 ```bash
 npx -y mcp-server <APIKEY> <DECISION_RUNTIME_BASEURL> <TRANSPORT>
@@ -111,15 +114,25 @@ More information at https://modelcontextprotocol.io/quickstart/user.
 
 ## Development
 
-### Building from Source
+### Get sources
 
 ```bash
 git clone https://github.com/DecisionsDev/di-mcp-server.git
 cd di-mcp-server
+```
+
+### Building from Source
+
+```bash
 npm install
 npm run build
 ```
 
+### Run tests
+
+```bash
+npm tests
+```
 
 ## License
 [Apache 2.0](LICENSE)
