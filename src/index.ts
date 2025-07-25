@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
+import { program } from "commander";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { jsonSchemaToZod } from "json-schema-to-zod";
 import { expandJSONSchemaDefinition } from './jsonschema.js';
 import { executeLastDeployedDecisionService, getDecisionServiceIds, getDecisionServiceOpenAPI, getMetadata } from './diruntimeclient.js';
 import { evalTS } from "./ts.js";
-import { debug } from "./debug.js";
+import { debug, setDebug } from "./debug.js";
 import { runHTTPServer } from "./httpserver.js";
 
 type parametersType = {[key: string]: any};
@@ -79,25 +80,33 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
 
 const version = String(process.env.npm_package_version);
 
-const server = new McpServer({
-    name: "di-mcp-server",
-    version: version
-});
+program
+    .name("di-mcp-server")
+    .description("MCP Server for IBM Decision Intelligence")
+    .version(version)
+    .option('--debug', 'Enable debug output')
+    .requiredOption('--url <string>', "Base URL for the Decision Runtime API")
+    .option('--apikey <string>', "API key for the Decision Runtime")
+    .option('--transport <string>', 'Transport mode: STDIO or HTTP', 'STDIO');
 
-var args = process.argv.slice(2);
+program.parse();
 
-if (args.length != 3) {
-    console.error("USAGE: <APIKEY> <BASE_URL> <STDIO|HTTP>");
-    process.exit(1);
-}
-  
-var apikey = args[0];
-var baseURL = args[1];
-var transportMode = args[2]
+const options = program.opts();
+
+setDebug(options.debug || process.env.DEBUG === "true");
+
+const apikey: string = options.apikey || process.env.APIKEY;
+const baseURL: string = options.url;
+const transportMode: string = options.transport;
 
 debug("APIKEY=" + apikey);
 debug("BASEURL=" + baseURL);
 debug("transportMode=" + transportMode);
+
+const server = new McpServer({
+    name: "di-mcp-server",
+    version: version
+});
 
 const spaceMetadata = await getMetadata(apikey, baseURL, "development");
 debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
