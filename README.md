@@ -41,14 +41,14 @@ npx -y mcp-server <APIKEY> <DECISION_RUNTIME_BASEURL> <TRANSPORT>
 Where:
 
 - APIKEY: the API key to access the Decision Runtime
-- DECISION_RUNTIME_BASEURL: is the baseurl of the REST API of the Decision Runtime. Its pattern is: https://<TENANT_NAME>.decision-dev-us-south.decision.saas.ibm.com/ads/runtime/api/v1 where TENANT_NAME is the name of the tenant
+- DECISION_RUNTIME_BASEURL: is the baseurl of the REST API of the Decision Runtime. Its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant
 - STDIO or HTTP
 
 
 Example:
 
 ```bash
-npx -y di-mcp-server azI6ZTViZDAAJDNMAtMDA1OS00NzVkLTg0YTctOGNiNzRkZjJmNzkyOlpnUHNMb0VCb0tBcDBsSnZhdTZXLy96N3ppWEwxM2Z4WHRJcDNlNXZVWlk9 https://ibm.decision-dev-us-south.decision.saas.ibm.com/ads/runtime/api/v1 STDIO
+npx -y di-mcp-server azI6ZTViZDAAJDNMAtMDA1OS00NzVkLTg0YTctOGNiNzRkZjJmNzkyOlpnUHNMb0VCb0tBcDBsSnZhdTZXLy96N3ppWEwxM2Z4WHRJcDNlNXZVWlk9 https://mytenant.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1 STDIO
 ```
 
 ## Integration Guides
@@ -101,7 +101,7 @@ In the configuration directory, edit or create `claude_desktop_config.json`:
                 "-y",
                 "di-mcp-server",
                 "<APIKEY>",
-                "https://<TENANT_NAME>.decision-dev-us-south.decision.saas.ibm.com/ads/runtime/api/v1",
+                "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1",
                 "STDIO"
             ]
         }
