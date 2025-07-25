@@ -7,8 +7,6 @@ export function executeDecision(apikey:string, baseURL:string, decisionId:string
       + encodeURIComponent(operation)
       +"/execute";
 
-    console.error("URL=" + url);
-
     var headers = {
         "Content-Type": "application/json",
         "accept": "application/json",
@@ -25,8 +23,6 @@ export function executeLastDeployedDecisionService(apikey:string, baseURL:string
     var url = baseURL + "/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/"
       + encodeURIComponent(operation)
       + "/execute?decisionServiceId=" + encodeURIComponent(serviceId);
-
-    console.error("URL=" + url);
 
     var headers = {
         "Content-Type": "application/json",
@@ -108,8 +104,6 @@ export function getDecisionOperationJsonSchema(apikey:string, baseURL:string, de
       + "/operations/"
       + encodeURIComponent(operation)
       + "/schemas?format=JSON_SCHEMA";
-
-    console.error("URL=" + url);
 
     var headers = {
         "accept": "application/json",
