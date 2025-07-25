@@ -15,7 +15,7 @@ function walk(schema: any, defs: any, history: any): void {
         var ref = paths[3];
 
         if (history.includes(ref)) {
-            console.error("Circular reference detected for " + ref + " in history: " + history);
+            debug("Circular reference detected for " + ref + " in history: " + history);
             delete(schema["$ref"]);
         } else {
             var def = defs[ref];
