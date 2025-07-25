@@ -7,7 +7,7 @@ import { expandJSONSchemaDefinition } from './jsonschema.js';
 import { executeLastDeployedDecisionService, getDecisionServiceIds, getDecisionServiceOpenAPI, getMetadata } from './diruntimeclient.js';
 import { evalTS } from "./ts.js";
 import { debug } from "./debug.js";
-import { runHTPServer } from "./httpserver.js";
+import { runHTTPServer } from "./httpserver.js";
 
 type parametersType = {[key: string]: any};
 
@@ -113,7 +113,7 @@ for (const serviceId of serviceIds) {
 
 if (transportMode === "HTTP") {
     debug("IBM Decision Intelligence MCP Server version", version, "running on http");
-    runHTPServer(server);
+    runHTTPServer(server);
 } else {
     const transport = new StdioServerTransport();
     await server.connect(transport);

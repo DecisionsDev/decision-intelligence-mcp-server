@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js"
 
-export function runHTPServer(server:any) {
+export function runHTTPServer(server:any) {
     const app = express();
     app.use(express.json());
 
