@@ -1,4 +1,4 @@
-export const DEBUG=true
+export const DEBUG=process.env.DEBUG === "true";
 
 export function debug(...data: any[]): void {
     console.error
