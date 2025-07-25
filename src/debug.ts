@@ -8,3 +8,7 @@ export function debug(...data: any[]): void {
     if (DEBUG)
         console.error.apply(null, data);
 }
+
+export function isDebug(): boolean {
+    return DEBUG;
+}

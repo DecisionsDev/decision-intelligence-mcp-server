@@ -7,8 +7,9 @@ import { jsonSchemaToZod } from "json-schema-to-zod";
 import { expandJSONSchemaDefinition } from './jsonschema.js';
 import { executeLastDeployedDecisionService, getDecisionServiceIds, getDecisionServiceOpenAPI, getMetadata } from './diruntimeclient.js';
 import { evalTS } from "./ts.js";
-import { debug, setDebug } from "./debug.js";
+import { debug, setDebug, isDebug } from "./debug.js";
 import { runHTTPServer } from "./httpserver.js";
+import { DecisionRuntime, parseDecisionRuntime } from "./decision-runtime.js";
 
 type parametersType = {[key: string]: any};
 
@@ -87,21 +88,52 @@ program
     .option('--debug', 'Enable debug output')
     .option('--url <string>', "Base URL for the Decision Runtime API")
     .option('--apikey <string>', "API key for the Decision Runtime")
-    .option('--transport <string>', 'Transport mode: STDIO or HTTP');
+    .option('--transport <string>', "Transport mode: 'STDIO' or 'HTTP'")
+    .option("--decision-runtime [runtime]", "Target Decision Runtime: 'DI' or 'ADS'. Default value is 'DI'");
 
 program.parse();
 
 const options = program.opts();
 
 setDebug(options.debug || process.env.DEBUG === "true");
+if (isDebug()) {
+    debug("Debug output is enabled");
+}
 
 const apikey: string = options.apikey || process.env.APIKEY;
 const baseURL: string = options.url || process.env.URL;
 const transportMode: string = options.transport || process.env.TRANSPORT || "STDIO";
+const decisionRuntimeOption = options["decisionRuntime"] || process.env.DECISION_RUNTIME;
+const decisionRuntime = parseDecisionRuntime(decisionRuntimeOption || DecisionRuntime.DI);
 
-debug("APIKEY=" + apikey);
-debug("URL=" + baseURL);
+debug("APIKEY=" + baseURL);
+debug("URL=" + apikey);
 debug("TRANSPORT=" + transportMode);
+debug("DECISION_RUNTIME=" + decisionRuntime);
+
+if (baseURL === undefined) {
+    console.error("The URL of the Decision Runtime API is not defined");
+    program.help();
+}
+
+if (apikey === undefined) {
+    console.error("The Decision Runtime API key is not defined");
+    program.help();
+}
+
+if (transportMode === undefined) {
+    console.error("The transport mode is not defined");
+    program.help();
+}
+
+if (decisionRuntime === undefined) {
+    console.error(
+        decisionRuntimeOption === undefined ?
+            "The target Decision Runtime is not defined" :
+            `'${decisionRuntimeOption}' is not a valid value for the target Decision Runtime`
+    );
+    program.help();
+}
 
 const server = new McpServer({
     name: "di-mcp-server",
