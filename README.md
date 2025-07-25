@@ -134,6 +134,12 @@ npm run build
 npm tests
 ```
 
+## Environment variables
+
+| Name  | Description                                                                                |
+|-------|--------------------------------------------------------------------------------------------|
+| DEBUG | When the value is `true`, the debug messages are written to the 'stderr' of the MCP server |
+
 ## License
 [Apache 2.0](LICENSE)
 
