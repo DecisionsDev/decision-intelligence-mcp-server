@@ -131,7 +131,7 @@ npm run build
 ### Run tests
 
 ```bash
-npm tests
+npm test
 ```
 
 ## Environment variables
