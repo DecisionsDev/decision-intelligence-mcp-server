@@ -23,7 +23,7 @@
     "jest": "^30.0.4",
     "json-schema-to-zod": "^2.6.1",
     "ts-jest": "^29.4.0",
-    "zod": "^3.25.76"
+    "zod": "^4.0.10"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.27.1",
