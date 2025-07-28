@@ -134,6 +134,19 @@ npm run build
 ```bash
 npm test
 ```
+### Running server in development mode with nodemon
+This will run `nodemon` with the `DEBUG` environment variable:
+ - The server is restarted whenever changes are detected on the source code
+ - Debug output is enabled
+ 
+#### Using command line options
+```bash
+npm run dev -- --apikey <APIKEY> --url <URL>
+```
+#### Using environment variables
+```bash
+APIKEY=<APIKEY> URL=<URL> npm run dev
+```
 
 ## Environment variables
 
