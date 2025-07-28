@@ -113,17 +113,17 @@ debug("DECISION_RUNTIME=" + decisionRuntime);
 
 if (baseURL === undefined) {
     console.error("The URL of the Decision Runtime API is not defined");
-    program.help();
+    program.help({ error: true });
 }
 
 if (apikey === undefined) {
     console.error("The Decision Runtime API key is not defined");
-    program.help();
+    program.help({ error: true });
 }
 
 if (transportMode === undefined) {
     console.error("The transport mode is not defined");
-    program.help();
+    program.help({ error: true });
 }
 
 if (decisionRuntime === undefined) {
@@ -132,7 +132,7 @@ if (decisionRuntime === undefined) {
             "The target Decision Runtime is not defined" :
             `'${decisionRuntimeOption}' is not a valid value for the target Decision Runtime`
     );
-    program.help();
+    program.help({ error: true });
 }
 
 const server = new McpServer({
