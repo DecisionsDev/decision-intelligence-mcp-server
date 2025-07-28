@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export function executeDecision(apikey:string, baseURL:string, decisionId:string, operation:string, input:any) {
+export function executeDecision(apikey:string, baseURL:URL, decisionId:string, operation:string, input:any) {
   var url = baseURL + "/deploymentSpaces/development/decisions/" 
       + encodeURIComponent(decisionId) 
       + "/operations/" 
@@ -19,7 +19,7 @@ export function executeDecision(apikey:string, baseURL:string, decisionId:string
       });
 }
 
-export function executeLastDeployedDecisionService(apikey:string, baseURL:string, serviceId:string, operation:string, input:any) {
+export function executeLastDeployedDecisionService(apikey:string, baseURL:URL, serviceId:string, operation:string, input:any) {
     var url = baseURL + "/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/"
       + encodeURIComponent(operation)
       + "/execute?decisionServiceId=" + encodeURIComponent(serviceId);
@@ -37,7 +37,7 @@ export function executeLastDeployedDecisionService(apikey:string, baseURL:string
 }
 
 
-export function getMetadata(apikey:string, baseURL:string, deploymentSpace:string) {
+export function getMetadata(apikey:string, baseURL:URL, deploymentSpace:string) {
     var url = baseURL + "/deploymentSpaces"
         + "/" + deploymentSpace
         + "/metadata?names=decisionServiceId";
@@ -66,7 +66,7 @@ export function getDecisionServiceIds(metadata:any): string[] {
     return ids;
 }
 
-export function getDecisionOpenapi(apikey:string, baseURL:string, decisionId:string) {
+export function getDecisionOpenapi(apikey:string, baseURL:URL, decisionId:string) {
   var url = baseURL + "/deploymentSpaces/development/decisions/" 
       + encodeURIComponent(decisionId) 
       + "/openapi";
@@ -82,7 +82,7 @@ export function getDecisionOpenapi(apikey:string, baseURL:string, decisionId:str
         });
 }
 
-export function getDecisionServiceOpenAPI(apikey:string, baseURL:string, decisionServiceId:string) {
+export function getDecisionServiceOpenAPI(apikey:string, baseURL:URL, decisionServiceId:string) {
     var url = baseURL + "/selectors/lastDeployedDecisionService/deploymentSpaces/development"
       + "/openapi?decisionServiceId="
       + encodeURIComponent(decisionServiceId) + "&outputFormat=JSON"
@@ -97,4 +97,22 @@ export function getDecisionServiceOpenAPI(apikey:string, baseURL:string, decisio
         .then(function (response) {          
             return response.data;
         });
+}
+
+export function getDecisionOperationJsonSchema(apikey:string, baseURL:URL, decisionId:string, operation:string) {
+    var url = baseURL + "/deploymentSpaces/development/decisions/"
+      + encodeURIComponent(decisionId)
+      + "/operations/"
+      + encodeURIComponent(operation)
+      + "/schemas?format=JSON_SCHEMA";
+
+    var headers = {
+        "accept": "application/json",
+        "apikey": apikey
+    };
+
+    return axios.get(url, { headers: headers })
+        .then(function (response) {          
+            return JSON.stringify(response.data);
+      });
 }
