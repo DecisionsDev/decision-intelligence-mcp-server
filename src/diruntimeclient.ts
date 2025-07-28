@@ -50,7 +50,8 @@ export function getMetadata(apikey:string, baseURL:string, deploymentSpace:strin
     return axios.get(url, { headers: headers })
         .then(function (response) {          
             return response.data;
-    });
+        }
+    );
 }
 
 export function getDecisionServiceIds(metadata:any): string[] {

@@ -56,8 +56,17 @@ test('getMetadata', () => {
         .get('/deploymentSpaces/development/metadata?names=decisionServiceId')
         .reply(200, metadata);
 
-    getMetadata('myapikey', 'http://example.com', 'development')
+    return getMetadata('myapikey', 'http://example.com', 'development')
         .then(data => {
             expect(data).toEqual(metadata);
     });
+});
+
+test('getMetadata with not exist deploymentSpace', async () => {
+    const runtimeNock = nock('http://example.com')
+        .get('/deploymentSpaces/notexist/metadata?names=decisionServiceId')
+        .reply(404);
+
+    await expect(getMetadata('myapikey', 'http://example.com', 'notexist'))
+        .rejects.toThrow('Request failed with status code 404');
 });
