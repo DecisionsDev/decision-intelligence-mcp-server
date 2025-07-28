@@ -56,8 +56,8 @@ test('getMetadata', () => {
         .get('/deploymentSpaces/development/metadata?names=decisionServiceId')
         .reply(200, metadata);
 
-        getMetadata('myapikey', 'http://example.com', 'development')
-            .then(data => {
-                expect(data).toEqual(metadata);
-        });
+    getMetadata('myapikey', 'http://example.com', 'development')
+        .then(data => {
+            expect(data).toEqual(metadata);
+    });
 });
