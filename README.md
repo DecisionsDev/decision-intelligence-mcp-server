@@ -35,7 +35,7 @@ flowchart LR
 The MCP server can be easily ran with `npx` to expose as MCP tools the operations of the last deployed version of all decision services:
 
 ```bash
-npx -y mcp-server <APIKEY> <DECISION_RUNTIME_BASEURL> <TRANSPORT>
+npx -y di-mcp-server --apikey <APIKEY> --url <DECISION_RUNTIME_BASEURL> --transport <TRANSPORT>
 ```
 
 Where:
@@ -48,7 +48,7 @@ Where:
 Example:
 
 ```bash
-npx -y di-mcp-server azI6ZTViZDAAJDNMAtMDA1OS00NzVkLTg0YTctOGNiNzRkZjJmNzkyOlpnUHNMb0VCb0tBcDBsSnZhdTZXLy96N3ppWEwxM2Z4WHRJcDNlNXZVWlk9 https://mytenant.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1 STDIO
+npx -y di-mcp-server --apikey HRJcDNlNXZVWlk9 --url https://mytenant.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1
 ```
 
 ## Integration Guides
@@ -100,9 +100,10 @@ In the configuration directory, edit or create `claude_desktop_config.json`:
             "args": [
                 "-y",
                 "di-mcp-server",
+                "--apikey",
                 "<APIKEY>",
-                "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1",
-                "STDIO"
+                "--url",
+                "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
             ]
         }
     }
@@ -133,12 +134,28 @@ npm run build
 ```bash
 npm test
 ```
+### Running server in development mode with nodemon
+This will run `nodemon` with the `DEBUG` environment variable:
+ - The server is restarted whenever changes are detected on the source code
+ - Debug output is enabled
+ 
+#### Using command line options
+```bash
+npm run dev -- --apikey <APIKEY> --url <URL>
+```
+#### Using environment variables
+```bash
+APIKEY=<APIKEY> URL=<URL> npm run dev
+```
 
 ## Environment variables
 
-| Name  | Description                                                                                |
-|-------|--------------------------------------------------------------------------------------------|
-| DEBUG | When the value is `true`, the debug messages are written to the 'stderr' of the MCP server |
+| Name      | Description                                                                                |
+|-----------|--------------------------------------------------------------------------------------------|
+| APIKEY    | API key to access the Decision Runtime                                                     |
+| DEBUG     | When the value is `true`, the debug messages are written to the 'stderr' of the MCP server |
+| TRANSPORT | The transport protocole `STDIO` (default) or `HTTP`                                        |
+| URL       | Base URL of the Decision Runtime                                                           |
 
 ## License
 [Apache 2.0](LICENSE)

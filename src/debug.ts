@@ -1,4 +1,8 @@
-const DEBUG=process.env.DEBUG === "true";
+var DEBUG = false;
+
+export function setDebug(value: boolean): void {
+    DEBUG = value;
+}
 
 export function debug(...data: any[]): void {
     if (DEBUG)
