@@ -20,6 +20,7 @@
     "@modelcontextprotocol/sdk": "^1.15.1",
     "axios": "^1.10.0",
     "babel-jest": "^30.0.4",
+    "commander": "^14.0.0",
     "jest": "^30.0.4",
     "json-schema-to-zod": "^2.6.1",
     "ts-jest": "^29.4.0",
