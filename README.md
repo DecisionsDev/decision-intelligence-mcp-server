@@ -35,7 +35,7 @@ flowchart LR
 The MCP server can be easily ran with `npx` to expose as MCP tools the operations of the last deployed version of all decision services:
 
 ```bash
-npx -y mcp-server --apikey <APIKEY> --url <DECISION_RUNTIME_BASEURL> --transport <TRANSPORT>
+npx -y di-mcp-server --apikey <APIKEY> --url <DECISION_RUNTIME_BASEURL> --transport <TRANSPORT>
 ```
 
 Where:
