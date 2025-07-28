@@ -85,9 +85,9 @@ program
     .description("MCP Server for IBM Decision Intelligence")
     .version(version)
     .option('--debug', 'Enable debug output')
-    .requiredOption('--url <string>', "Base URL for the Decision Runtime API")
+    .option('--url <string>', "Base URL for the Decision Runtime API")
     .option('--apikey <string>', "API key for the Decision Runtime")
-    .option('--transport <string>', 'Transport mode: STDIO or HTTP', 'STDIO');
+    .option('--transport <string>', 'Transport mode: STDIO or HTTP');
 
 program.parse();
 
@@ -96,12 +96,12 @@ const options = program.opts();
 setDebug(options.debug || process.env.DEBUG === "true");
 
 const apikey: string = options.apikey || process.env.APIKEY;
-const baseURL: string = options.url;
-const transportMode: string = options.transport;
+const baseURL: string = options.url || process.env.URL;
+const transportMode: string = options.transport || process.env.TRANSPORT || "STDIO";
 
 debug("APIKEY=" + apikey);
-debug("BASEURL=" + baseURL);
-debug("transportMode=" + transportMode);
+debug("URL=" + baseURL);
+debug("TRANSPORT=" + transportMode);
 
 const server = new McpServer({
     name: "di-mcp-server",

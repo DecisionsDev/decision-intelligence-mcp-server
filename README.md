@@ -137,9 +137,11 @@ npm test
 
 ## Environment variables
 
-| Name  | Description                                                                                |
-|-------|--------------------------------------------------------------------------------------------|
-| DEBUG | When the value is `true`, the debug messages are written to the 'stderr' of the MCP server |
+| Name      | Description                                                                                |
+|-----------|--------------------------------------------------------------------------------------------|
+| DEBUG     | When the value is `true`, the debug messages are written to the 'stderr' of the MCP server |
+| URL       | Base URL of the Decision Runtime                                                           |
+| TRANSPORT | The transport protocole `STDIO` (default) or `HTTP`                                        |
 
 ## License
 [Apache 2.0](LICENSE)
