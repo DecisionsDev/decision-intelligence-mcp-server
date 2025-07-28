@@ -40,7 +40,7 @@ export function executeLastDeployedDecisionService(apikey:string, baseURL:string
 export function getMetadata(apikey:string, baseURL:string, deploymentSpace:string) {
     var url = baseURL + "/deploymentSpaces"
         + "/" + deploymentSpace
-        + "/metadata?&names=decisionServiceId";
+        + "/metadata?names=decisionServiceId";
 
     var headers = {
         "accept": "application/json",
