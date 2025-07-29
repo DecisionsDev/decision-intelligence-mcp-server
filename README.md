@@ -42,7 +42,7 @@ Where:
 - `APIKEY` is the API key to access the Decision Runtime
 - `RUNTIME_BASE_URL` is the base URL of the Decision Runtime REST API. Its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant
 - `TRANSPORT` is either `STDIO` (default) or `HTTP`
-- `RUNTIME` is either `DI` (default) or `ADS`
+- `RUNTIME` is either `DI` (default value) when using the Decision Runtime of Decision Intelligence or `ADS` when using the Decision Runtime of CP4BA/ADS.
 
 
 Example:
