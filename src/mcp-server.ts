@@ -12,10 +12,12 @@ import {expandJSONSchemaDefinition} from './jsonschema.js';
 import {getToolName} from "./ditool.js";
 import {jsonSchemaToZod} from "json-schema-to-zod";
 import {evalTS} from "./ts.js";
+import { OpenAPIV3_1 } from "openapi-types";
+
 type parametersType = {[key: string]: any};
 
-function getParameters(jsonSchema:any): parametersType {
-    const params:any = {}
+function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): parametersType {
+    const params: parametersType = {}
 
     for (const propName in jsonSchema.properties) {
         const jsonSchemaProp = jsonSchema.properties[propName];
@@ -29,7 +31,21 @@ function getParameters(jsonSchema:any): parametersType {
 function registerTool(server: McpServer, apikey: string, baseURL: string, decisionOpenAPI: any, decisionServiceId: string, toolNames: string[]) {
     for (const key in decisionOpenAPI.paths) {
         const value = decisionOpenAPI.paths[key];
+
+        if (value == undefined 
+            || value.post == undefined
+            || value.post.requestBody == undefined) {           
+            debug("invalid openapi path ", JSON.stringify(value))
+            continue ;
+        }
+
         const operationId = value.post.operationId;
+
+        if (operationId == undefined) {
+            debug("no operationId for ", JSON.stringify(value))
+            continue ;
+        }
+
         debug("path info", value);
 
         debug("Found operationName", key);
@@ -39,7 +55,8 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
         debug("operation", operation);
         debug("inputSchema", inputSchema);
 
-        const operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, decisionOpenAPI.components.schemas)
+        const schemas = decisionOpenAPI.components == undefined ? null: decisionOpenAPI.components.schemas;
+        const operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, schemas)
         debug("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
 
         const serviceName = decisionOpenAPI.info["x-ibm-ads-decision-service-name"];
@@ -49,7 +66,7 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
         debug("toolName", toolName, toolNames);
         toolNames.push(toolName);
 
-        const inputParameters:any = getParameters(operationJsonInputSchema);
+        const inputParameters: parametersType = getParameters(operationJsonInputSchema);
 
         server.registerTool(
             toolName,
@@ -58,7 +75,8 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
                 description: value.post.description,
                 inputSchema: inputParameters
             },
-            async (input, {}) => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            async (input, n) => {
                 const decInput = input;
                 debug("Execute decision with", JSON.stringify(decInput, null, " "))
                 const str = await executeLastDeployedDecisionService(apikey, baseURL, decisionServiceId, operationId, decInput);
