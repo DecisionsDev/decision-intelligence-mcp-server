@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export function executeDecision(apikey:string, baseURL:URL, decisionId:string, operation:string, input:any) {
+export function executeDecision(apikey:string, baseURL:string, decisionId:string, operation:string, input:any) {
   var url = baseURL + "/deploymentSpaces/development/decisions/" 
       + encodeURIComponent(decisionId) 
       + "/operations/" 
