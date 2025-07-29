@@ -2,6 +2,20 @@ import {Command} from 'commander';
 import {DecisionRuntime, parseDecisionRuntime} from "./decision-runtime.js";
 import {debug, setDebug} from "./debug.js";
 
+export type configType = {
+        apiKey: string,
+        runtime: string,
+        transport: string,
+        url: string,
+        version: string,
+        // Helper properties
+        isDebugEnabled: boolean,
+        isDiRuntime: boolean,
+        isAdsRuntime: boolean,
+        isHttpTransport: boolean,
+        isStdioTransport: boolean,
+};
+
 // Configuration validation functions
 function validateUrl(url: string) : string {
     debug("URL=" + url);
@@ -48,7 +62,7 @@ function validateApiKey(apiKey: string): string {
     return apiKey;
 }
 
-export function createConfiguration(cliArguments?: readonly string[]) {
+export function createConfiguration(cliArguments?: readonly string[]): configType {
     const program = new Command();
     const version = String(process.env.npm_package_version);
     program

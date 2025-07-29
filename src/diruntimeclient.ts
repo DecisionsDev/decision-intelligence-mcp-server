@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { OpenAPIV3_1 } from "openapi-types";
 
 export function executeDecision(apikey:string, baseURL:string, decisionId:string, operation:string, input:object|undefined) {
     const url = baseURL + "/deploymentSpaces/development/decisions/" 
@@ -96,6 +97,6 @@ export function getDecisionServiceOpenAPI(apikey:string, baseURL:string, decisio
 
     return axios.get(url, { headers: headers })
         .then(function (response) {          
-            return response.data;
+            return (response.data as OpenAPIV3_1.Document);
     });
 }
