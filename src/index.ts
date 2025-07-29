@@ -14,6 +14,7 @@ import {evalTS} from "./ts.js";
 import {debug} from "./debug.js";
 import {runHTTPServer} from "./httpserver.js";
 import {createConfiguration} from "./command-line.js";
+import { getToolName } from "./ditool.js";
 
 type parametersType = {[key: string]: any};
 
@@ -48,16 +49,8 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
         const serviceName = decisionOpenAPI.info["x-ibm-ads-decision-service-name"];
         debug("decisionServiceName", serviceName);
 
-        // WO does not support white spaces for tool names
-        // Claude does not support /
-        let toolName = (serviceName + " " + operationId).replaceAll(" ", "_").replaceAll("/", "_");
-        
-        if (toolNames.includes(toolName)) {
-            debug("toolName clash");
-            toolName = (decisionServiceId + " " + operationId).replaceAll(" ", "_").replaceAll("/", "_");
-        }
+        const toolName = getToolName(operationId, serviceName, decisionServiceId, toolNames);
         debug("toolName", toolName, toolNames);
-
         toolNames.push(toolName);
 
         const inputParameters:any = getParameters(operationJsonInputSchema);
