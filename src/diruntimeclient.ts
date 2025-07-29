@@ -98,21 +98,3 @@ export function getDecisionServiceOpenAPI(apikey:string, baseURL:string, decisio
             return response.data;
         });
 }
-
-export function getDecisionOperationJsonSchema(apikey:string, baseURL:string, decisionId:string, operation:string) {
-    var url = baseURL + "/deploymentSpaces/development/decisions/"
-      + encodeURIComponent(decisionId)
-      + "/operations/"
-      + encodeURIComponent(operation)
-      + "/schemas?format=JSON_SCHEMA";
-
-    var headers = {
-        "accept": "application/json",
-        "apikey": apikey
-    };
-
-    return axios.get(url, { headers: headers })
-        .then(function (response) {          
-            return JSON.stringify(response.data);
-      });
-}
