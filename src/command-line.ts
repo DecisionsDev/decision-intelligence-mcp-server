@@ -74,7 +74,7 @@ export function createConfiguration(cliArguments?: readonly string[]) {
 
     // Validate all options;
     const apiKey = validateApiKey(options.apikey || process.env.APIKEY);
-    const decisionRuntime = validateDecisionRuntime(options["decisionRuntime"] || process.env.RUNTIME || DecisionRuntime.DI);
+    const decisionRuntime = validateDecisionRuntime(options["runtime"] || process.env.RUNTIME || DecisionRuntime.DI);
     const transport = validateTransport(options.transport || process.env.TRANSPORT || "STDIO");
     const url = validateUrl(options.url || process.env.URL);
 
@@ -87,8 +87,8 @@ export function createConfiguration(cliArguments?: readonly string[]) {
         version: version,
         // Helper properties
         isDebugEnabled: debugFlag,
-        isDiDecisionRuntime: decisionRuntime == DecisionRuntime.DI,
-        isAdsDecisionRuntime: decisionRuntime == DecisionRuntime.ADS,
+        isDiRuntime: decisionRuntime == DecisionRuntime.DI,
+        isAdsRuntime: decisionRuntime == DecisionRuntime.ADS,
         isHttpTransport: transport === 'HTTP',
         isStdioTransport: transport === 'STDIO',
     };

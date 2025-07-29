@@ -200,8 +200,8 @@ describe('CLI Configuration', () => {
                 '--runtime', 'ADS'
             ]);
 
-            expect(diConfig.decisionRuntime).toBe(DecisionRuntime.DI);
-            expect(adsConfig.decisionRuntime).toBe(DecisionRuntime.ADS);
+            expect(diConfig.runtime).toBe(DecisionRuntime.DI);
+            expect(adsConfig.runtime).toBe(DecisionRuntime.ADS);
         });
 
         test('should default to DI when not specified', () => {
@@ -212,7 +212,7 @@ describe('CLI Configuration', () => {
                 '--transport', 'STDIO'
             ]);
 
-            expect(config.decisionRuntime).toBe(DecisionRuntime.DI);
+            expect(config.runtime).toBe(DecisionRuntime.DI);
         });
 
         test('should throw error for invalid decision runtime', () => {
@@ -230,7 +230,7 @@ describe('CLI Configuration', () => {
         });
 
         test('should use decision runtime from environment variable', () => {
-            process.env.DECISION_RUNTIME = 'ADS';
+            process.env.RUNTIME = 'ADS';
 
             const config = createConfiguration([
                 'node', 'cli.js',
@@ -239,7 +239,7 @@ describe('CLI Configuration', () => {
                 '--transport', 'STDIO'
             ]);
 
-            expect(config.decisionRuntime).toBe(DecisionRuntime.ADS);
+            expect(config.runtime).toBe(DecisionRuntime.ADS);
         });
 
         test('should call debug function with decision runtime', () => {
@@ -251,7 +251,7 @@ describe('CLI Configuration', () => {
                 '--runtime', 'DI'
             ]);
 
-            expect(mockDebug).toHaveBeenCalledWith('DECISION RUNTIME=DI');
+            expect(mockDebug).toHaveBeenCalledWith('RUNTIME=DI');
         });
 
         test('should call parseDecisionRuntime function', () => {
@@ -350,13 +350,13 @@ describe('CLI Configuration', () => {
 
             expect(config).toMatchObject({
                 apiKey: 'validkey123',
-                decisionRuntime: DecisionRuntime.ADS,
+                runtime: DecisionRuntime.ADS,
                 transport: 'HTTP',
                 url: url,
                 version: version,
                 isDebugEnabled: true,
-                isDiDecisionRuntime: false,
-                isAdsDecisionRuntime: true,
+                isDiruntime: false,
+                isAdsruntime: true,
                 isHttpTransport: true,
                 isStdioTransport: false,
             });
@@ -371,13 +371,13 @@ describe('CLI Configuration', () => {
 
             expect(config).toMatchObject({
                 apiKey: 'validkey123',
-                decisionRuntime: DecisionRuntime.DI,
+                runtime: DecisionRuntime.DI,
                 transport: 'STDIO',
                 url: url,
                 version: '1.0.0',
                 isDebugEnabled: false,
-                isDiDecisionRuntime: true,
-                isAdsDecisionRuntime: false,
+                isDiRuntime: true,
+                isAdsRuntime: false,
                 isHttpTransport: false,
                 isStdioTransport: true,
             });
@@ -411,7 +411,7 @@ describe('CLI Configuration', () => {
             process.env.URL = urlFromEnv;
             process.env.APIKEY = 'env-api-key';
             process.env.TRANSPORT = 'STDIO';
-            process.env.DECISION_RUNTIME = 'DI';
+            process.env.RUNTIME = 'DI';
 
             const urlFromCli = 'https://cli-api.example.com';
             const config = createConfiguration([
@@ -425,7 +425,7 @@ describe('CLI Configuration', () => {
             expect(config.url).toBe(urlFromCli);
             expect(config.apiKey).toBe('cli-api-key-123');
             expect(config.transport).toBe('HTTP');
-            expect(config.decisionRuntime).toBe(DecisionRuntime.ADS);
+                expect(config.runtime).toBe(DecisionRuntime.ADS);
         });
 
         test('should set helper properties correctly for DI runtime', () => {
@@ -438,8 +438,8 @@ describe('CLI Configuration', () => {
                 '--runtime', 'DI'
             ]);
 
-            expect(config.isDiDecisionRuntime).toBe(true);
-            expect(config.isAdsDecisionRuntime).toBe(false);
+            expect(config.isDiRuntime).toBe(true);
+            expect(config.isAdsRuntime).toBe(false);
         });
 
         test('should set helper properties correctly for ADS runtime', () => {
@@ -452,8 +452,8 @@ describe('CLI Configuration', () => {
                 '--runtime', 'ADS'
             ]);
 
-            expect(config.isDiDecisionRuntime).toBe(false);
-            expect(config.isAdsDecisionRuntime).toBe(true);
+            expect(config.isDiRuntime).toBe(false);
+            expect(config.isAdsRuntime).toBe(true);
         });
 
         test('should set transport helper properties correctly', () => {
