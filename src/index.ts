@@ -81,7 +81,7 @@ function registerTool(server: McpServer, apikey: string, baseURL: URL, decisionO
     }
 }
 
-const configuration = createConfiguration()
+const configuration = createConfiguration();
 const version = configuration.version;
 const server = new McpServer({
     name: "di-mcp-server",

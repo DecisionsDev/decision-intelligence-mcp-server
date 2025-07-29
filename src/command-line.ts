@@ -1,3 +1,4 @@
+// command-line.ts
 import {Command} from 'commander';
 import {DecisionRuntime, parseDecisionRuntime} from "./decision-runtime.js";
 import {debug, setDebug} from "./debug.js";
@@ -52,7 +53,7 @@ function validateApiKey(apiKey: string): string {
     return apiKey;
 }
 
-export function createConfiguration() {
+export function createConfiguration(cliArguments?: readonly string[]) {
     const program = new Command();
     program
         .name("di-mcp-server")
@@ -61,10 +62,10 @@ export function createConfiguration() {
         .option('--debug', 'Enable debug output')
         .option('--url <string>', "Base URL for the Decision Runtime API")
         .option('--apikey <string>', "API key for the Decision Runtime")
-        .option('--transport <string>', "Transport mode: 'STDIO' or 'HTTP'")
-        .option("--decision-runtime [runtime]", "Target Decision Runtime: 'DI' or 'ADS'. Default value is 'DI'");
+        .option('--transport <transport>', "Transport mode: 'STDIO' or 'HTTP'")
+        .option("--decision-runtime <runtime>", "Target Decision Runtime: 'DI' or 'ADS'. Default value is 'DI'");
 
-    program.parse();
+    program.parse(cliArguments);
 
     const options = program.opts();
     const debugFlag = Boolean(options.debug || process.env.DEBUG === "true");
