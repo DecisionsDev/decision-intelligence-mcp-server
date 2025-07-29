@@ -6,13 +6,14 @@ import {debug, setDebug} from "./debug.js";
 const version = process.env.npm_package_version || require('./package.json').version;
 
 // Configuration validation functions
-function validateUrl(url: string) : URL {
+function validateUrl(url: string) : string {
     debug("URL=" + url);
     if (url === undefined) {
         throw new Error('The Decision Runtime REST API URL is not defined');
     }
     try {
-        return new URL(url);
+        new URL(url);
+        return url;
     } catch {
         throw new Error(`Invalid URL format: '${url}'`);
     }

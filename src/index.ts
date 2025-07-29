@@ -29,7 +29,7 @@ function getParameters(jsonSchema:any): parametersType {
     return params;
 }
 
-function registerTool(server: McpServer, apikey: string, baseURL: URL, decisionOpenAPI: any, decisionServiceId: string, toolNames: string[]) {
+function registerTool(server: McpServer, apikey: string, baseURL: string, decisionOpenAPI: any, decisionServiceId: string, toolNames: string[]) {
     for (const key in decisionOpenAPI.paths) {
         const value = decisionOpenAPI.paths[key];
         const operationId = value.post.operationId;
