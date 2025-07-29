@@ -1,0 +1,307 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Loan Approval",
+    "description": "Loan Approval",
+    "version": "3",
+    "x-ibm-ads-decision-service-id": "test/Loan Approval",
+    "x-ibm-ads-decision-service-name": "Loan Approval",
+    "x-ibm-ads-decision-id": "test/loan_approval/loanApprovalDecisionService/3-2025-06-18T13:00:39.447Z"
+  },
+  "servers": [
+    {
+      "url": "https://example.com/ads/runtime/api/v1/deploymentSpaces/development/decisions/test%2Floan_approval%2FloanApprovalDecisionService%2F3-2025-06-18T13%3A00%3A39.447Z/operations"
+    }
+  ],
+  "security": [
+    {
+      "DI-APIKEY": []
+    }
+  ],
+  "paths": {
+    "/approval/execute": {
+      "post": {
+        "tags": [
+          "test/Loan Approval"
+        ],
+        "summary": "approval",
+        "description": "Execute approval",
+        "operationId": "approval",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/approval_input"
+              },
+              "example": {
+                "loan": {
+                  "amount": 1000,
+                  "loanToValue": 1.5,
+                  "numberOfMonthlyPayments": 1000,
+                  "startDate": "2025-06-17T14:40:26Z"
+                },
+                "borrower": {
+                  "SSN": {
+                    "areaNumber": "<areaNumber>",
+                    "groupCode": "<groupCode>",
+                    "serialNumber": "<serialNumber>"
+                  },
+                  "birthDate": "2025-06-17T14:40:26Z",
+                  "creditScore": 1000,
+                  "firstName": "<firstName>",
+                  "lastName": "<lastName>",
+                  "latestBankruptcy": {
+                    "chapter": 1000,
+                    "date": "2025-06-17T14:40:26Z",
+                    "reason": "<reason>"
+                  },
+                  "yearlyIncome": 1000,
+                  "zipCode": "<zipCode>"
+                },
+                "currentTime": "2025-06-17T14:40:26Z"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Decision execution success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/approval_output"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A decision or decision operation was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "A runtime exception occurred while executing a decision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "insurance": {
+        "title": "insurance",
+        "type": "object",
+        "properties": {
+          "rate": {
+            "title": "rate",
+            "type": "number",
+            "format": "double"
+          },
+          "required": {
+            "title": "required",
+            "type": "boolean"
+          }
+        }
+      },
+      "loan": {
+        "title": "loan",
+        "type": "object",
+        "properties": {
+          "amount": {
+            "title": "amount",
+            "type": "integer"
+          },
+          "loanToValue": {
+            "title": "loan to value",
+            "type": "number",
+            "format": "double"
+          },
+          "numberOfMonthlyPayments": {
+            "title": "number of monthly payments",
+            "type": "integer"
+          },
+          "startDate": {
+            "title": "start date",
+            "type": "string",
+            "description": "The format for this field is \"date-time\" as defined in rfc3339 (https://tools.ietf.org/html/rfc3339#section-5.6)",
+            "format": "date-time"
+          }
+        }
+      },
+      "approval_input": {
+        "type": "object",
+        "properties": {
+          "loan": {
+            "$ref": "#/components/schemas/loan"
+          },
+          "borrower": {
+            "$ref": "#/components/schemas/borrower"
+          },
+          "currentTime": {
+            "type": "string",
+            "description": "The format for this field is \"date-time\" as defined in rfc3339 (https://tools.ietf.org/html/rfc3339#section-5.6)",
+            "format": "date-time"
+          }
+        },
+        "x-ibm-parameter-wrapper": true
+      },
+      "approval": {
+        "title": "approval",
+        "type": "object",
+        "properties": {
+          "approved": {
+            "title": "approved",
+            "type": "boolean"
+          },
+          "message": {
+            "title": "message",
+            "type": "string"
+          }
+        }
+      },
+      "approval_output": {
+        "type": "object",
+        "properties": {
+          "insurance": {
+            "$ref": "#/components/schemas/insurance"
+          },
+          "approval": {
+            "$ref": "#/components/schemas/approval"
+          }
+        },
+        "nullable": true,
+        "x-ibm-parameter-wrapper": true
+      },
+      "borrower": {
+        "title": "borrower",
+        "type": "object",
+        "properties": {
+          "SSN": {
+            "$ref": "#/components/schemas/SSN"
+          },
+          "birthDate": {
+            "title": "birth date",
+            "type": "string",
+            "description": "The format for this field is \"date-time\" as defined in rfc3339 (https://tools.ietf.org/html/rfc3339#section-5.6)",
+            "format": "date-time"
+          },
+          "creditScore": {
+            "title": "credit score",
+            "type": "integer"
+          },
+          "firstName": {
+            "title": "first name",
+            "type": "string"
+          },
+          "lastName": {
+            "title": "last name",
+            "type": "string"
+          },
+          "latestBankruptcy": {
+            "$ref": "#/components/schemas/bankruptcy"
+          },
+          "spouse": {
+            "$ref": "#/components/schemas/borrower"
+          },
+          "yearlyIncome": {
+            "title": "yearly income",
+            "type": "integer"
+          },
+          "zipCode": {
+            "title": "zip code",
+            "type": "string"
+          }
+        }
+      },
+      "BaseError": {
+        "type": "object",
+        "properties": {
+          "output": {
+            "type": "object",
+            "description": "The output of the decision service archive.",
+            "nullable": true
+          },
+          "incident": {
+            "$ref": "#/components/schemas/Incident"
+          }
+        },
+        "description": "The response when an error occurs"
+      },
+      "Incident": {
+        "type": "object",
+        "properties": {
+          "incidentId": {
+            "type": "string",
+            "description": "A unique identifier for the incident"
+          },
+          "incidentCategory": {
+            "type": "string",
+            "description": "The category of the incident, for instance \"Decision not found\""
+          },
+          "stackTrace": {
+            "type": "string",
+            "description": "An associated stack trace, if the decision runtime is configured to provide it. By default, the stack trace is null"
+          }
+        },
+        "description": "The description of the failure"
+      },
+      "bankruptcy": {
+        "title": "bankruptcy",
+        "type": "object",
+        "properties": {
+          "chapter": {
+            "title": "chapter",
+            "type": "integer"
+          },
+          "date": {
+            "title": "date",
+            "type": "string",
+            "description": "The format for this field is \"date-time\" as defined in rfc3339 (https://tools.ietf.org/html/rfc3339#section-5.6)",
+            "format": "date-time"
+          },
+          "reason": {
+            "title": "reason",
+            "type": "string"
+          }
+        }
+      },
+      "SSN": {
+        "title": "SSN",
+        "type": "object",
+        "properties": {
+          "areaNumber": {
+            "title": "area number",
+            "type": "string"
+          },
+          "groupCode": {
+            "title": "group code",
+            "type": "string"
+          },
+          "serialNumber": {
+            "title": "serial number",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "DI-APIKEY": {
+        "type": "apiKey",
+        "name": "apikey",
+        "in": "header"
+      }
+    }
+  }
+}
