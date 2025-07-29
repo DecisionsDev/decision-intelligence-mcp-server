@@ -32,7 +32,7 @@ function validateTransport(transport: string) :string {
 }
 
 function validateDecisionRuntime(runtime: string): DecisionRuntime {
-    debug("DECISION RUNTIME=" + runtime);
+    debug("RUNTIME=" + runtime);
     const decisionRuntime = parseDecisionRuntime(runtime);
     if (decisionRuntime === undefined) {
         throw new Error(`Invalid target Decision Runtime: '${decisionRuntime}'. Must be one of: '${Object.values(DecisionRuntime).join('\', \'')}'}`);
@@ -64,7 +64,7 @@ export function createConfiguration(cliArguments?: readonly string[]) {
         .option('--url <string>', "Base URL for the Decision Runtime API")
         .option('--apikey <string>', "API key for the Decision Runtime")
         .option('--transport <transport>', "Transport mode: 'STDIO' or 'HTTP'")
-        .option("--decision-runtime <runtime>", "Target Decision Runtime: 'DI' or 'ADS'. Default value is 'DI'");
+        .option("--runtime <runtime>", "Target Decision Runtime: 'DI' or 'ADS'. Default value is 'DI'");
 
     program.parse(cliArguments);
 
@@ -74,14 +74,14 @@ export function createConfiguration(cliArguments?: readonly string[]) {
 
     // Validate all options;
     const apiKey = validateApiKey(options.apikey || process.env.APIKEY);
-    const decisionRuntime = validateDecisionRuntime(options["decisionRuntime"] || process.env.DECISION_RUNTIME || DecisionRuntime.DI);
+    const decisionRuntime = validateDecisionRuntime(options["decisionRuntime"] || process.env.RUNTIME || DecisionRuntime.DI);
     const transport = validateTransport(options.transport || process.env.TRANSPORT || "STDIO");
     const url = validateUrl(options.url || process.env.URL);
 
     // Create and return configuration object
     return {
         apiKey: apiKey,
-        decisionRuntime: decisionRuntime,
+        runtime: decisionRuntime,
         transport: transport,
         url: url,
         version: version,

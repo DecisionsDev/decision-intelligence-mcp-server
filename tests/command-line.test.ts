@@ -189,7 +189,7 @@ describe('CLI Configuration', () => {
                 '--url', url,
                 '--apikey', 'validkey123',
                 '--transport', 'STDIO',
-                '--decision-runtime', 'DI'
+                '--runtime', 'DI'
             ]);
 
             const adsConfig = createConfiguration([
@@ -197,7 +197,7 @@ describe('CLI Configuration', () => {
                 '--url', url,
                 '--apikey', 'validkey123',
                 '--transport', 'STDIO',
-                '--decision-runtime', 'ADS'
+                '--runtime', 'ADS'
             ]);
 
             expect(diConfig.decisionRuntime).toBe(DecisionRuntime.DI);
@@ -224,7 +224,7 @@ describe('CLI Configuration', () => {
                     '--url', url,
                     '--apikey', 'validkey123',
                     '--transport', 'STDIO',
-                    '--decision-runtime', 'INVALID'
+                    '--runtime', 'INVALID'
                 ]);
             }).toThrow('Invalid target Decision Runtime: \'undefined\'. Must be one of: \'DI\', \'ADS\'');
         });
@@ -248,7 +248,7 @@ describe('CLI Configuration', () => {
                 '--url', url,
                 '--apikey', 'validkey123',
                 '--transport', 'STDIO',
-                '--decision-runtime', 'DI'
+                '--runtime', 'DI'
             ]);
 
             expect(mockDebug).toHaveBeenCalledWith('DECISION RUNTIME=DI');
@@ -260,7 +260,7 @@ describe('CLI Configuration', () => {
                 '--url', url,
                 '--apikey', 'validkey123',
                 '--transport', 'STDIO',
-                '--decision-runtime', 'DI'
+                '--runtime', 'DI'
             ]);
 
             expect(mockParseDecisionRuntime).toHaveBeenCalledWith('DI');
@@ -345,7 +345,7 @@ describe('CLI Configuration', () => {
                 '--url', url,
                 '--apikey', 'validkey123',
                 '--transport', 'HTTP',
-                '--decision-runtime', 'ADS'
+                '--runtime', 'ADS'
             ]);
 
             expect(config).toMatchObject({
@@ -419,7 +419,7 @@ describe('CLI Configuration', () => {
                 '--url', urlFromCli,
                 '--apikey', 'cli-api-key-123',
                 '--transport', 'HTTP',
-                '--decision-runtime', 'ADS'
+                '--runtime', 'ADS'
             ]);
 
             expect(config.url).toBe(urlFromCli);
@@ -435,7 +435,7 @@ describe('CLI Configuration', () => {
 
             const config = createConfiguration([
                 'node', 'cli.js',
-                '--decision-runtime', 'DI'
+                '--runtime', 'DI'
             ]);
 
             expect(config.isDiDecisionRuntime).toBe(true);
@@ -449,7 +449,7 @@ describe('CLI Configuration', () => {
 
             const config = createConfiguration([
                 'node', 'cli.js',
-                '--decision-runtime', 'ADS'
+                '--runtime', 'ADS'
             ]);
 
             expect(config.isDiDecisionRuntime).toBe(false);

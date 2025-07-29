@@ -35,14 +35,14 @@ flowchart LR
 The MCP server can be easily ran with `npx` to expose as MCP tools the operations of the last deployed version of all decision services:
 
 ```bash
-npx -y di-mcp-server --apikey <APIKEY> --url <DECISION_RUNTIME_BASE_URL> --transport <TRANSPORT> --decision-runtime <DECISION_RUNTIME>
+npx -y di-mcp-server --apikey <APIKEY> --url <RUNTIME_BASE_URL> --transport <TRANSPORT> --runtime <RUNTIME>
 ```
 
 Where:
 - `APIKEY` is the API key to access the Decision Runtime
-- `DECISION_RUNTIME_BASE_URL` is the base URL of the Decision Runtime REST API. Its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant
+- `RUNTIME_BASE_URL` is the base URL of the Decision Runtime REST API. Its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant
 - `TRANSPORT` is either `STDIO` (default) or `HTTP`
-- `DECISION_RUNTIME` is either `DI` (default) or `ADS`
+- `RUNTIME` is either `DI` (default) or `ADS`
 
 
 Example:
@@ -154,7 +154,7 @@ APIKEY=<APIKEY> URL=<URL> npm run dev
 |------------------|--------------------------------------------------------------------------------------------|
 | APIKEY           | API key to access the Decision Runtime                                                     |
 | DEBUG            | When the value is `true`, the debug messages are written to the 'stderr' of the MCP server |
-| DECISION_RUNTIME | The target Decision Runtime; `DI` (default) or `ADS`                                       
+| RUNTIME | The target Decision Runtime; `DI` (default) or `ADS`                                       
 | TRANSPORT        | The transport protocol; `STDIO` (default) or `HTTP`                                        |
 | URL              | Base URL of the Decision Runtime                                                           |
 
