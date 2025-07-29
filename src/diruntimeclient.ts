@@ -40,7 +40,7 @@ export function executeLastDeployedDecisionService(apikey:string, baseURL:string
 export function getMetadata(apikey:string, baseURL:string, deploymentSpace:string) {
     var url = baseURL + "/deploymentSpaces"
         + "/" + deploymentSpace
-        + "/metadata?&names=decisionServiceId";
+        + "/metadata?names=decisionServiceId";
 
     var headers = {
         "accept": "application/json",
@@ -50,7 +50,8 @@ export function getMetadata(apikey:string, baseURL:string, deploymentSpace:strin
     return axios.get(url, { headers: headers })
         .then(function (response) {          
             return response.data;
-    });
+        }
+    );
 }
 
 export function getDecisionServiceIds(metadata:any): string[] {
