@@ -1,4 +1,3 @@
-// decision-runtime.test.ts
 import { DecisionRuntime, parseDecisionRuntime } from '../src/decision-runtime.js';
 
 describe('Decision Runtime', () => {
