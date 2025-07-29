@@ -10,13 +10,16 @@
 export function getToolName(operationId: string, 
                             decisionServiceName: string,
                             decisionServiceId: string,
-                            toolNames: string[]): string {
+                            toolNames: string[]): any {
     // WO does not support white spaces for tool names
     // Claude does not support /
-    const toolName = (decisionServiceName + " " + operationId).replaceAll(" ", "_").replaceAll("/", "_");
+    var toolName = (decisionServiceName + " " + operationId).replaceAll(" ", "_").replaceAll("/", "_");
             
-    if (toolNames.includes(toolName))
-        return (decisionServiceId + " " + operationId).replaceAll(" ", "_").replaceAll("/", "_");
+    if (toolNames.includes(toolName)) {
+        toolName = (decisionServiceId + " " + operationId).replaceAll(" ", "_").replaceAll("/", "_");
+        if (toolNames.includes(toolName))
+            throw new Error("Tool name " + toolName  + " already exist");
+    }
 
     return toolName;
 }
