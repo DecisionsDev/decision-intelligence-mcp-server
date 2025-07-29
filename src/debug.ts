@@ -1,10 +1,10 @@
-var DEBUG = false;
+let DEBUG = false;
 
 export function setDebug(value: boolean): void {
     DEBUG = value;
 }
 
-export function debug(...data: any[]): void {
+export function debug(...data: (object|string)[]): void {
     if (DEBUG)
         console.error.apply(null, data);
 }
