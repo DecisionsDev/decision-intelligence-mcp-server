@@ -11,6 +11,9 @@ import { debug, setDebug } from "./debug.js";
 import { runHTTPServer } from "./httpserver.js";
 
 type parametersType = {[key: string]: any};
+type configType = {apikey: string, url: string, transport: string, debug: boolean};
+
+const version = String(process.env.npm_package_version);
 
 function getParameters(jsonSchema:any): parametersType {
     var params:any = {}
@@ -78,53 +81,60 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
     }
 }
 
-const version = String(process.env.npm_package_version);
+function parseCLI(): configType {
+    program
+        .name("di-mcp-server")
+        .description("MCP Server for IBM Decision Intelligence")
+        .version(version)
+        .option('--debug', 'Enable debug output')
+        .option('--url <string>', "Base URL for the Decision Runtime API")
+        .option('--apikey <string>', "API key for the Decision Runtime")
+        .option('--transport <string>', 'Transport mode: STDIO or HTTP');
 
-program
-    .name("di-mcp-server")
-    .description("MCP Server for IBM Decision Intelligence")
-    .version(version)
-    .option('--debug', 'Enable debug output')
-    .option('--url <string>', "Base URL for the Decision Runtime API")
-    .option('--apikey <string>', "API key for the Decision Runtime")
-    .option('--transport <string>', 'Transport mode: STDIO or HTTP');
+    program.parse();
 
-program.parse();
+    const options = program.opts();
 
-const options = program.opts();
-
-setDebug(options.debug || process.env.DEBUG === "true");
-
-const apikey: string = options.apikey || process.env.APIKEY;
-const baseURL: string = options.url || process.env.URL;
-const transportMode: string = options.transport || process.env.TRANSPORT || "STDIO";
-
-debug("APIKEY=" + apikey);
-debug("URL=" + baseURL);
-debug("TRANSPORT=" + transportMode);
-
-const server = new McpServer({
-    name: "di-mcp-server",
-    version: version
-});
-
-const spaceMetadata = await getMetadata(apikey, baseURL, "development");
-debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
-const serviceIds = getDecisionServiceIds(spaceMetadata);
-debug("serviceIds", JSON.stringify(serviceIds, null, " "));
-
-var toolNames: string[] = [];
-for (const serviceId of serviceIds) {
-    debug("serviceId", serviceId);
-    const openapi = await getDecisionServiceOpenAPI(apikey, baseURL, serviceId);
-    registerTool(server, apikey, baseURL, openapi, serviceId, toolNames);
+    return {
+        apikey:  options.apikey || process.env.APIKEY,
+        url: options.url || process.env.URL,
+        transport: options.transport || process.env.TRANSPORT || "STDIO",
+        debug: options.debug || process.env.DEBUG === "true"
+    };
 }
 
-if (transportMode === "HTTP") {
-    debug("IBM Decision Intelligence MCP Server version", version, "running on http");
-    runHTTPServer(server);
-} else {
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
-    debug("IBM Decision Intelligence MCP Server version", version, "running on stdio");
+async function runServer(cfg: configType) {
+    debug("APIKEY=" + cfg.apikey);
+    debug("URL=" + cfg.url);
+    debug("TRANSPORT=" + cfg.transport);
+
+    const server = new McpServer({
+        name: "di-mcp-server",
+        version: version
+    });
+
+    const spaceMetadata = await getMetadata(cfg.apikey, cfg.url, "development");
+    debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
+    const serviceIds = getDecisionServiceIds(spaceMetadata);
+    debug("serviceIds", JSON.stringify(serviceIds, null, " "));
+
+    var toolNames: string[] = [];
+    for (const serviceId of serviceIds) {
+        debug("serviceId", serviceId);
+        const openapi = await getDecisionServiceOpenAPI(cfg.apikey, cfg.url, serviceId);
+        registerTool(server, cfg.apikey, cfg.url, openapi, serviceId, toolNames);
+    }
+
+    if (cfg.transport === "HTTP") {
+        debug("IBM Decision Intelligence MCP Server version", version, "running on http");
+        runHTTPServer(server);
+    } else {
+        const transport = new StdioServerTransport();
+        await server.connect(transport);
+        debug("IBM Decision Intelligence MCP Server version", version, "running on stdio");
+    }
 }
+
+const config = parseCLI();
+setDebug(config.debug);
+runServer(config);
