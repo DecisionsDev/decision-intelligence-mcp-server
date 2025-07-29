@@ -295,18 +295,6 @@ describe('CLI Configuration', () => {
             }).toThrow('The Decision Runtime API key cannot be empty');
         });
 
-        test('should throw error for API key shorter than 8 characters', () => {
-            const apiKey = 'short'
-            expect(() => {
-                createConfiguration([
-                    'node', 'cli.js',
-                    '--url', url,
-                    '--apikey', apiKey,
-                    '--transport', 'STDIO'
-                ]);
-            }).toThrow(`The Decision Runtime API key '${apiKey}' is not valid: it must be at least 8 characters long`);
-        });
-
         test('should use API key from environment variable', () => {
             process.env.APIKEY = 'env-api-key-123';
 
@@ -484,7 +472,7 @@ describe('CLI Configuration', () => {
 
     describe('Error handling', () => {
         test('should fail fast on first validation error', () => {
-            const apiKey = 'short';
+            const apiKey = ' ';
             expect(() => {
                 createConfiguration([
                     'node', 'cli.js',
@@ -492,7 +480,7 @@ describe('CLI Configuration', () => {
                     '--apikey', apiKey,
                     '--transport', 'INVALID'
                 ]);
-            }).toThrow(`The Decision Runtime API key '${apiKey}' is not valid: it must be at least 8 characters long`); // Should throw on invalid API key first
+            }).toThrow(`The Decision Runtime API key cannot be empty`); // Should throw on invalid API key first
         });
 
         test('should provide descriptive error messages', () => {

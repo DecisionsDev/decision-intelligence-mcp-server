@@ -45,9 +45,6 @@ function validateApiKey(apiKey: string): string {
     if (apiKey.trim().length === 0) {
         throw new Error('The Decision Runtime API key cannot be empty');
     }
-    if (apiKey.length < 8) {
-        throw new Error(`The Decision Runtime API key '${apiKey}' is not valid: it must be at least 8 characters long`);
-    }
     return apiKey;
 }
 
