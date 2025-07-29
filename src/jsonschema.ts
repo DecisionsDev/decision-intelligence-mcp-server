@@ -1,5 +1,7 @@
 import { debug } from "./debug.js";
 
+export type jschemaType = {properties: {[key: string]: jschemaType}};
+
 function walk(schema: any, defs: any, history: any): void {
     if (schema["type"] === 'object') {
         if (schema.properties) {
@@ -30,7 +32,7 @@ function walk(schema: any, defs: any, history: any): void {
     }
 }
 
-export function expandJSONSchemaDefinition(schema: any, defs: any): object {
+export function expandJSONSchemaDefinition(schema: any, defs: any): jschemaType {
     var outSchema = {...schema};
 
     var expandedDefs = {... defs};
