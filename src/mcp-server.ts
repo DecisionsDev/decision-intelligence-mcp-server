@@ -28,14 +28,41 @@ function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): parametersType {
     return params;
 }
 
+function getToolDefinition(path: any, openapi: any) {
+        if (path.post == undefined || path.post.requestBody == undefined) {           
+            debug("no valid post information");
+            return null;
+        }
+
+        const operation = path.post.requestBody.content["application/json"];
+        const inputSchema = operation.schema;
+        debug("operation", operation);
+        debug("inputSchema", inputSchema);
+
+        const schemas = openapi.components == undefined ? null: openapi.components.schemas;
+        const operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, schemas)
+        debug("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
+
+        const serviceName = openapi.info["x-ibm-ads-decision-service-name"];
+        debug("decisionServiceName", serviceName);
+
+        const inputParameters: parametersType = getParameters(operationJsonInputSchema);
+
+    return {
+        title: path.post.summary,
+        description: path.post.description,
+        inputSchema: inputParameters
+    };
+}
+
 function registerTool(server: McpServer, apikey: string, baseURL: string, decisionOpenAPI: any, decisionServiceId: string, toolNames: string[]) {
     for (const key in decisionOpenAPI.paths) {
         const value = decisionOpenAPI.paths[key];
 
-        if (value == undefined 
-            || value.post == undefined
-            || value.post.requestBody == undefined) {           
-            debug("invalid openapi path ", JSON.stringify(value))
+        const toolDef = getToolDefinition(value, decisionOpenAPI);
+
+        if (toolDef == null) {
+            debug("Skipping invalid operation", key);
             continue ;
         }
 
@@ -46,19 +73,6 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
             continue ;
         }
 
-        debug("path info", value);
-
-        debug("Found operationName", key);
-
-        const operation = value.post.requestBody.content["application/json"];
-        const inputSchema = operation.schema;
-        debug("operation", operation);
-        debug("inputSchema", inputSchema);
-
-        const schemas = decisionOpenAPI.components == undefined ? null: decisionOpenAPI.components.schemas;
-        const operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, schemas)
-        debug("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
-
         const serviceName = decisionOpenAPI.info["x-ibm-ads-decision-service-name"];
         debug("decisionServiceName", serviceName);
 
@@ -66,15 +80,8 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
         debug("toolName", toolName, toolNames);
         toolNames.push(toolName);
 
-        const inputParameters: parametersType = getParameters(operationJsonInputSchema);
-
         server.registerTool(
-            toolName,
-            {
-                title: value.post.summary,
-                description: value.post.description,
-                inputSchema: inputParameters
-            },
+            toolName, toolDef,
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             async (input, n) => {
                 const decInput = input;
