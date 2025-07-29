@@ -30,7 +30,14 @@ function getParameters(jsonSchema: jschemaType): parametersType {
     return params;
 }
 
-function registerTool(server: McpServer, apikey: string, baseURL: string, decisionOpenAPI: object, decisionServiceId: string, toolNames: string[]) {
+type openapiPathType = {};
+type openapiType = { 
+    info: {[key: string]: string}, 
+    paths: undefined|{[key: string]: openapiPathType},
+    components: any|undefined
+};
+
+function registerTool(server: McpServer, apikey: string, baseURL: string, decisionOpenAPI: openapiType, decisionServiceId: string, toolNames: string[]) {
     for (const key in decisionOpenAPI.paths) {
         const value = decisionOpenAPI.paths[key];
         const operationId = value.post.operationId;
