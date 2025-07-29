@@ -1,12 +1,12 @@
-// command-line.test.ts
-import { createConfiguration } from '../src/command-line.js';
+import {createConfiguration} from '../src/command-line.js';
+import {debug, setDebug} from '../src/debug.js';
+import {DecisionRuntime, parseDecisionRuntime} from '../src/decision-runtime.js';
 
 // Mock the debug function and setDebug function
 jest.mock('../src/debug', () => ({
     debug: jest.fn(),
     setDebug: jest.fn(),
 }));
-import { debug, setDebug } from '../src/debug.js';
 const mockDebug = debug as jest.MockedFunction<typeof debug>;
 const mockSetDebug = setDebug as jest.MockedFunction<typeof setDebug>;
 
@@ -18,15 +18,9 @@ jest.mock('../src/decision-runtime', () => ({
     },
     parseDecisionRuntime: jest.fn(),
 }));
-import { parseDecisionRuntime, DecisionRuntime } from '../src/decision-runtime.js';
 const mockParseDecisionRuntime = parseDecisionRuntime as jest.MockedFunction<typeof parseDecisionRuntime>;
 
-// Mock version
-const version = '1.0.0';
-jest.mock('../package.json', () => ({
-    version: version
-}));
-
+const version = '2.0.0';
 describe('CLI Configuration', () => {
     let originalEnv: NodeJS.ProcessEnv;
 
@@ -34,6 +28,7 @@ describe('CLI Configuration', () => {
         // Save original environment
         originalEnv = process.env;
         process.env = { ...originalEnv };
+        process.env.npm_package_version = version;
 
         // Clear all mocks
         jest.clearAllMocks();
@@ -337,8 +332,7 @@ describe('CLI Configuration', () => {
     });
 
     describe('createConfiguration', () => {
-        test.skip('should create complete configuration object', () => {
-            process.env.npm_package_version = version;
+        test('should create complete configuration object', () => {
             const config = createConfiguration([
                 'node', 'cli.js',
                 '--debug',
@@ -355,14 +349,14 @@ describe('CLI Configuration', () => {
                 url: url,
                 version: version,
                 isDebugEnabled: true,
-                isDiruntime: false,
-                isAdsruntime: true,
+                isDiRuntime: false,
+                isAdsRuntime: true,
                 isHttpTransport: true,
                 isStdioTransport: false,
             });
         });
 
-        test.skip('should create configuration with defaults', () => {
+        test('should create configuration with defaults', () => {
             process.env.URL = url;
             process.env.APIKEY = 'validkey123';
             process.env.TRANSPORT = 'STDIO';
@@ -374,7 +368,7 @@ describe('CLI Configuration', () => {
                 runtime: DecisionRuntime.DI,
                 transport: 'STDIO',
                 url: url,
-                version: '1.0.0',
+                version: version,
                 isDebugEnabled: false,
                 isDiRuntime: true,
                 isAdsRuntime: false,
@@ -407,8 +401,7 @@ describe('CLI Configuration', () => {
         });
 
         test('should prioritize CLI arguments over environment variables', () => {
-            const urlFromEnv = 'https://env-api.example.com';
-            process.env.URL = urlFromEnv;
+            process.env.URL = 'https://env-api.example.com';
             process.env.APIKEY = 'env-api-key';
             process.env.TRANSPORT = 'STDIO';
             process.env.RUNTIME = 'DI';
@@ -425,7 +418,7 @@ describe('CLI Configuration', () => {
             expect(config.url).toBe(urlFromCli);
             expect(config.apiKey).toBe('cli-api-key-123');
             expect(config.transport).toBe('HTTP');
-                expect(config.runtime).toBe(DecisionRuntime.ADS);
+            expect(config.runtime).toBe(DecisionRuntime.ADS);
         });
 
         test('should set helper properties correctly for DI runtime', () => {

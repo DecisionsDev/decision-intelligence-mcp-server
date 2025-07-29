@@ -1,9 +1,6 @@
-// command-line.ts
 import {Command} from 'commander';
 import {DecisionRuntime, parseDecisionRuntime} from "./decision-runtime.js";
 import {debug, setDebug} from "./debug.js";
-
-const version = process.env.npm_package_version || require('./package.json').version;
 
 // Configuration validation functions
 function validateUrl(url: string) : string {
@@ -56,6 +53,7 @@ function validateApiKey(apiKey: string): string {
 
 export function createConfiguration(cliArguments?: readonly string[]) {
     const program = new Command();
+    const version = String(process.env.npm_package_version);
     program
         .name("di-mcp-server")
         .description("MCP Server for IBM Decision Intelligence")
