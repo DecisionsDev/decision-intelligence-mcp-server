@@ -353,7 +353,7 @@ describe('CLI Configuration', () => {
                 transport: 'STDIO',
                 url: url,
                 version: version,
-                debugEnabled: false
+                debugEnabled: originalEnv.DEBUG === 'true'
             });
         });
 
