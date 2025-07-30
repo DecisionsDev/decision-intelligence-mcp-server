@@ -9,7 +9,7 @@ export function executeDecision(apikey:string, baseURL:string, decisionId:string
         +"/execute";
 
     const headers = {
-        "Content-Type": "application/json",
+        ["Content-Type"]: "application/json",
         "accept": "application/json",
         "apikey": apikey
     };
@@ -26,7 +26,7 @@ export function executeLastDeployedDecisionService(apikey:string, baseURL:string
       + "/execute?decisionServiceId=" + encodeURIComponent(serviceId);
 
     const headers = {
-        "Content-Type": "application/json",
+        ["Content-Type"]: "application/json",
         "accept": "application/json",
         "apikey": apikey
     };
@@ -55,11 +55,11 @@ export function getMetadata(apikey:string, baseURL:string, deploymentSpace:strin
     );
 }
 
-type metadataType = {decisionServiceId: {value: string}};
-export function getDecisionServiceIds(metadata: metadataType[]): string[] {
+type MetadataType = {decisionServiceId: {value: string}};
+export function getDecisionServiceIds(metadata: MetadataType[]): string[] {
     const ids: string[] = [];
 
-    metadata.forEach((m: metadataType) => {
+    metadata.forEach((m: MetadataType) => {
         const id = m.decisionServiceId.value;
         if (!ids.includes(id))
             ids.push(id);

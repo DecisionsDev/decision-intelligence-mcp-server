@@ -14,12 +14,12 @@ import {jsonSchemaToZod} from "json-schema-to-zod";
 import {evalTS} from "./ts.js";
 import { OpenAPIV3_1 } from "openapi-types";
 import { ZodRawShape } from "zod";
-import { configType } from "./command-line.js";
+import { Configuration } from "./command-line.js";
 
-type parametersType = ZodRawShape;
+type Parameters = ZodRawShape;
 
-function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): parametersType {
-    const params: parametersType = {}
+function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): Parameters {
+    const params: Parameters = {}
 
     for (const propName in jsonSchema.properties) {
         const jsonSchemaProp = jsonSchema.properties[propName];
@@ -71,7 +71,7 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
         debug("toolName", toolName, toolNames);
         toolNames.push(toolName);
 
-        const inputParameters: parametersType = getParameters(operationJsonInputSchema);
+        const inputParameters: Parameters = getParameters(operationJsonInputSchema);
 
         server.registerTool(
             toolName,
@@ -80,8 +80,7 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
                 description: value.post.description,
                 inputSchema: inputParameters
             },
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            async (input, n) => {
+            async (input) => {
                 const decInput = input;
                 debug("Execute decision with", JSON.stringify(decInput, null, " "))
                 const str = await executeLastDeployedDecisionService(apikey, baseURL, decisionServiceId, operationId, decInput);
@@ -93,7 +92,7 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
     }
 }
 
-export async function createMcpServer(name: string, configuration: configType): Promise<McpServer> {
+export async function createMcpServer(name: string, configuration: Configuration): Promise<McpServer> {
     const version = configuration.version;
     const server = new McpServer({
         name: name,
@@ -115,7 +114,7 @@ export async function createMcpServer(name: string, configuration: configType): 
         registerTool(server, apikey, baseURL, openapi, serviceId, toolNames);
     }
 
-    if (configuration.isHttpTransport) {
+    if (configuration.isHttpTransport()) {
         debug("IBM Decision Intelligence MCP Server version", version, "running on http");
         runHTTPServer(server);
     } else {

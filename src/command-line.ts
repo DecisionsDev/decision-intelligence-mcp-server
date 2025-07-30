@@ -2,19 +2,118 @@ import {Command} from 'commander';
 import {DecisionRuntime, parseDecisionRuntime} from "./decision-runtime.js";
 import {debug, setDebug} from "./debug.js";
 
-export type configType = {
-        apiKey: string,
-        runtime: string,
-        transport: string,
-        url: string,
-        version: string,
-        // Helper properties
-        isDebugEnabled: boolean,
-        isDiRuntime: boolean,
-        isAdsRuntime: boolean,
-        isHttpTransport: boolean,
-        isStdioTransport: boolean,
-};
+export class Configuration {
+    static readonly STDIO = "STDIO";
+    static readonly HTTP = "HTTP";
+
+    constructor(
+        public apiKey: string,
+        public runtime: DecisionRuntime,
+        public transport: string,
+        public url: string,
+        public version: string,
+        public debugEnabled: boolean
+    ) {
+    }
+
+    static defaultRuntime(): DecisionRuntime {
+        return DecisionRuntime.DI;
+    }
+
+    static isDefaultRuntime(runtime: DecisionRuntime): boolean {
+        return Configuration.defaultRuntime() == runtime;
+    }
+
+    static defaultTransport(): string {
+        return Configuration.STDIO;
+    }
+
+    static isDefaultTransport(transport: string) {
+        return Configuration.defaultTransport() == transport;
+    }
+
+    static builder() {
+        return new ConfigurationBuilder();
+    }
+
+    isDiRuntime(): boolean {
+        return this.runtime == DecisionRuntime.DI;
+    }
+
+    isAdsRuntime(): boolean {
+        return this.runtime == DecisionRuntime.ADS;
+    }
+
+    isStdioTransport(): boolean {
+        return this.transport === Configuration.STDIO;
+    }
+    isHttpTransport(): boolean {
+        return this.transport === Configuration.HTTP;
+    }
+}
+
+class ConfigurationBuilder {
+    private configuration: Partial<Configuration> = {};
+
+    apiKey(apiKey: string): ConfigurationBuilder {
+        this.configuration.apiKey = apiKey;
+        return this;
+    }
+
+    runtime(runtime: DecisionRuntime): ConfigurationBuilder {
+        this.configuration.runtime = this.getRuntime(runtime);
+        return this;
+    }
+
+    transport(transport: string): ConfigurationBuilder {
+        this.configuration.transport = this.getTransport(transport);
+        return this;
+    }
+
+    url(url: string): ConfigurationBuilder {
+        this.configuration.url = url;
+        return this;
+    }
+
+    version(version: string): ConfigurationBuilder {
+        this.configuration.version = version;
+        return this;
+    }
+
+    debug(enabled: boolean = true): ConfigurationBuilder {
+        this.configuration.debugEnabled = enabled;
+        return this;
+    }
+
+    build(): Configuration {
+        const required: (keyof Configuration)[] = [
+            'apiKey', 'url', 'version'
+        ];
+
+        const missing = required.filter(key => !this.configuration[key]);
+
+        if (missing.length > 0) {
+            throw new Error(`Missing required configuration fields: ${missing.join(', ')}`);
+        }
+
+        return new Configuration(
+            this.configuration.apiKey!,
+            this.getRuntime(this.configuration.runtime),
+            this.getTransport(this.configuration.transport),
+            this.configuration.url!,
+            this.configuration.version!,
+            this.configuration.debugEnabled ?? false
+        );
+    }
+
+    private getTransport(transport: string | undefined) {
+        return transport || Configuration.defaultTransport();
+    }
+
+    private getRuntime(runtime: DecisionRuntime | undefined) {
+        return runtime || Configuration.defaultRuntime();
+    }
+}
 
 // Configuration validation functions
 function validateUrl(url: string) : string {
@@ -33,17 +132,22 @@ function validateUrl(url: string) : string {
 function validateTransport(transport: string) :string {
     debug("TRANSPORT=" + transport);
     if (transport === undefined) {
-        throw new Error('The transport protocol is not defined');
-    }
-    const validTransports = ['STDIO', 'HTTP'];
-    if (!validTransports.includes(transport)) {
-        throw new Error(`Invalid transport protocol: '${transport}'. Must be one of: '${validTransports.join('\', \'')}'`);
+        debug(`The transport protocol is not defined. Using '${Configuration.defaultTransport()}'`);
+    } else {
+        const validTransports = ['STDIO', 'HTTP'];
+        if (!validTransports.includes(transport)) {
+            throw new Error(`Invalid transport protocol: '${transport}'. Must be one of: '${validTransports.join('\', \'')}'`);
+        }
     }
     return transport;
 }
 
 function validateDecisionRuntime(runtime: string): DecisionRuntime {
     debug("RUNTIME=" + runtime);
+    if (runtime === undefined) {
+        debug(`The Decision Runtime is not defined. Using '${Configuration.defaultRuntime()}'`);
+        return runtime;
+    }
     const decisionRuntime = parseDecisionRuntime(runtime);
     if (decisionRuntime === undefined) {
         throw new Error(`Invalid target Decision Runtime: '${decisionRuntime}'. Must be one of: '${Object.values(DecisionRuntime).join('\', \'')}'}`);
@@ -62,7 +166,7 @@ function validateApiKey(apiKey: string): string {
     return apiKey;
 }
 
-export function createConfiguration(cliArguments?: readonly string[]): configType {
+export function createConfiguration(cliArguments?: readonly string[]): Configuration {
     const program = new Command();
     const version = String(process.env.npm_package_version);
     program
@@ -83,22 +187,17 @@ export function createConfiguration(cliArguments?: readonly string[]): configTyp
 
     // Validate all options;
     const apiKey = validateApiKey(options.apikey || process.env.APIKEY);
-    const decisionRuntime = validateDecisionRuntime(options["runtime"] || process.env.RUNTIME || DecisionRuntime.DI);
-    const transport = validateTransport(options.transport || process.env.TRANSPORT || "STDIO");
+    const runtime = validateDecisionRuntime(options["runtime"] || process.env.RUNTIME);
+    const transport = validateTransport(options.transport || process.env.TRANSPORT);
     const url = validateUrl(options.url || process.env.URL);
 
     // Create and return configuration object
-    return {
-        apiKey: apiKey,
-        runtime: decisionRuntime,
-        transport: transport,
-        url: url,
-        version: version,
-        // Helper properties
-        isDebugEnabled: debugFlag,
-        isDiRuntime: decisionRuntime == DecisionRuntime.DI,
-        isAdsRuntime: decisionRuntime == DecisionRuntime.ADS,
-        isHttpTransport: transport === 'HTTP',
-        isStdioTransport: transport === 'STDIO',
-    };
+    return Configuration.builder()
+        .apiKey(apiKey)
+        .url(url)
+        .runtime(runtime)
+        .transport(transport)
+        .version(version)
+        .debug(debugFlag)
+        .build();
 }
