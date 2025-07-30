@@ -19,13 +19,6 @@ export default tseslint.config(
                     "selector": ["class", "interface", "typeAlias", "enum"],
                     "format": ["PascalCase"]
                 },
-                // Allow UPPER_CASE for static readonly class properties (constants)
-                // {
-                //     "selector": "classProperty",
-                //     "modifiers": ["static"],
-                //     "format": ["UPPER_CASE", "camelCase"]
-                // },
-                // Alternative: Only allow UPPER_CASE for static readonly properties
                 {
                     "selector": "classProperty",
                     "modifiers": ["static", "readonly"],
