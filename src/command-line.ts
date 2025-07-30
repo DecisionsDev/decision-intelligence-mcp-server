@@ -20,16 +20,8 @@ export class Configuration {
         return DecisionRuntime.DI;
     }
 
-    static isDefaultRuntime(runtime: DecisionRuntime): boolean {
-        return Configuration.defaultRuntime() == runtime;
-    }
-
     static defaultTransport(): string {
         return Configuration.STDIO;
-    }
-
-    static isDefaultTransport(transport: string) {
-        return Configuration.defaultTransport() == transport;
     }
 
     static builder() {
