@@ -16,10 +16,8 @@ import { OpenAPIV3_1 } from "openapi-types";
 import { ZodRawShape } from "zod";
 import { Configuration } from "./command-line.js";
 
-type Parameters = ZodRawShape;
-
 function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): ZodRawShape {
-    const params: Parameters = {}
+    const params: ZodRawShape = {}
 
     for (const propName in jsonSchema.properties) {
         const jsonSchemaProp = jsonSchema.properties[propName];
