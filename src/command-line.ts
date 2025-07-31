@@ -14,6 +14,8 @@ export class Configuration {
         public version: string,
         public debugEnabled: boolean
     ) {
+        this.runtime = runtime || Configuration.defaultRuntime();
+        this.transport = transport || Configuration.defaultTransport();
     }
 
     static defaultRuntime(): DecisionRuntime {
@@ -22,10 +24,6 @@ export class Configuration {
 
     static defaultTransport(): string {
         return Configuration.STDIO;
-    }
-
-    static builder() {
-        return new ConfigurationBuilder();
     }
 
     isDiRuntime(): boolean {
@@ -41,69 +39,6 @@ export class Configuration {
     }
     isHttpTransport(): boolean {
         return this.transport === Configuration.HTTP;
-    }
-}
-
-class ConfigurationBuilder {
-    private configuration: Partial<Configuration> = {};
-
-    apiKey(apiKey: string): ConfigurationBuilder {
-        this.configuration.apiKey = apiKey;
-        return this;
-    }
-
-    runtime(runtime: DecisionRuntime): ConfigurationBuilder {
-        this.configuration.runtime = this.getRuntime(runtime);
-        return this;
-    }
-
-    transport(transport: string): ConfigurationBuilder {
-        this.configuration.transport = this.getTransport(transport);
-        return this;
-    }
-
-    url(url: string): ConfigurationBuilder {
-        this.configuration.url = url;
-        return this;
-    }
-
-    version(version: string): ConfigurationBuilder {
-        this.configuration.version = version;
-        return this;
-    }
-
-    debug(enabled: boolean = true): ConfigurationBuilder {
-        this.configuration.debugEnabled = enabled;
-        return this;
-    }
-
-    build(): Configuration {
-        const required: (keyof Configuration)[] = [
-            'apiKey', 'url', 'version'
-        ];
-
-        const missing = required.filter(key => !this.configuration[key]);
-
-        if (missing.length > 0) {
-            throw new Error(`Missing required configuration fields: ${missing.join(', ')}`);
-        }
-
-        return new Configuration(
-            this.configuration.apiKey!,
-            this.getRuntime(this.configuration.runtime),
-            this.getTransport(this.configuration.transport),
-            this.configuration.url!,
-            this.configuration.version!,
-            this.configuration.debugEnabled ?? false
-        );
-    }
-
-    private getTransport(transport: string | undefined) {
-        return transport || Configuration.defaultTransport();
-    }
-
-    private getRuntime(runtime: DecisionRuntime | undefined) {
-        return runtime || Configuration.defaultRuntime();
     }
 }
 
@@ -184,12 +119,5 @@ export function createConfiguration(cliArguments?: readonly string[]): Configura
     const url = validateUrl(options.url || process.env.URL);
 
     // Create and return configuration object
-    return Configuration.builder()
-        .apiKey(apiKey)
-        .url(url)
-        .runtime(runtime)
-        .transport(transport)
-        .version(version)
-        .debug(debugFlag)
-        .build();
+    return new Configuration(apiKey, runtime, transport, url, version, debugFlag);
 }
