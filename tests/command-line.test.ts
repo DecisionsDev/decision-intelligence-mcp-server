@@ -336,11 +336,7 @@ describe('CLI Configuration', () => {
                 transport: 'HTTP',
                 url: url,
                 version: version,
-                isDebugEnabled: true,
-                isDiRuntime: false,
-                isAdsRuntime: true,
-                isHttpTransport: true,
-                isStdioTransport: false,
+                debugEnabled: true
             });
         });
 
@@ -357,11 +353,7 @@ describe('CLI Configuration', () => {
                 transport: 'STDIO',
                 url: url,
                 version: version,
-                isDebugEnabled: false,
-                isDiRuntime: true,
-                isAdsRuntime: false,
-                isHttpTransport: false,
-                isStdioTransport: true,
+                debugEnabled: originalEnv.DEBUG === 'true'
             });
         });
 
@@ -372,7 +364,7 @@ describe('CLI Configuration', () => {
 
             const config = createConfiguration(['node', 'cli.js', '--debug']);
 
-            expect(config.isDebugEnabled).toBe(true);
+            expect(config.debugEnabled).toBe(true);
             expect(mockSetDebug).toHaveBeenCalledWith(true);
         });
 
@@ -384,7 +376,7 @@ describe('CLI Configuration', () => {
 
             const config = createConfiguration(['node', 'cli.js']);
 
-            expect(config.isDebugEnabled).toBe(true);
+            expect(config.debugEnabled).toBe(true);
             expect(mockSetDebug).toHaveBeenCalledWith(true);
         });
 
@@ -419,8 +411,8 @@ describe('CLI Configuration', () => {
                 '--runtime', 'DI'
             ]);
 
-            expect(config.isDiRuntime).toBe(true);
-            expect(config.isAdsRuntime).toBe(false);
+            expect(config.isDiRuntime()).toBe(true);
+            expect(config.isAdsRuntime()).toBe(false);
         });
 
         test('should set helper properties correctly for ADS runtime', () => {
@@ -433,8 +425,8 @@ describe('CLI Configuration', () => {
                 '--runtime', 'ADS'
             ]);
 
-            expect(config.isDiRuntime).toBe(false);
-            expect(config.isAdsRuntime).toBe(true);
+            expect(config.isDiRuntime()).toBe(false);
+            expect(config.isAdsRuntime()).toBe(true);
         });
 
         test('should set transport helper properties correctly', () => {
@@ -451,10 +443,10 @@ describe('CLI Configuration', () => {
                 '--transport', 'HTTP'
             ]);
 
-            expect(stdioConfig.isStdioTransport).toBe(true);
-            expect(stdioConfig.isHttpTransport).toBe(false);
-            expect(httpConfig.isStdioTransport).toBe(false);
-            expect(httpConfig.isHttpTransport).toBe(true);
+            expect(stdioConfig.isStdioTransport()).toBe(true);
+            expect(stdioConfig.isHttpTransport()).toBe(false);
+            expect(httpConfig.isStdioTransport()).toBe(false);
+            expect(httpConfig.isHttpTransport()).toBe(true);
         });
 
         test('should parse arguments when no arguments provided', () => {

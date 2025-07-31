@@ -2,6 +2,46 @@ import {Command} from 'commander';
 import {DecisionRuntime, parseDecisionRuntime} from "./decision-runtime.js";
 import {debug, setDebug} from "./debug.js";
 
+export class Configuration {
+    static readonly STDIO = "STDIO";
+    static readonly HTTP = "HTTP";
+
+    constructor(
+        public apiKey: string,
+        public runtime: DecisionRuntime,
+        public transport: string,
+        public url: string,
+        public version: string,
+        public debugEnabled: boolean
+    ) {
+        this.runtime = runtime || Configuration.defaultRuntime();
+        this.transport = transport || Configuration.defaultTransport();
+    }
+
+    static defaultRuntime(): DecisionRuntime {
+        return DecisionRuntime.DI;
+    }
+
+    static defaultTransport(): string {
+        return Configuration.STDIO;
+    }
+
+    isDiRuntime(): boolean {
+        return this.runtime == DecisionRuntime.DI;
+    }
+
+    isAdsRuntime(): boolean {
+        return this.runtime == DecisionRuntime.ADS;
+    }
+
+    isStdioTransport(): boolean {
+        return this.transport === Configuration.STDIO;
+    }
+    isHttpTransport(): boolean {
+        return this.transport === Configuration.HTTP;
+    }
+}
+
 // Configuration validation functions
 function validateUrl(url: string) : string {
     debug("URL=" + url);
@@ -19,17 +59,22 @@ function validateUrl(url: string) : string {
 function validateTransport(transport: string) :string {
     debug("TRANSPORT=" + transport);
     if (transport === undefined) {
-        throw new Error('The transport protocol is not defined');
-    }
-    const validTransports = ['STDIO', 'HTTP'];
-    if (!validTransports.includes(transport)) {
-        throw new Error(`Invalid transport protocol: '${transport}'. Must be one of: '${validTransports.join('\', \'')}'`);
+        debug(`The transport protocol is not defined. Using '${Configuration.defaultTransport()}'`);
+    } else {
+        const validTransports = ['STDIO', 'HTTP'];
+        if (!validTransports.includes(transport)) {
+            throw new Error(`Invalid transport protocol: '${transport}'. Must be one of: '${validTransports.join('\', \'')}'`);
+        }
     }
     return transport;
 }
 
 function validateDecisionRuntime(runtime: string): DecisionRuntime {
     debug("RUNTIME=" + runtime);
+    if (runtime === undefined) {
+        debug(`The Decision Runtime is not defined. Using '${Configuration.defaultRuntime()}'`);
+        return runtime;
+    }
     const decisionRuntime = parseDecisionRuntime(runtime);
     if (decisionRuntime === undefined) {
         throw new Error(`Invalid target Decision Runtime: '${decisionRuntime}'. Must be one of: '${Object.values(DecisionRuntime).join('\', \'')}'}`);
@@ -48,7 +93,7 @@ function validateApiKey(apiKey: string): string {
     return apiKey;
 }
 
-export function createConfiguration(cliArguments?: readonly string[]) {
+export function createConfiguration(cliArguments?: readonly string[]): Configuration {
     const program = new Command();
     const version = String(process.env.npm_package_version);
     program
@@ -69,22 +114,10 @@ export function createConfiguration(cliArguments?: readonly string[]) {
 
     // Validate all options;
     const apiKey = validateApiKey(options.apikey || process.env.APIKEY);
-    const decisionRuntime = validateDecisionRuntime(options["runtime"] || process.env.RUNTIME || DecisionRuntime.DI);
-    const transport = validateTransport(options.transport || process.env.TRANSPORT || "STDIO");
+    const runtime = validateDecisionRuntime(options["runtime"] || process.env.RUNTIME);
+    const transport = validateTransport(options.transport || process.env.TRANSPORT);
     const url = validateUrl(options.url || process.env.URL);
 
     // Create and return configuration object
-    return {
-        apiKey: apiKey,
-        runtime: decisionRuntime,
-        transport: transport,
-        url: url,
-        version: version,
-        // Helper properties
-        isDebugEnabled: debugFlag,
-        isDiRuntime: decisionRuntime == DecisionRuntime.DI,
-        isAdsRuntime: decisionRuntime == DecisionRuntime.ADS,
-        isHttpTransport: transport === 'HTTP',
-        isStdioTransport: transport === 'STDIO',
-    };
+    return new Configuration(apiKey, runtime, transport, url, version, debugFlag);
 }

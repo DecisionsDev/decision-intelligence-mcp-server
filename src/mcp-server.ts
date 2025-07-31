@@ -12,10 +12,14 @@ import {expandJSONSchemaDefinition} from './jsonschema.js';
 import {getToolName} from "./ditool.js";
 import {jsonSchemaToZod} from "json-schema-to-zod";
 import {evalTS} from "./ts.js";
-type parametersType = {[key: string]: any};
+import { OpenAPIV3_1 } from "openapi-types";
+import { ZodRawShape } from "zod";
+import { Configuration } from "./command-line.js";
 
-function getParameters(jsonSchema:any): parametersType {
-    const params:any = {}
+type Parameters = ZodRawShape;
+
+function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): Parameters {
+    const params: Parameters = {}
 
     for (const propName in jsonSchema.properties) {
         const jsonSchemaProp = jsonSchema.properties[propName];
@@ -26,30 +30,48 @@ function getParameters(jsonSchema:any): parametersType {
     return params;
 }
 
-function registerTool(server: McpServer, apikey: string, baseURL: string, decisionOpenAPI: any, decisionServiceId: string, toolNames: string[]) {
+function registerTool(server: McpServer, apikey: string, baseURL: string, decisionOpenAPI: OpenAPIV3_1.Document, decisionServiceId: string, toolNames: string[]) {
     for (const key in decisionOpenAPI.paths) {
         const value = decisionOpenAPI.paths[key];
+
+        if (value == undefined 
+            || value.post == undefined
+            || value.post.requestBody == undefined) {           
+            debug("invalid openapi path ", JSON.stringify(value))
+            continue ;
+        }
+
         const operationId = value.post.operationId;
+
+        if (operationId == undefined) {
+            debug("no operationId for ", JSON.stringify(value))
+            continue ;
+        }
+
         debug("path info", value);
 
         debug("Found operationName", key);
 
-        const operation = value.post.requestBody.content["application/json"];
+        const body = value.post.requestBody;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const operation = (body as any).content["application/json"];
         const inputSchema = operation.schema;
         debug("operation", operation);
         debug("inputSchema", inputSchema);
 
-        const operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, decisionOpenAPI.components.schemas)
+        const schemas = decisionOpenAPI.components == undefined ? null: decisionOpenAPI.components.schemas;
+        const operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, schemas)
         debug("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
 
-        const serviceName = decisionOpenAPI.info["x-ibm-ads-decision-service-name"];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const serviceName = (decisionOpenAPI as any).info["x-ibm-ads-decision-service-name"];
         debug("decisionServiceName", serviceName);
 
         const toolName = getToolName(operationId, serviceName, decisionServiceId, toolNames);
         debug("toolName", toolName, toolNames);
         toolNames.push(toolName);
 
-        const inputParameters:any = getParameters(operationJsonInputSchema);
+        const inputParameters: Parameters = getParameters(operationJsonInputSchema);
 
         server.registerTool(
             toolName,
@@ -58,7 +80,7 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
                 description: value.post.description,
                 inputSchema: inputParameters
             },
-            async (input, {}) => {
+            async (input) => {
                 const decInput = input;
                 debug("Execute decision with", JSON.stringify(decInput, null, " "))
                 const str = await executeLastDeployedDecisionService(apikey, baseURL, decisionServiceId, operationId, decInput);
@@ -70,7 +92,7 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
     }
 }
 
-export async function createMcpServer(name: string, configuration: any): Promise<McpServer> {
+export async function createMcpServer(name: string, configuration: Configuration): Promise<McpServer> {
     const version = configuration.version;
     const server = new McpServer({
         name: name,
@@ -88,10 +110,11 @@ export async function createMcpServer(name: string, configuration: any): Promise
     for (const serviceId of serviceIds) {
         debug("serviceId", serviceId);
         const openapi = await getDecisionServiceOpenAPI(apikey, baseURL, serviceId);
+        
         registerTool(server, apikey, baseURL, openapi, serviceId, toolNames);
     }
 
-    if (configuration.isHttpTransport) {
+    if (configuration.isHttpTransport()) {
         debug("IBM Decision Intelligence MCP Server version", version, "running on http");
         runHTTPServer(server);
     } else {

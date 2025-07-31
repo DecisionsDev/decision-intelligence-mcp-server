@@ -10,10 +10,10 @@
 export function getToolName(operationId: string, 
                             decisionServiceName: string,
                             decisionServiceId: string,
-                            toolNames: string[]): any {
+                            toolNames: string[]): string {
     // WO does not support white spaces for tool names
     // Claude does not support /
-    var toolName = (decisionServiceName + " " + operationId).replaceAll(" ", "_").replaceAll("/", "_");
+    let toolName = (decisionServiceName + " " + operationId).replaceAll(" ", "_").replaceAll("/", "_");
             
     if (toolNames.includes(toolName)) {
         toolName = (decisionServiceId + " " + operationId).replaceAll(" ", "_").replaceAll("/", "_");
