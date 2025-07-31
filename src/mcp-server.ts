@@ -18,7 +18,7 @@ import { Configuration } from "./command-line.js";
 
 type Parameters = ZodRawShape;
 
-function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): Parameters {
+function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): ZodRawShape {
     const params: Parameters = {}
 
     for (const propName in jsonSchema.properties) {
@@ -30,14 +30,38 @@ function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): Parameters {
     return params;
 }
 
+function getToolDefinition(path: OpenAPIV3_1.PathItemObject, components: OpenAPIV3_1.ComponentsObject|null|undefined) {
+    if (path.post == undefined || path.post.requestBody == undefined) {
+        debug("invalid path", JSON.stringify(path));
+        return null;
+    }
+
+    const body = path.post.requestBody;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const operation = (body as any).content["application/json"];
+    const inputSchema = operation.schema;
+    debug("operation", operation);
+    debug("inputSchema", inputSchema);
+
+    const schemas = components == undefined ? null: components.schemas;
+    const operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, schemas);
+    debug("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
+
+    return {
+        title: path.post.summary,
+        description: path.post.description,
+        inputSchema: getParameters(operationJsonInputSchema)
+    };
+}
+
 function registerTool(server: McpServer, apikey: string, baseURL: string, decisionOpenAPI: OpenAPIV3_1.Document, decisionServiceId: string, toolNames: string[]) {
     for (const key in decisionOpenAPI.paths) {
+        debug("Found operationName", key);
+
         const value = decisionOpenAPI.paths[key];
 
-        if (value == undefined 
-            || value.post == undefined
-            || value.post.requestBody == undefined) {           
-            debug("invalid openapi path ", JSON.stringify(value))
+        if (value == undefined || value.post == undefined) {           
+            debug("invalid openapi for path", key)
             continue ;
         }
 
@@ -47,10 +71,13 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
             debug("no operationId for ", JSON.stringify(value))
             continue ;
         }
+        
+        const toolDef = getToolDefinition(value, decisionOpenAPI.components);
 
-        debug("path info", value);
-
-        debug("Found operationName", key);
+        if (toolDef == null) {
+            debug("no tooldef for ", key);
+            continue ;
+        }
 
         const body = value.post.requestBody;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,10 +85,6 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
         const inputSchema = operation.schema;
         debug("operation", operation);
         debug("inputSchema", inputSchema);
-
-        const schemas = decisionOpenAPI.components == undefined ? null: decisionOpenAPI.components.schemas;
-        const operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, schemas)
-        debug("operationJsonSchema after expand", JSON.stringify(operationJsonInputSchema, null, " "));
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const serviceName = (decisionOpenAPI as any).info["x-ibm-ads-decision-service-name"];
@@ -71,15 +94,9 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
         debug("toolName", toolName, toolNames);
         toolNames.push(toolName);
 
-        const inputParameters: Parameters = getParameters(operationJsonInputSchema);
-
         server.registerTool(
             toolName,
-            {
-                title: value.post.summary,
-                description: value.post.description,
-                inputSchema: inputParameters
-            },
+            toolDef,
             async (input) => {
                 const decInput = input;
                 debug("Execute decision with", JSON.stringify(decInput, null, " "))
