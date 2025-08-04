@@ -107,7 +107,7 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
     }
 }
 
-export async function createMcpServer(name: string, configuration: Configuration): Promise<McpServer> {
+export async function createMcpServer(name: string, configuration: Configuration): Promise<{ server: McpServer, transport?: StdioServerTransport }> {
     const version = configuration.version;
     const server = new McpServer({
         name: name,
@@ -132,10 +132,11 @@ export async function createMcpServer(name: string, configuration: Configuration
     if (configuration.isHttpTransport()) {
         debug("IBM Decision Intelligence MCP Server version", version, "running on http");
         runHTTPServer(server);
-    } else {
-        const transport = new StdioServerTransport();
-        await server.connect(transport);
-        debug("IBM Decision Intelligence MCP Server version", version, "running on stdio");
+        return { server }
     }
-    return server;
+
+    const transport = configuration.transport!;
+    await server.connect(transport);
+    debug("IBM Decision Intelligence MCP Server version", version, "running on stdio");
+    return { server, transport }
 }
