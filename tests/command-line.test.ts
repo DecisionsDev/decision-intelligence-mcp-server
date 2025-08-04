@@ -1,6 +1,7 @@
 import {createConfiguration} from '../src/command-line.js';
 import {debug, setDebug} from '../src/debug.js';
 import {DecisionRuntime, parseDecisionRuntime} from '../src/decision-runtime.js';
+import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
 
 // Mock the debug function and setDebug function
 jest.mock('../src/debug', () => ({
@@ -125,8 +126,8 @@ describe('CLI Configuration', () => {
                 '--transport', 'HTTP'
             ]);
 
-            expect(stdioConfig.transport).toBe('STDIO');
-            expect(httpConfig.transport).toBe('HTTP');
+            expect(stdioConfig.transport).toBeInstanceOf(StdioServerTransport);
+            expect(httpConfig.transport).toBe(undefined);
         });
 
         test('should throw error for invalid transport', () => {
@@ -149,7 +150,7 @@ describe('CLI Configuration', () => {
                 '--apikey', 'validkey123'
             ]);
 
-            expect(config.transport).toBe('HTTP');
+            expect(config.transport).toBe(undefined);
         });
 
         test('should default to STDIO when not specified', () => {
@@ -162,7 +163,7 @@ describe('CLI Configuration', () => {
                 '--apikey', 'validkey123'
             ]);
 
-            expect(config.transport).toBe('STDIO');
+            expect(config.transport).toBeInstanceOf(StdioServerTransport);
         });
 
         test('should call debug function with transport', () => {
@@ -333,7 +334,7 @@ describe('CLI Configuration', () => {
             expect(config).toMatchObject({
                 apiKey: 'validkey123',
                 runtime: DecisionRuntime.ADS,
-                transport: 'HTTP',
+                transport: undefined,
                 url: url,
                 version: version,
                 debugEnabled: true
@@ -350,7 +351,7 @@ describe('CLI Configuration', () => {
             expect(config).toMatchObject({
                 apiKey: 'validkey123',
                 runtime: DecisionRuntime.DI,
-                transport: 'STDIO',
+                transport: expect.any(StdioServerTransport),
                 url: url,
                 version: version,
                 debugEnabled: originalEnv.DEBUG === 'true'
@@ -397,7 +398,7 @@ describe('CLI Configuration', () => {
 
             expect(config.url).toBe(urlFromCli);
             expect(config.apiKey).toBe('cli-api-key-123');
-            expect(config.transport).toBe('HTTP');
+            expect(config.transport).toBe(undefined);
             expect(config.runtime).toBe(DecisionRuntime.ADS);
         });
 
