@@ -1,14 +1,15 @@
 import axios from 'axios';
+import { OpenAPIV3_1 } from "openapi-types";
 
-export function executeDecision(apikey:string, baseURL:string, decisionId:string, operation:string, input:any) {
-  var url = baseURL + "/deploymentSpaces/development/decisions/" 
-      + encodeURIComponent(decisionId) 
-      + "/operations/" 
-      + encodeURIComponent(operation)
-      +"/execute";
+export function executeDecision(apikey:string, baseURL:string, decisionId:string, operation:string, input:object|undefined) {
+    const url = baseURL + "/deploymentSpaces/development/decisions/" 
+        + encodeURIComponent(decisionId) 
+        + "/operations/" 
+        + encodeURIComponent(operation)
+        +"/execute";
 
-    var headers = {
-        "Content-Type": "application/json",
+    const headers = {
+        ["Content-Type"]: "application/json",
         "accept": "application/json",
         "apikey": apikey
     };
@@ -19,13 +20,13 @@ export function executeDecision(apikey:string, baseURL:string, decisionId:string
       });
 }
 
-export function executeLastDeployedDecisionService(apikey:string, baseURL:string, serviceId:string, operation:string, input:any) {
-    var url = baseURL + "/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/"
+export function executeLastDeployedDecisionService(apikey:string, baseURL:string, serviceId:string, operation:string, input: object) {
+    const url = baseURL + "/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/"
       + encodeURIComponent(operation)
       + "/execute?decisionServiceId=" + encodeURIComponent(serviceId);
 
-    var headers = {
-        "Content-Type": "application/json",
+    const headers = {
+        ["Content-Type"]: "application/json",
         "accept": "application/json",
         "apikey": apikey
     };
@@ -38,11 +39,11 @@ export function executeLastDeployedDecisionService(apikey:string, baseURL:string
 
 
 export function getMetadata(apikey:string, baseURL:string, deploymentSpace:string) {
-    var url = baseURL + "/deploymentSpaces"
+    const url = baseURL + "/deploymentSpaces"
         + "/" + deploymentSpace
-        + "/metadata?&names=decisionServiceId";
+        + "/metadata?names=decisionServiceId";
 
-    var headers = {
+    const headers = {
         "accept": "application/json",
         "apikey": apikey
     };
@@ -50,14 +51,16 @@ export function getMetadata(apikey:string, baseURL:string, deploymentSpace:strin
     return axios.get(url, { headers: headers })
         .then(function (response) {          
             return response.data;
-    });
+        }
+    );
 }
 
-export function getDecisionServiceIds(metadata:any): string[] {
-    var ids: string[] = [];
+type MetadataType = {decisionServiceId: {value: string}};
+export function getDecisionServiceIds(metadata: MetadataType[]): string[] {
+    const ids: string[] = [];
 
-    metadata.forEach((m:any) => {
-        var id = m.decisionServiceId.value;
+    metadata.forEach((m: MetadataType) => {
+        const id = m.decisionServiceId.value;
         if (!ids.includes(id))
             ids.push(id);
     });
@@ -66,11 +69,11 @@ export function getDecisionServiceIds(metadata:any): string[] {
 }
 
 export function getDecisionOpenapi(apikey:string, baseURL:string, decisionId:string) {
-  var url = baseURL + "/deploymentSpaces/development/decisions/" 
-      + encodeURIComponent(decisionId) 
-      + "/openapi";
+    const url = baseURL + "/deploymentSpaces/development/decisions/" 
+        + encodeURIComponent(decisionId) 
+        + "/openapi";
 
-    var headers = {
+    const headers = {
         "accept": "application/json",
         "apikey": apikey
     };
@@ -78,40 +81,22 @@ export function getDecisionOpenapi(apikey:string, baseURL:string, decisionId:str
     return axios.get(url, { headers: headers })
         .then(function (response) {          
             return response.data;
-        });
+    });
 }
 
 export function getDecisionServiceOpenAPI(apikey:string, baseURL:string, decisionServiceId:string) {
-    var url = baseURL + "/selectors/lastDeployedDecisionService/deploymentSpaces/development"
-      + "/openapi?decisionServiceId="
-      + encodeURIComponent(decisionServiceId) + "&outputFormat=JSON"
-      + "/openapi";
+    const url = baseURL + "/selectors/lastDeployedDecisionService/deploymentSpaces/development"
+        + "/openapi?decisionServiceId="
+        + encodeURIComponent(decisionServiceId) + "&outputFormat=JSON"
+        + "/openapi";
 
-    var headers = {
+    const headers = {
         "accept": "application/json",
         "apikey": apikey
     };
 
     return axios.get(url, { headers: headers })
         .then(function (response) {          
-            return response.data;
-        });
-}
-
-export function getDecisionOperationJsonSchema(apikey:string, baseURL:string, decisionId:string, operation:string) {
-    var url = baseURL + "/deploymentSpaces/development/decisions/"
-      + encodeURIComponent(decisionId)
-      + "/operations/"
-      + encodeURIComponent(operation)
-      + "/schemas?format=JSON_SCHEMA";
-
-    var headers = {
-        "accept": "application/json",
-        "apikey": apikey
-    };
-
-    return axios.get(url, { headers: headers })
-        .then(function (response) {          
-            return JSON.stringify(response.data);
-      });
+            return (response.data as OpenAPIV3_1.Document);
+    });
 }

@@ -3,8 +3,9 @@ import express from "express";
 import { randomUUID } from "node:crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js"
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-export function runHTTPServer(server:any) {
+export function runHTTPServer(server: McpServer) {
     const app = express();
     app.use(express.json());
 

@@ -1,11 +1,13 @@
 {
   "name": "di-mcp-server",
-  "version": "0.0.32",
+  "version": "0.0.33",
   "description": "",
   "main": "build/index.js",
   "scripts": {
+    "lint": "eslint src --ext .ts",
     "build": "tsc && chmod 755 build/index.js",
     "start": "node build/index.js",
+    "full-start": "npm run lint && npm run test && npm run build && node build/index.js",
     "dev": "DEBUG=true nodemon",
     "test": "jest"
   },
@@ -20,19 +22,24 @@
     "@babel/preset-env": "^7.28.0",
     "@modelcontextprotocol/sdk": "^1.15.1",
     "axios": "^1.10.0",
-    "babel-jest": "^30.0.4",
     "commander": "^14.0.0",
-    "jest": "^30.0.4",
     "json-schema-to-zod": "^2.6.1",
-    "ts-jest": "^29.4.0",
+    "openapi-types": "^12.1.3",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.27.1",
+    "@eslint/js": "^9.32.0",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
+    "babel-jest": "^30.0.5",
+    "eslint": "^9.32.0",
+    "jest": "^30.0.5",
+    "nock": "^14.0.7",
     "nodemon": "^3.1.10",
-    "typescript": "^5.8.3"
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.38.0"
   },
   "type": "module",
   "module": "./build/index.js",

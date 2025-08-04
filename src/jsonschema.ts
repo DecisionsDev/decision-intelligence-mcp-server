@@ -1,42 +1,45 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { OpenAPIV3_1 } from "openapi-types";
 import { debug } from "./debug.js";
 
-function walk(schema: any, defs: any, history: any): void {
-    if (schema["type"] === 'object') {
+function walk(schema: OpenAPIV3_1.SchemaObject, defs: any, history: any): void {
+    
+    if (schema.type === 'object') {
         if (schema.properties) {
             for (const key in schema.properties) {
-                var property = schema.properties[key];
+                const property = schema.properties[key];
                 walk(property, defs, history);
             }   
         }
-    } else if (schema["$ref"]) {
-        var canonicalRef = schema['$ref'];
+    } else if ((schema as any)["$ref"]) {
+        const canonicalRef = (schema as any)['$ref'];
 
-        var paths = canonicalRef.split('/');
-        var ref = paths[3];
+        const paths = canonicalRef.split('/');
+        const ref = paths[3];
 
         if (history.includes(ref)) {
             debug("Circular reference detected for " + ref + " in history: " + history);
-            delete(schema["$ref"]);
+            delete((schema as any)["$ref"]);
         } else {
-            var def = defs[ref];
+            const def = defs[ref];
             for (const k in def) {
-                schema[k] = def[k];
+                (schema as any)[k] = def[k];
             }
 
-            delete(schema["$ref"]);
+            delete((schema as any)["$ref"]);
 
             walk(schema, defs, [...history, ref]);
         }       
     }
 }
 
-export function expandJSONSchemaDefinition(schema: any, defs: any): object {
-    var outSchema = {...schema};
+export function expandJSONSchemaDefinition(schema: any, defs: any): any {
+    const outSchema = {...schema};
 
-    var expandedDefs = {... defs};
+    const expandedDefs = {... defs};
 
     Object.keys(expandedDefs).forEach((key) => {
-        var def = defs[key];
+        const def = defs[key];
         walk(def, expandedDefs, [key]);
     });
 

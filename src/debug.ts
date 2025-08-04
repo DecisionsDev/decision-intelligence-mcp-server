@@ -1,10 +1,14 @@
-var DEBUG = false;
+let isDebuggingEnabled = false;
 
 export function setDebug(value: boolean): void {
-    DEBUG = value;
+    isDebuggingEnabled = value;
 }
 
-export function debug(...data: any[]): void {
-    if (DEBUG)
+export function debug(...data: (object|string)[]): void {
+    if (isDebuggingEnabled)
         console.error.apply(null, data);
+}
+
+export function isDebug(): boolean {
+    return isDebuggingEnabled;
 }
