@@ -135,7 +135,7 @@ export async function createMcpServer(name: string, configuration: Configuration
         return { server }
     }
 
-    const transport = new StdioServerTransport();
+    const transport = configuration.transport!;
     await server.connect(transport);
     debug("IBM Decision Intelligence MCP Server version", version, "running on stdio");
     return { server, transport }
