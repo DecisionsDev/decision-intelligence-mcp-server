@@ -1,6 +1,6 @@
 {
   "name": "di-mcp-server",
-  "version": "0.0.33",
+  "version": "0.0.34",
   "description": "",
   "main": "build/index.js",
   "scripts": {
