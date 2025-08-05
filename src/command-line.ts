@@ -1,21 +1,23 @@
 import {Command} from 'commander';
 import {DecisionRuntime, parseDecisionRuntime} from "./decision-runtime.js";
 import {debug, setDebug} from "./debug.js";
+import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
 
 export class Configuration {
     static readonly STDIO = "STDIO";
     static readonly HTTP = "HTTP";
 
+    static readonly TRANSPORTS: string[] = [ Configuration.STDIO, Configuration.HTTP];
+
     constructor(
         public apiKey: string,
         public runtime: DecisionRuntime,
-        public transport: string,
+        public transport: StdioServerTransport | undefined,
         public url: string,
         public version: string,
         public debugEnabled: boolean
     ) {
         this.runtime = runtime || Configuration.defaultRuntime();
-        this.transport = transport || Configuration.defaultTransport();
     }
 
     static defaultRuntime(): DecisionRuntime {
@@ -27,18 +29,19 @@ export class Configuration {
     }
 
     isDiRuntime(): boolean {
-        return this.runtime == DecisionRuntime.DI;
+        return this.runtime === DecisionRuntime.DI;
     }
 
     isAdsRuntime(): boolean {
-        return this.runtime == DecisionRuntime.ADS;
+        return this.runtime === DecisionRuntime.ADS;
     }
 
     isStdioTransport(): boolean {
-        return this.transport === Configuration.STDIO;
+        return this.transport !== undefined;
     }
+
     isHttpTransport(): boolean {
-        return this.transport === Configuration.HTTP;
+        return this.transport === undefined;
     }
 }
 
@@ -56,17 +59,16 @@ function validateUrl(url: string) : string {
     }
 }
 
-function validateTransport(transport: string) :string {
+function validateTransport(transport: string) :StdioServerTransport | undefined {
     debug("TRANSPORT=" + transport);
     if (transport === undefined) {
         debug(`The transport protocol is not defined. Using '${Configuration.defaultTransport()}'`);
     } else {
-        const validTransports = ['STDIO', 'HTTP'];
-        if (!validTransports.includes(transport)) {
-            throw new Error(`Invalid transport protocol: '${transport}'. Must be one of: '${validTransports.join('\', \'')}'`);
+        if (!Configuration.TRANSPORTS.includes(transport)) {
+            throw new Error(`Invalid transport protocol: '${transport}'. Must be one of: '${Configuration.TRANSPORTS.join('\', \'')}'`);
         }
     }
-    return transport;
+    return (transport === undefined || Configuration.STDIO === transport) ?  new StdioServerTransport() : undefined;
 }
 
 function validateDecisionRuntime(runtime: string): DecisionRuntime {
