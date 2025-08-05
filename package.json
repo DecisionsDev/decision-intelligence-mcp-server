@@ -13,11 +13,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DecisionsDev/di-mcp-server.git"
+    "url": "git+https://github.com/DecisionsDev/decision-intelligence-mcp-server.git"
   },
   "author": "",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/DecisionsDev/di-mcp-server",
+  "homepage": "https://github.com/DecisionsDev/decision-intelligence-mcp-server",
   "dependencies": {
     "@babel/preset-env": "^7.28.0",
     "@modelcontextprotocol/sdk": "^1.17.0",
