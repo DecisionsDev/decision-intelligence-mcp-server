@@ -61,25 +61,69 @@ You can integrate decision services into IBM watsonx Orchestrate by adding the M
 
 1. In the agent builder, click **Add tool**.
 
-   ![](doc/wo1.png)
+   [![Thumbnail](./doc/wo1-thumbnail.png)](doc/wo1.png)
 
-2. Click **Import**, and then click **Import from MCP server**.
+2. Click **Import**
 
-   ![](doc/wo2.png)
+   [![Thumbnail](./doc/wo2-thumbnail.png)](doc/wo2.png)
 
-3. Click **Add MCP server**
+3. Then click **Import from mcp server**
 
-   ![](doc/wo4.png)
+   [![Thumbnail](./doc/wo3-thumbnail.png)](doc/wo3.png)
 
-4. Specify the name for the server and the `npx` command that is explained in the Getting started section.
+4. Click **Add MCP server**
 
-   ![](doc/wo5.png)
+   [![Thumbnail](./doc/wo4-thumbnail.png)](doc/wo4.png)
 
-5. Close the dialog box, and select the tool that you want to add to your agent.
+5. Specify the name for the server and the `npx` command that is explained in the Getting started section.
 
-   ![](doc/wo6.png)
+   [![Thumbnail](./doc/wo5-thumbnail.png)](doc/wo5.png)
+
+6. Close the dialog box, and select the tool that you want to add to your agent.
+
+   [![Thumbnail](./doc/wo6-thumbnail.png)](doc/wo6.png)
 
    Your agent is now empowered with decisions.
+
+#### Use a connection to specify the APIKEY and URL environment variables
+
+1. Open the main menu, then click **Manage**, then click **Connections**, to open the Connection settings
+
+   [![Thumbnail](./doc/wxO-connection-01-thumbnail.png)](doc/wxO-connection-01.png)
+
+2. Click **Add new connection** to launch the **Add new connection** wizard
+
+   [![Thumbnail](./doc/wxO-connection-02-thumbnail.png)](doc/wxO-connection-02.png)
+
+3. Fill in the **Connection ID** and **Display name** fields, then click **Save and continue**
+
+   [![Thumbnail](./doc/wxO-connection-03-thumbnail.png)](doc/wxO-connection-03.png)
+
+4. In the **Configure draft connection** panel:
+   - Select **Key Value Pair** as **Authentication Type**
+   - Fill-in the **Key** and **Value** fields to define the `APIKEY` environment variable
+   - Then click **Add key value pair**
+
+   [![Thumbnail](./doc/wxO-connection-04-thumbnail.png)](doc/wxO-connection-04.png)
+
+5. Fill-in the **Key** and **Value** fields to define the `URL` environment variable, then click **Connect**
+
+   [![Thumbnail](./doc/wxO-connection-05-thumbnail.png)](doc/wxO-connection-05.png)
+
+6. When the draft connection is connected, click **Next**
+
+   [![Thumbnail](./doc/wxO-connection-06-thumbnail.png)](doc/wxO-connection-06.png)
+
+7. Similarly configure the live connection, then click **Add connection**
+
+   [![Thumbnail](./doc/wxO-connection-07-thumbnail.png)](doc/wxO-connection-07.png)
+
+8. In the **Add MCP Server** wizard:
+   - Select the display name corresponding to the connection you just configured
+   - Fill-in the `npx` command **WITHOUT** the `--apikey` and `--url` arguments
+   - Click **Connect** then **Done**
+
+    [![Thumbnail](./doc/wxO-connection-08-thumbnail.png)](doc/wxO-connection-08.png)
 
 ### Integrating decision services into Claude Desktop
 
@@ -95,29 +139,101 @@ You can integrate decision services into Claude Desktop by adding the MCP server
 
 2. Add the MCP server configuration to the configuration file.
 
-   In the configuration directory, edit or create `claude_desktop_config.json`:
+   - In the configuration directory, edit or create `claude_desktop_config.json`:
 
-```json
-{
-    [..]
-    "mcpServers": {
-        "di-mcp-server": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "di-mcp-server",
-                "--apikey",
-                "<APIKEY>",
-                "--url",
-                "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
-            ]
-        }
-    }
-    [..]
-}
-```
+      ```json
+      {
+          [..]
+          "mcpServers": {
+              "di-mcp-server": {
+                  "command": "npx",
+                  "args": [
+                      "-y",
+                      "di-mcp-server",
+                      "--apikey",
+                      "<APIKEY>",
+                      "--url",
+                      "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
+                  ]
+              }
+          }
+          [..]
+      }
+      ```
+   - Alternatively, you can use the `APIKEY` and `URL` environment variables to respectively specify the API key and the base URL of the decision runtime REST API:
+
+      ```json
+      {
+          [..]
+          "mcpServers": {
+              "di-mcp-server": {
+                  "command": "npx",
+                  "args": ["-y", "di-mcp-server"],
+                  "env": {
+                      "APIKEY": "<APIKEY>",
+                      "URL": "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
+                  }
+              }
+          }
+          [..]
+      }
+      ```
 
 For more information, see https://modelcontextprotocol.io/quickstart/user.
+
+### Integrating decision services into Cursor
+
+1. In Cursor, click the cog wheel icon to open Cursor settings
+
+2. Click **Tools & Integration** in the setting categories listed on the left-hand side
+
+   [![Thumbnail](./doc/cursor1-thumbnail.png)](doc/cursor1.png)
+
+3. Click **+ New MCP Server**, this will open Cursor's `mcp.json` configuration file
+
+   [![Thumbnail](./doc/cursor2-thumbnail.png)](doc/cursor2.png)
+
+4. Add a new MCP server entry.
+As for Claude Desktop, you can specify the API key and base URL of the decision runtime REST API using:
+   - Either command line arguments:
+      ```json
+      {
+          [..]
+          "mcpServers": {
+              "di-mcp-server": {
+                  "command": "npx",
+                  "args": [
+                      "-y",
+                      "di-mcp-server",
+                      "--apikey",
+                      "<APIKEY>",
+                      "--url",
+                      "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
+                  ]
+              }
+          }
+          [..]
+      }
+      ```
+   - Or environment variables: 
+      ```json
+      {
+          [..]
+          "mcpServers": {
+              "di-mcp-server": {
+                  "command": "npx",
+                  "args": ["-y", "di-mcp-server"],
+                  "env": {
+                      "APIKEY": "<APIKEY>",
+                      "URL": "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
+                  }
+              }
+          }
+          [..]
+      }
+      ```
+
+For more information, see Cursor's documentation about [_Installing MCP servers_](https://docs.cursor.com/en/context/mcp#installing-mcp-servers).
 
 <a id="developing"></a>
 ## Developing the MCP server
