@@ -10,19 +10,47 @@ import {runHTTPServer} from "./httpserver.js";
 import {debug} from "./debug.js";
 import {expandJSONSchemaDefinition} from './jsonschema.js';
 import {getToolName} from "./ditool.js";
-import {jsonSchemaToZod} from "json-schema-to-zod";
-import {evalTS} from "./ts.js";
 import { OpenAPIV3_1 } from "openapi-types";
-import { ZodRawShape } from "zod";
+import { ZodRawShape, z } from "zod";
 import { Configuration } from "./command-line.js";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function jsonSchemaToZodSchema(schema: OpenAPIV3_1.SchemaObject): any {
+    if (schema.type === 'object') {
+        const shape: ZodRawShape = {};
+        if (schema.properties) {
+            for (const [key, prop] of Object.entries(schema.properties)) {
+                shape[key] = jsonSchemaToZodSchema(prop);
+            }
+        }
+        return z.object(shape);
+    } else if (schema.type === 'string') {
+        if (schema.format === 'date-time') {
+            return z.string().datetime();
+        }
+        return z.string();
+    } else if (schema.type === 'number') {
+        return z.number();
+    } else if (schema.type === 'integer') {
+        return z.number().int();
+    } else if (schema.type === 'boolean') {
+        return z.boolean();
+    } else if (schema.type === 'array') {
+        if (schema.items) {
+            return z.array(jsonSchemaToZodSchema(schema.items));
+        }
+        return z.array(z.any());
+    } else {
+        return z.any();
+    }
+}
 
 function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): ZodRawShape {
     const params: ZodRawShape = {}
 
     for (const propName in jsonSchema.properties) {
         const jsonSchemaProp = jsonSchema.properties[propName];
-        const code = jsonSchemaToZod(jsonSchemaProp);
-        params[propName] = evalTS(code);
+        params[propName] = jsonSchemaToZodSchema(jsonSchemaProp);
     }
 
     return params;
