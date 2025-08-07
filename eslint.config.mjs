@@ -7,8 +7,18 @@ export default tseslint.config(
     tseslint.configs.recommended,
     {
         "rules": {
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             "@typescript-eslint/naming-convention": [
                 "error",
+                {
+                    "selector": "objectLiteralProperty",
+                    "format": ["UPPER_CASE", "camelCase"]
+                },
+                {
+                    "selector": "variable",
+                    "modifiers": ["const"],
+                    "format": ["PascalCase", "camelCase"]
+                },
                 {
                     "selector": "default",
                     "format": ["camelCase"]
