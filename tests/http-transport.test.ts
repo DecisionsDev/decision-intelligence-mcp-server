@@ -57,7 +57,7 @@ describe('HTTP Transport', () => {
             // Test tool execution
             try {
                 const response = await client.callTool({
-                    name: TEST_EXPECTATIONS.toolName,
+                    name: TEST_EXPECTATIONS.tool.name,
                     arguments: TEST_INPUT
                 });
                 validateToolExecution(response);

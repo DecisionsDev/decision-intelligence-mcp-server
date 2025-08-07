@@ -1,12 +1,15 @@
 import nock from "nock";
 
 // Shared test data
+const toolName = 'my tool name';
 export const TEST_CONFIG = {
     protocol: 'https:',
     hostname: 'example.com',
     url: 'https://example.com',
-    decisionServiceId: 'test/loan_approval/loanApprovalDecisionService/3-2025-06-18T13:00:39.447Z',
+    decisionServiceId: 'test/Loan Approval',
+    decisionId: 'test/loan_approval/loanApprovalDecisionService/3-2025-06-18T13:00:39.447Z',
     operationId: 'approval',
+    toolName: toolName,
     output: {
         "insurance": {
             "rate": 2.5,
@@ -50,9 +53,8 @@ export const TEST_INPUT = {
 
 // Shared test expectations
 export const TEST_EXPECTATIONS = {
-    toolName: 'Loan_Approval_approval',
-    expectedTool: {
-        name: 'Loan_Approval_approval',
+    tool: {
+        name: toolName,
         title: 'approval',
         description: 'Execute approval'
     }
@@ -60,11 +62,11 @@ export const TEST_EXPECTATIONS = {
 
 // Setup nock mocks for testing
 export function setupNockMocks(): void {
-    const { url, decisionServiceId, operationId, output } = TEST_CONFIG;
+    const { url, decisionId, decisionServiceId, operationId, toolName, output } = TEST_CONFIG;
     const uri = '/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/' + 
                 encodeURIComponent(operationId) + '/execute?decisionServiceId=' + 
                 encodeURIComponent(decisionServiceId);
-    
+    const metadataName = `mcpToolName.${operationId}`;
     nock(url)
         .get('/deploymentSpaces/development/metadata?names=decisionServiceId')
         .reply(200, [{
@@ -75,6 +77,17 @@ export function setupNockMocks(): void {
                 'value': decisionServiceId
             }
         }])
+        .get(`/deploymentSpaces/development/decisions/${encodeURIComponent(decisionId)}/metadata`)
+        .reply(200, {
+            map : {
+                [metadataName] : {
+                    'name': metadataName,
+                    'kind': 'PLAIN',
+                    'readOnly': false,
+                    'value': toolName
+                }
+            }
+        })
         .get(`/selectors/lastDeployedDecisionService/deploymentSpaces/development/openapi?decisionServiceId=${decisionServiceId}&outputFormat=JSON/openapi`)
         .replyWithFile(200, 'tests/loanvalidation-openapi.json')
         .post(uri)
@@ -88,7 +101,7 @@ export function validateToolListing(tools: any[]): void {
     
     const loanApprovalTool = tools[0];
     expect(loanApprovalTool).toEqual(
-        expect.objectContaining(TEST_EXPECTATIONS.expectedTool)
+        expect.objectContaining(TEST_EXPECTATIONS.tool)
     );
     
     expect(loanApprovalTool).toHaveProperty('inputSchema');
