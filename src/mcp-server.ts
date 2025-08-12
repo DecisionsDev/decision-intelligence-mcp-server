@@ -53,7 +53,7 @@ function getToolDefinition(path: OpenAPIV3_1.PathItemObject, components: OpenAPI
     };
 }
 
-function registerTool(server: McpServer, apikey: string, baseURL: string, decisionOpenAPI: OpenAPIV3_1.Document, decisionServiceId: string, toolNames: string[]) {
+function registerTool(server: McpServer, configuration: Configuration, decisionOpenAPI: OpenAPIV3_1.Document, decisionServiceId: string, toolNames: string[]) {
     for (const key in decisionOpenAPI.paths) {
         debug("Found operationName", key);
 
@@ -99,7 +99,7 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
             async (input) => {
                 const decInput = input;
                 debug("Execute decision with", JSON.stringify(decInput, null, " "))
-                const str = await executeLastDeployedDecisionService(apikey, baseURL, decisionServiceId, operationId, decInput);
+                const str = await executeLastDeployedDecisionService(configuration, decisionServiceId, operationId, decInput);
                 return {
                     content: [{ type: "text", text: str}]
                 };
@@ -115,9 +115,7 @@ export async function createMcpServer(name: string, configuration: Configuration
         version: version
     });
 
-    const apikey = configuration.apiKey;
-    const baseURL = configuration.url;
-    const spaceMetadata = await getMetadata(apikey, baseURL, "development");
+    const spaceMetadata = await getMetadata(configuration, "development");
     debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
     const serviceIds = getDecisionServiceIds(spaceMetadata);
     debug("serviceIds", JSON.stringify(serviceIds, null, " "));
@@ -125,9 +123,9 @@ export async function createMcpServer(name: string, configuration: Configuration
     const toolNames: string[] = [];
     for (const serviceId of serviceIds) {
         debug("serviceId", serviceId);
-        const openapi = await getDecisionServiceOpenAPI(apikey, baseURL, serviceId);
+        const openapi = await getDecisionServiceOpenAPI(configuration, serviceId);
         
-        registerTool(server, apikey, baseURL, openapi, serviceId, toolNames);
+        registerTool(server,configuration, openapi, serviceId, toolNames);
     }
 
     if (configuration.isHttpTransport()) {

@@ -7,6 +7,7 @@ import {Configuration} from "../src/command-line.js";
 import {DecisionRuntime} from "../src/decision-runtime.js";
 import {createMcpServer} from "../src/mcp-server.js";
 import {PassThrough, Readable, Writable} from 'stream';
+import {Credentials} from "../src/credentials.js";
 import { TEST_CONFIG, TEST_INPUT, TEST_EXPECTATIONS, setupNockMocks, validateToolListing, validateToolExecution } from "./test-utils.js";
 
 describe('Mcp Server', () => {
@@ -74,7 +75,7 @@ describe('Mcp Server', () => {
         const fakeStdout = new PassThrough();
         const transport = new StdioServerTransport(fakeStdin, fakeStdout);
         const clientTransport = new StreamClientTransport(fakeStdout, fakeStdin);
-        const configuration = new Configuration('validkey123',  DecisionRuntime.DI,  transport, TEST_CONFIG.url, '1.2.3', true);
+        const configuration = new Configuration(new Credentials({apikey : apikey}),  DecisionRuntime.DI,  transport, TEST_CONFIG.url, '1.2.3', true);
         let server: McpServer | undefined;
         let client: Client | undefined;
         try {
