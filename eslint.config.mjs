@@ -35,6 +35,10 @@ export default tseslint.config(
                 {
                     "selector": "enumMember",
                     "format": ["UPPER_CASE", "PascalCase"]
+                },
+                {
+                    "selector": "objectLiteralProperty",
+                    "format": ["UPPER_CASE", "camelCase"]
                 }
             ]
         }
