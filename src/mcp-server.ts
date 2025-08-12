@@ -16,7 +16,6 @@ import { OpenAPIV3_1 } from "openapi-types";
 import { ZodRawShape } from "zod";
 import { Configuration } from "./command-line.js";
 import http from "node:http";
-import {Constants} from "./constants.js";
 
 function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): ZodRawShape {
     const params: ZodRawShape = {}

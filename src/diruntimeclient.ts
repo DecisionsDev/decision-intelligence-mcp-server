@@ -9,35 +9,28 @@ export function executeDecision(configuration :Configuration, decisionId:string,
         + encodeURIComponent(operation)
         +"/execute";
 
-    return axios.post(url, input, { headers: getJSONContentTypeHeaders(configuration) })
+    return axios.post(url, input, { headers: getJsonContentTypeHeaders(configuration) })
         .then(function (response) {          
             return JSON.stringify(response.data);
       });
 }
 
-export function executeLastDeployedDecisionService(configuration :Configuration, serviceId:string, operation:string, input: object) {
-    const url = configuration.url + "/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/"
-      + encodeURIComponent(operation)
-      + "/execute?decisionServiceId=" + encodeURIComponent(serviceId);
-
-    return axios.post(url, input, { headers: getJSONContentTypeHeaders(configuration) })
-        .then(function (response) {          
-            return JSON.stringify(response.data);
-      });
-}
-
-function getHeaders(configuration: Configuration) {
-    return {
-        "accept": "application/json",
-        "apikey": configuration.apiKey
-    };
-}
-
-function getJSONContentTypeHeaders(configuration: Configuration) {
+function getJsonContentTypeHeaders(configuration: Configuration) {
     return {
         ["Content-Type"]: "application/json",
         ...getHeaders(configuration)
     };
+}
+
+export function executeLastDeployedDecisionService(configuration: Configuration, serviceId:string, operation:string, input: object) {
+    const url = configuration.url + "/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/"
+      + encodeURIComponent(operation)
+      + "/execute?decisionServiceId=" + encodeURIComponent(serviceId);
+
+    return axios.post(url, input, { headers: getJsonContentTypeHeaders(configuration) })
+        .then(function (response) {          
+            return JSON.stringify(response.data);
+      });
 }
 
 export async function getDecisionMetadata(configuration: Configuration, deploymentSpace: string, decisionId: string) {
@@ -47,10 +40,9 @@ export async function getDecisionMetadata(configuration: Configuration, deployme
     return response.data;
 }
 
-
 export function getMetadata(configuration: Configuration, deploymentSpace:string) {
     const url = configuration.url + "/deploymentSpaces"
-        + "/" + encodeURIComponent(deploymentSpace)
+        + "/" + deploymentSpace
         + "/metadata?names=decisionServiceId";
 
     return axios.get(url, { headers: getHeaders(configuration) })
@@ -73,8 +65,8 @@ export function getDecisionServiceIds(metadata: MetadataType[]): string[] {
     return ids;
 }
 
-export function getDecisionOpenapi(configuration :Configuration, decisionId:string) {
-    const url = configuration.url  + "/deploymentSpaces/development/decisions/"
+export function getDecisionOpenapi(configuration: Configuration, decisionId:string) {
+    const url = configuration.url + "/deploymentSpaces/development/decisions/"
         + encodeURIComponent(decisionId) 
         + "/openapi";
 
@@ -84,8 +76,17 @@ export function getDecisionOpenapi(configuration :Configuration, decisionId:stri
     });
 }
 
-export function getDecisionServiceOpenAPI(configuration :Configuration, decisionServiceId:string) {
-    const url = configuration.url  + "/selectors/lastDeployedDecisionService/deploymentSpaces/development"
+function getHeaders(configuration: Configuration) {
+    const authorizationHeaderValue = configuration.credentials.getAuthorizationHeaderValue();
+    const authorizationHeaderKey = configuration.credentials.getAuthorizationHeaderKey()
+    return {
+        "accept": "application/json",
+        [authorizationHeaderKey] : authorizationHeaderValue
+    };
+}
+
+export function getDecisionServiceOpenAPI(configuration: Configuration, decisionServiceId:string) {
+    const url = configuration.url + "/selectors/lastDeployedDecisionService/deploymentSpaces/development"
         + "/openapi?decisionServiceId="
         + encodeURIComponent(decisionServiceId) + "&outputFormat=JSON"
         + "/openapi";

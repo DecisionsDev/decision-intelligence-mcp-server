@@ -1,4 +1,4 @@
-import {createConfiguration} from '../src/command-line.js';
+import {Configuration, createConfiguration} from '../src/command-line.js';
 import {debug, setDebug} from '../src/debug.js';
 import {DecisionRuntime, parseDecisionRuntime} from '../src/decision-runtime.js';
 import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -71,7 +71,7 @@ describe('CLI Configuration', () => {
                     '--apikey', 'validkey123',
                     '--transport', 'STDIO'
                 ]);
-            }).toThrow('The Decision Runtime REST API URL is not defined');
+            }).toThrow('The decision runtime REST API URL is not defined');
         });
 
         test('should throw error for invalid URL format', () => {
@@ -222,7 +222,7 @@ describe('CLI Configuration', () => {
                     '--transport', 'STDIO',
                     '--runtime', 'INVALID'
                 ]);
-            }).toThrow('Invalid target Decision Runtime: \'undefined\'. Must be one of: \'DI\', \'ADS\'');
+            }).toThrow('Invalid target decision runtime: \'undefined\'. Must be one of: \'DI\', \'ADS\'');
         });
 
         test('should use decision runtime from environment variable', () => {
@@ -263,76 +263,95 @@ describe('CLI Configuration', () => {
         });
     });
 
-    describe('validateApiKey', () => {
-        test('should accept valid API keys', () => {
-            const config = createConfiguration([
-                'node', 'cli.js',
-                '--url', url,
-                '--apikey', 'validkey123',
-                '--transport', 'STDIO'
-            ]);
+    describe('validateCredentials', () => {
 
-            expect(config.apiKey).toBe('validkey123');
-        });
-
-        test('should throw error when API key is undefined', () => {
+        test('should throw error when no credentials are defined', () => {
             expect(() => {
                 createConfiguration([
                     'node', 'cli.js',
                     '--url', url,
                     '--transport', 'STDIO'
                 ]);
-            }).toThrow('The Decision Runtime API key is not defined');
+            }).toThrow('No decision runtime credentials provide: please set either the APIKEY or both USERNAME and PASSWORD environment variables - or use the corresponding command line arguments');
         });
 
-        test('should throw error for empty API key', () => {
-            expect(() => {
+        describe('With API key', () => {
+            const apiKey = 'validkey123';
+            test('should accept valid API keys', () => {
+                const config = createConfiguration([
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--apikey', apiKey,
+                    '--transport', 'STDIO'
+                ]);
+
+                expect(config).toMatchObject({
+                    credentials: {
+                        apikey: apiKey
+                    },
+                });
+            });
+
+            test('should throw error for empty API key', () => {
+                expect(() => {
+                    createConfiguration([
+                        'node', 'cli.js',
+                        '--url', url,
+                        '--apikey', '   ',
+                        '--transport', 'STDIO'
+                    ]);
+                }).toThrow('The decision runtime API key cannot be empty');
+            });
+
+            test('should use API key from environment variable', () => {
+                const envApiKey = 'env-api-key-123';
+                process.env.APIKEY = envApiKey;
+
+                const config = createConfiguration([
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--transport', 'STDIO'
+                ]);
+
+                expect(config).toMatchObject({
+                    credentials: {
+                        apikey: envApiKey
+                    },
+                });
+            });
+
+            test('should call debug function with API key', () => {
                 createConfiguration([
                     'node', 'cli.js',
                     '--url', url,
-                    '--apikey', '   ',
+                    '--apikey', apiKey,
                     '--transport', 'STDIO'
                 ]);
-            }).toThrow('The Decision Runtime API key cannot be empty');
+
+                expect(mockDebug).toHaveBeenCalledWith('Credentials(apikey: ***)');
+            });
         });
 
-        test('should use API key from environment variable', () => {
-            process.env.APIKEY = 'env-api-key-123';
-
-            const config = createConfiguration([
-                'node', 'cli.js',
-                '--url', url,
-                '--transport', 'STDIO'
-            ]);
-
-            expect(config.apiKey).toBe('env-api-key-123');
-        });
-
-        test('should call debug function with API key', () => {
-            createConfiguration([
-                'node', 'cli.js',
-                '--url', url,
-                '--apikey', 'validkey123',
-                '--transport', 'STDIO'
-            ]);
-
-            expect(mockDebug).toHaveBeenCalledWith('API KEY=validkey123');
+        describe('with username/password', () => {
         });
     });
 
     describe('createConfiguration', () => {
+        const apiKey = 'validkey123';
         test('should create complete configuration object', () => {
             const config = createConfiguration([
                 'node', 'cli.js',
                 '--debug',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--apikey', apiKey,
                 '--transport', 'HTTP',
                 '--runtime', 'ADS'
             ]);
 
             expect(config).toMatchObject({
-                apiKey: 'validkey123',
+                credentials: {
+                    apikey: apiKey
+                },
                 runtime: DecisionRuntime.ADS,
                 transport: undefined,
                 url: url,
@@ -343,13 +362,15 @@ describe('CLI Configuration', () => {
 
         test('should create configuration with defaults', () => {
             process.env.URL = url;
-            process.env.APIKEY = 'validkey123';
+            process.env.APIKEY = apiKey;
             process.env.TRANSPORT = 'STDIO';
 
             const config = createConfiguration(['node', 'cli.js']);
 
             expect(config).toMatchObject({
-                apiKey: 'validkey123',
+                credentials: {
+                    apikey: apiKey
+                },
                 runtime: DecisionRuntime.DI,
                 transport: expect.any(StdioServerTransport),
                 url: url,
@@ -360,7 +381,7 @@ describe('CLI Configuration', () => {
 
         test('should handle debug flag from CLI argument', () => {
             process.env.URL = url;
-            process.env.APIKEY = 'validkey123';
+            process.env.APIKEY = apiKey;
             process.env.TRANSPORT = 'STDIO';
 
             const config = createConfiguration(['node', 'cli.js', '--debug']);
@@ -372,7 +393,7 @@ describe('CLI Configuration', () => {
         test('should handle debug flag from environment variable', () => {
             process.env.DEBUG = 'true';
             process.env.URL = url;
-            process.env.APIKEY = 'validkey123';
+            process.env.APIKEY = apiKey;
             process.env.TRANSPORT = 'STDIO';
 
             const config = createConfiguration(['node', 'cli.js']);
@@ -388,23 +409,28 @@ describe('CLI Configuration', () => {
             process.env.RUNTIME = 'DI';
 
             const urlFromCli = 'https://cli-api.example.com';
+            const cliApiKey = 'cli-api-key-123';
             const config = createConfiguration([
                 'node', 'cli.js',
                 '--url', urlFromCli,
-                '--apikey', 'cli-api-key-123',
+                '--apikey', cliApiKey,
                 '--transport', 'HTTP',
                 '--runtime', 'ADS'
             ]);
 
-            expect(config.url).toBe(urlFromCli);
-            expect(config.apiKey).toBe('cli-api-key-123');
-            expect(config.transport).toBe(undefined);
-            expect(config.runtime).toBe(DecisionRuntime.ADS);
+            expect(config).toMatchObject({
+                credentials: {
+                    apikey: cliApiKey
+                },
+                runtime: DecisionRuntime.ADS,
+                transport: undefined,
+                url: urlFromCli,
+            });
         });
 
         test('should set helper properties correctly for DI runtime', () => {
             process.env.URL = url;
-            process.env.APIKEY = 'validkey123';
+            process.env.APIKEY = apiKey;
             process.env.TRANSPORT = 'STDIO';
 
             const config = createConfiguration([
@@ -418,7 +444,7 @@ describe('CLI Configuration', () => {
 
         test('should set helper properties correctly for ADS runtime', () => {
             process.env.URL = url;
-            process.env.APIKEY = 'validkey123';
+            process.env.APIKEY = apiKey;
             process.env.TRANSPORT = 'STDIO';
 
             const config = createConfiguration([
@@ -432,7 +458,7 @@ describe('CLI Configuration', () => {
 
         test('should set transport helper properties correctly', () => {
             process.env.URL = url;
-            process.env.APIKEY = 'validkey123';
+            process.env.APIKEY = apiKey;
 
             const stdioConfig = createConfiguration([
                 'node', 'cli.js',
@@ -451,15 +477,28 @@ describe('CLI Configuration', () => {
         });
 
         test('should parse arguments when no arguments provided', () => {
-            process.env.URL = url;
-            process.env.APIKEY = 'validkey123';
-            process.env.TRANSPORT = 'STDIO';
 
-            // Should use process.argv when no arguments provided
-            const config = createConfiguration();
+            const originalArgv = process.argv;
+            try {
+                process.argv = [originalArgv[0], originalArgv[1]];
+                process.env.URL = url;
+                process.env.APIKEY = apiKey;
 
-            expect(config).toBeDefined();
-            expect(config.apiKey).toBe('validkey123');
+                // Should use process.argv when no arguments provided
+                const config = createConfiguration();
+
+                expect(config).toBeDefined();
+                expect(config).toMatchObject({
+                    credentials: {
+                        apikey: apiKey
+                    },
+                    runtime: Configuration.defaultRuntime(),
+                    transport: expect.any(StdioServerTransport),
+                    url: url,
+                });
+            } finally {
+                process.argv = originalArgv;
+            }
         });
     });
 
@@ -473,7 +512,7 @@ describe('CLI Configuration', () => {
                     '--apikey', apiKey,
                     '--transport', 'INVALID'
                 ]);
-            }).toThrow(`The Decision Runtime API key cannot be empty`); // Should throw on invalid API key first
+            }).toThrow(`The decision runtime API key cannot be empty`); // Should throw on invalid API key first
         });
 
         test('should provide descriptive error messages', () => {

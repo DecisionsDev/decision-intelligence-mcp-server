@@ -2,6 +2,7 @@ import {Command} from 'commander';
 import {DecisionRuntime, parseDecisionRuntime} from "./decision-runtime.js";
 import {debug, setDebug} from "./debug.js";
 import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
+import {Credentials} from "./credentials.js";
 
 export class Configuration {
     static readonly STDIO = "STDIO";
@@ -10,7 +11,7 @@ export class Configuration {
     static readonly TRANSPORTS: string[] = [ Configuration.STDIO, Configuration.HTTP];
 
     constructor(
-        public apiKey: string,
+        public credentials: Credentials,
         public runtime: DecisionRuntime,
         public transport: StdioServerTransport | undefined,
         public url: string,
@@ -49,7 +50,7 @@ export class Configuration {
 function validateUrl(url: string) : string {
     debug("URL=" + url);
     if (url === undefined) {
-        throw new Error('The Decision Runtime REST API URL is not defined');
+        throw new Error('The decision runtime REST API URL is not defined');
     }
     try {
         new URL(url);
@@ -74,25 +75,14 @@ function validateTransport(transport: string) :StdioServerTransport | undefined 
 function validateDecisionRuntime(runtime: string): DecisionRuntime {
     debug("RUNTIME=" + runtime);
     if (runtime === undefined) {
-        debug(`The Decision Runtime is not defined. Using '${Configuration.defaultRuntime()}'`);
+        debug(`The decision runtime is not defined. Using '${Configuration.defaultRuntime()}'`);
         return runtime;
     }
     const decisionRuntime = parseDecisionRuntime(runtime);
     if (decisionRuntime === undefined) {
-        throw new Error(`Invalid target Decision Runtime: '${decisionRuntime}'. Must be one of: '${Object.values(DecisionRuntime).join('\', \'')}'}`);
+        throw new Error(`Invalid target decision runtime: '${decisionRuntime}'. Must be one of: '${Object.values(DecisionRuntime).join('\', \'')}'}`);
     }
     return decisionRuntime;
-}
-
-function validateApiKey(apiKey: string): string {
-    debug("API KEY=" + apiKey);
-    if (apiKey === undefined) {
-        throw new Error('The Decision Runtime API key is not defined');
-    }
-    if (apiKey.trim().length === 0) {
-        throw new Error('The Decision Runtime API key cannot be empty');
-    }
-    return apiKey;
 }
 
 export function createConfiguration(cliArguments?: readonly string[]): Configuration {
@@ -103,10 +93,12 @@ export function createConfiguration(cliArguments?: readonly string[]): Configura
         .description("MCP Server for IBM Decision Intelligence")
         .version(version)
         .option('--debug', 'Enable debug output')
-        .option('--url <string>', "Base URL for the Decision Runtime API")
-        .option('--apikey <string>', "API key for the Decision Runtime")
+        .option('--url <string>', "Base URL for the decision runtime API, required. Or set the 'URL' environment variable")
+        .option('--apikey <string>', "API key for the decision runtime, required if not using basic authentication. Or set the 'URL' environment variable")
+        .option('--username <string>', "Username for the decision runtime. Or set the 'USERNAME' environment variable")
+        .option('--password <string>', "Password for the decision runtime. Or set 'PASSWORD' environment variable)")
         .option('--transport <transport>', "Transport mode: 'STDIO' or 'HTTP'")
-        .option("--runtime <runtime>", "Target Decision Runtime: 'DI' or 'ADS'. Default value is 'DI'");
+        .option("--runtime <runtime>", "Target decision runtime: 'DI' or 'ADS'. Default value is 'DI'");
 
     program.parse(cliArguments);
 
@@ -115,11 +107,11 @@ export function createConfiguration(cliArguments?: readonly string[]): Configura
     setDebug(debugFlag);
 
     // Validate all options;
-    const apiKey = validateApiKey(options.apikey || process.env.APIKEY);
+    const credentials = Credentials.validateCredentials(options);
     const runtime = validateDecisionRuntime(options["runtime"] || process.env.RUNTIME);
     const transport = validateTransport(options.transport || process.env.TRANSPORT);
     const url = validateUrl(options.url || process.env.URL);
 
     // Create and return configuration object
-    return new Configuration(apiKey, runtime, transport, url, version, debugFlag);
+    return new Configuration(credentials, runtime, transport, url, version, debugFlag);
 }
