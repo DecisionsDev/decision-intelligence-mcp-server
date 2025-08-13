@@ -15,6 +15,7 @@ import {evalTS} from "./ts.js";
 import { OpenAPIV3_1 } from "openapi-types";
 import { ZodRawShape } from "zod";
 import { Configuration } from "./command-line.js";
+import http from "node:http";
 
 function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): ZodRawShape {
     const params: ZodRawShape = {}
@@ -107,7 +108,7 @@ function registerTool(server: McpServer, apikey: string, baseURL: string, decisi
     }
 }
 
-export async function createMcpServer(name: string, configuration: Configuration): Promise<{ server: McpServer, transport?: StdioServerTransport }> {
+export async function createMcpServer(name: string, configuration: Configuration): Promise<{ server: McpServer, transport?: StdioServerTransport, httpServer?: http.Server }> {
     const version = configuration.version;
     const server = new McpServer({
         name: name,
@@ -131,8 +132,8 @@ export async function createMcpServer(name: string, configuration: Configuration
 
     if (configuration.isHttpTransport()) {
         debug("IBM Decision Intelligence MCP Server version", version, "running on http");
-        runHTTPServer(server);
-        return { server }
+        const httpServer = runHTTPServer(server);
+        return { server, httpServer }
     }
 
     const transport = configuration.transport!;
