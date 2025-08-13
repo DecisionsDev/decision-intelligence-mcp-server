@@ -1,18 +1,12 @@
 import nock from "nock";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type {Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
+import {Configuration} from "../src/command-line";
 
-// Shared test data
-const toolName = 'my tool name';
-const protocol =  'https';
-const hostname = 'example.com';
-export const url = `${protocol}://${hostname}`;
-
-const testConfiguration = {
+export const testConfiguration = {
     decisionServiceId: 'test/Loan Approval',
     decisionId: 'test/loan_approval/loanApprovalDecisionService/3-2025-06-18T13:00:39.447Z',
     operationId: 'approval',
-    toolName: toolName,
     output: {
         "insurance": {
             "rate": 2.5,
@@ -55,21 +49,22 @@ const testInput = {
 
 const testExpectations = {
     tool: {
-        name: toolName,
+        name: 'my tool name',
         title: 'approval',
         description: 'Execute approval'
     }
 };
 
 // Setup nock mocks for testing
-export function setupNockMocks(): void {
-    const { decisionId, decisionServiceId, operationId, toolName, output } = testConfiguration;
-    const uri = '/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/' + 
-                encodeURIComponent(operationId) + '/execute?decisionServiceId=' + 
-                encodeURIComponent(decisionServiceId);
+export function setupNockMocks(configuration: Configuration): void {
+    const { decisionId, decisionServiceId, operationId, output } = testConfiguration;
     const metadataName = `mcpToolName.${operationId}`;
-    nock(url)
+    const credentials = configuration.credentials;
+    const headerValue = credentials.getAuthorizationHeaderValue();
+    const headerKey = credentials.getAuthorizationHeaderKey();
+    nock(configuration.url)
         .get('/deploymentSpaces/development/metadata?names=decisionServiceId')
+        .matchHeader(headerKey, headerValue)
         .reply(200, [{
             'decisionServiceId': {
                 'name': 'decisionServiceId',
@@ -79,23 +74,38 @@ export function setupNockMocks(): void {
             }
         }])
         .get(`/deploymentSpaces/development/decisions/${encodeURIComponent(decisionId)}/metadata`)
+        .matchHeader(headerKey, headerValue)
         .reply(200, {
             map : {
                 [metadataName] : {
                     'name': metadataName,
                     'kind': 'PLAIN',
                     'readOnly': false,
-                    'value': toolName
+                    'value': testExpectations.tool.name
                 }
             }
         })
         .get(`/selectors/lastDeployedDecisionService/deploymentSpaces/development/openapi?decisionServiceId=${decisionServiceId}&outputFormat=JSON/openapi`)
+        .matchHeader(headerKey, headerValue)
         .replyWithFile(200, 'tests/loanvalidation-openapi.json')
-        .post(uri)
+        .post('/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/' +
+            encodeURIComponent(operationId) + '/execute?decisionServiceId=' +
+            encodeURIComponent(decisionServiceId))
+        .matchHeader(headerKey, headerValue)
         .reply(200, output);
 }
 
-export async function validateClient(client: Client, clientTransport: Transport) {
+export async function validateClient(clientTransport: Transport) {
+    const client = new Client(
+        {
+            name: "http-client-test",
+            version: "1.0.0",
+        },
+        {
+            capabilities: {},
+        }
+    );
+
     await client.connect(clientTransport);
     const toolList = await client.listTools();
     validateToolListing(toolList.tools);
@@ -109,6 +119,8 @@ export async function validateClient(client: Client, clientTransport: Transport)
     } catch (error) {
         console.error('Tool call failed:', error);
         throw error;
+    } finally {
+        await client.close();
     }
 }
 

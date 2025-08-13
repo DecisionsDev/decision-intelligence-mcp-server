@@ -4,13 +4,13 @@ import {Configuration} from "./command-line.js";
 
 export function executeDecision(configuration :Configuration, decisionId:string, operation:string, input:object|undefined) {
     const url = configuration.url + "/deploymentSpaces/development/decisions/"
-        + encodeURIComponent(decisionId) 
-        + "/operations/" 
+        + encodeURIComponent(decisionId)
+        + "/operations/"
         + encodeURIComponent(operation)
         +"/execute";
 
     return axios.post(url, input, { headers: getJsonContentTypeHeaders(configuration) })
-        .then(function (response) {          
+        .then(function (response) {
             return JSON.stringify(response.data);
       });
 }
@@ -42,7 +42,7 @@ export async function getDecisionMetadata(configuration: Configuration, deployme
 
 export function getMetadata(configuration: Configuration, deploymentSpace:string) {
     const url = configuration.url + "/deploymentSpaces"
-        + "/" + deploymentSpace
+        + "/" + encodeURIComponent(deploymentSpace)
         + "/metadata?names=decisionServiceId";
 
     return axios.get(url, { headers: getHeaders(configuration) })

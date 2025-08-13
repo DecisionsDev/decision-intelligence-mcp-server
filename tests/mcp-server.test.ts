@@ -1,5 +1,4 @@
 import {JSONRPCMessage, MessageExtraInfo} from "@modelcontextprotocol/sdk/types.js";
-import {Client} from "@modelcontextprotocol/sdk/client/index.js";
 import {McpServer} from "@modelcontextprotocol/sdk/server/mcp.js";
 import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
 import type {Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
@@ -8,13 +7,9 @@ import {DecisionRuntime} from "../src/decision-runtime.js";
 import {createMcpServer} from "../src/mcp-server.js";
 import {PassThrough, Readable, Writable} from 'stream';
 import {Credentials} from "../src/credentials.js";
-import {url, setupNockMocks, validateClient} from "./test-utils.js";
+import {setupNockMocks, validateClient} from "./test-utils.js";
 
 describe('Mcp Server', () => {
-
-    beforeAll(() => {
-        setupNockMocks();
-    });
 
     class StreamClientTransport implements Transport {
         public onmessage?: (message: JSONRPCMessage, extra?: MessageExtraInfo) => void;
@@ -70,32 +65,27 @@ describe('Mcp Server', () => {
         }
     }
 
+    const fakeStdin = new PassThrough();
+    const fakeStdout = new PassThrough();
+    const transport = new StdioServerTransport(fakeStdin, fakeStdout);
+    const clientTransport = new StreamClientTransport(fakeStdout, fakeStdin);
+    const configuration = new Configuration(Credentials.createDiApiKeyCredentials('dummy.api.key'),  DecisionRuntime.DI,  transport, 'https://example.com', '1.2.3', true);
+
+    beforeAll(() => {
+        setupNockMocks(configuration);
+    });
+
     test('should properly list and execute tool when configured with STDIO transport', async () => {
-        const fakeStdin = new PassThrough();
-        const fakeStdout = new PassThrough();
-        const transport = new StdioServerTransport(fakeStdin, fakeStdout);
-        const clientTransport = new StreamClientTransport(fakeStdout, fakeStdin);
-        const configuration = new Configuration(new Credentials({apikey : apikey}),  DecisionRuntime.DI,  transport, url, '1.2.3', true);
         let server: McpServer | undefined;
-        let client: Client | undefined;
         try {
             const result = await createMcpServer('toto', configuration);
             server = result.server;
             expect(server.isConnected()).toEqual(true);
-
-            client = new Client({
-                    name: "string-analyzer-client",
-                    version: "1.0.0",
-                },
-                {
-                    capabilities: {},
-                });
-            await validateClient(client, clientTransport);
+            await validateClient(clientTransport);
         } finally {
             await clientTransport?.close();
             await transport?.close();
             await server?.close();
-            await client?.close();
         }
     });
 });
