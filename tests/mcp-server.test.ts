@@ -75,7 +75,7 @@ describe('Mcp Server', () => {
         const fakeStdout = new PassThrough();
         const transport = new StdioServerTransport(fakeStdin, fakeStdout);
         const clientTransport = new StreamClientTransport(fakeStdout, fakeStdin);
-        const configuration = new Configuration(new Credentials({apikey : apikey}),  DecisionRuntime.DI,  transport, TEST_CONFIG.url, '1.2.3', true);
+        const configuration = new Configuration(Credentials.createDiApiKeyCredentials(TEST_CONFIG.apiKey),  DecisionRuntime.DI,  transport, TEST_CONFIG.url, '1.2.3', true);
         let server: McpServer | undefined;
         let client: Client | undefined;
         try {

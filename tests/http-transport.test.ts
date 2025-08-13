@@ -7,6 +7,7 @@ import { createMcpServer } from "../src/mcp-server.js";
 import { Server } from "http";
 import { TEST_CONFIG, TEST_INPUT, TEST_EXPECTATIONS, setupNockMocks, validateToolListing, validateToolExecution } from "./test-utils.js";
 import { AddressInfo } from 'net';
+import {Credentials} from "../src/credentials.js";
 
 describe('HTTP Transport', () => {
     beforeAll(() => {
@@ -15,8 +16,8 @@ describe('HTTP Transport', () => {
 
     test('should properly list and execute tool when configured with HTTP transport', async () => {
         // Create a custom configuration for HTTP transport
-        const configuration = new Configuration('validkey123', DecisionRuntime.DI, undefined, TEST_CONFIG.url, '1.2.3', true);
-        
+        const configuration = new Configuration(Credentials.createDiApiKeyCredentials(TEST_CONFIG.apiKey),  DecisionRuntime.DI,  undefined, TEST_CONFIG.url, '1.2.3', true);
+
         let server: McpServer | undefined;
         let httpServer: Server | undefined;
         let client: Client | undefined;

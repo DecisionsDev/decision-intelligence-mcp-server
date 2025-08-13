@@ -2,6 +2,7 @@ import nock from "nock";
 
 // Shared test data
 export const TEST_CONFIG = {
+    apiKey: 'validKey123',
     protocol: 'https:',
     hostname: 'example.com',
     url: 'https://example.com',
@@ -60,13 +61,14 @@ export const TEST_EXPECTATIONS = {
 
 // Setup nock mocks for testing
 export function setupNockMocks(): void {
-    const { url, decisionServiceId, operationId, output } = TEST_CONFIG;
+    const { apiKey, url, decisionServiceId, operationId, output } = TEST_CONFIG;
     const uri = '/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/' + 
                 encodeURIComponent(operationId) + '/execute?decisionServiceId=' + 
                 encodeURIComponent(decisionServiceId);
     
     nock(url)
         .get('/deploymentSpaces/development/metadata?names=decisionServiceId')
+        .matchHeader('apikey', apiKey)
         .reply(200, [{
             'decisionServiceId': {
                 'name': 'decisionServiceId',
@@ -76,8 +78,10 @@ export function setupNockMocks(): void {
             }
         }])
         .get(`/selectors/lastDeployedDecisionService/deploymentSpaces/development/openapi?decisionServiceId=${decisionServiceId}&outputFormat=JSON/openapi`)
+        .matchHeader('apikey', apiKey)
         .replyWithFile(200, 'tests/loanvalidation-openapi.json')
         .post(uri)
+        .matchHeader('apikey', apiKey)
         .reply(200, output);
 }
 
