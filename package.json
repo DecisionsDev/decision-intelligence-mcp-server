@@ -9,7 +9,8 @@
     "start": "node build/index.js",
     "full-start": "npm run lint && npm run test && npm run build && node build/index.js",
     "dev": "DEBUG=true nodemon",
-    "test": "jest"
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
   "repository": {
     "type": "git",

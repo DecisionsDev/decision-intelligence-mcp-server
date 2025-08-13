@@ -265,6 +265,29 @@ Run the following command to test the MCP server:
 ```bash
 npm test
 ```
+
+### Code Coverage
+
+The project is configured with Jest's built-in code coverage capabilities. To generate a code coverage report:
+
+```bash
+npm run test:coverage
+```
+
+This will:
+1. Run all tests in the project
+2. Generate a coverage report showing which parts of the code are covered by tests
+3. Create detailed reports in the `coverage` directory
+
+The coverage report includes:
+- Statement coverage: percentage of code statements executed
+- Branch coverage: percentage of control structures (if/else, switch) executed
+- Function coverage: percentage of functions called
+- Line coverage: percentage of executable lines executed
+
+Coverage thresholds are set to 70% for statements, branches, functions, and lines. If coverage falls below these thresholds, the test command will fail.
+
+To view the detailed HTML coverage report, open `coverage/lcov-report/index.html` in your browser after running the coverage command.
 ### Running the MCP server in development mode with `nodemon`
 
 Run the MCP server with `nodemon` and the `DEBUG` environment variable:
