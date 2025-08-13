@@ -112,7 +112,7 @@ export async function createMcpServer(name: string, configuration: Configuration
         version: version
     });
 
-    const spaceMetadata = await getMetadata(configuration, Constants.DEVELOPMENT_DEPLOYMENT_SPACE);
+    const spaceMetadata = await getMetadata(configuration, 'development');
     debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
     const serviceIds = getDecisionServiceIds(spaceMetadata);
     debug("serviceIds", JSON.stringify(serviceIds, null, " "));
