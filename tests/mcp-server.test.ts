@@ -2,46 +2,18 @@ import {JSONRPCMessage, MessageExtraInfo} from "@modelcontextprotocol/sdk/types.
 import {Client} from "@modelcontextprotocol/sdk/client/index.js";
 import {McpServer} from "@modelcontextprotocol/sdk/server/mcp.js";
 import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
-import type {Transport, TransportSendOptions} from '@modelcontextprotocol/sdk/shared/transport.js';
+import type {Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
 import {Configuration} from "../src/command-line.js";
 import {DecisionRuntime} from "../src/decision-runtime.js";
 import {createMcpServer} from "../src/mcp-server.js";
-import nock from "nock";
 import {PassThrough, Readable, Writable} from 'stream';
+import { TEST_CONFIG, TEST_INPUT, TEST_EXPECTATIONS, setupNockMocks, validateToolListing, validateToolExecution } from "./test-utils.js";
 
 describe('Mcp Server', () => {
 
-    const protocol = 'https:';
-    const hostname = 'example.com';
-    const url = `${protocol}//${hostname}`;
-
-    const decisionServiceId = 'test/loan_approval/loanApprovalDecisionService/3-2025-06-18T13:00:39.447Z';
-    const operationId = 'approval';
-    const uri = '/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/' + encodeURIComponent(operationId) + '/execute?decisionServiceId=' + encodeURIComponent(decisionServiceId);
-    const output = {
-        "insurance": {
-            "rate": 2.5,
-            "required": true
-        },
-        "approval": {
-            "approved": true,
-            "message": "Loan approved based on income and credit score"
-        }
-    };
-    nock(url)
-        .get('/deploymentSpaces/development/metadata?names=decisionServiceId')
-        .reply(200, [{
-            'decisionServiceId': {
-                'name': 'decisionServiceId',
-                'kind': 'PLAIN',
-                'readOnly': true,
-                'value': decisionServiceId
-            }
-        }])
-        .get(`/selectors/lastDeployedDecisionService/deploymentSpaces/development/openapi?decisionServiceId=${decisionServiceId}&outputFormat=JSON/openapi`)
-        .replyWithFile(200, 'tests/loanvalidation-openapi.json')
-        .post(uri)
-        .reply(200, output);
+    beforeAll(() => {
+        setupNockMocks();
+    });
 
     class StreamClientTransport implements Transport {
         public onmessage?: (message: JSONRPCMessage, extra?: MessageExtraInfo) => void;
@@ -84,8 +56,7 @@ describe('Mcp Server', () => {
         }
 
         async send(
-            message: JSONRPCMessage,
-            _options?: TransportSendOptions
+            message: JSONRPCMessage
         ): Promise<void> {
             const json = JSON.stringify(message) + "\n";
             return new Promise<void>((resolve) => {
@@ -103,7 +74,7 @@ describe('Mcp Server', () => {
         const fakeStdout = new PassThrough();
         const transport = new StdioServerTransport(fakeStdin, fakeStdout);
         const clientTransport = new StreamClientTransport(fakeStdout, fakeStdin);
-        const configuration = new Configuration('validkey123',  DecisionRuntime.DI,  transport, url, '1.2.3', true);
+        const configuration = new Configuration('validkey123',  DecisionRuntime.DI,  transport, TEST_CONFIG.url, '1.2.3', true);
         let server: McpServer | undefined;
         let client: Client | undefined;
         try {
@@ -120,65 +91,14 @@ describe('Mcp Server', () => {
                 });
             await client.connect(clientTransport);
             const toolList = await client.listTools();
-            expect(toolList).toHaveProperty('tools');
-            const tools = toolList.tools;
-            expect(Array.isArray(tools)).toBe(true);
-            expect(tools).toHaveLength(1);
-
-            const loanApprovalTool = tools[0];
-            const toolName = 'Loan_Approval_approval';
-            expect(loanApprovalTool).toEqual(
-                expect.objectContaining({
-                    name: toolName,
-                    title: 'approval',
-                    description: 'Execute approval'
-                })
-            );
-
-            expect(loanApprovalTool).toHaveProperty('inputSchema');
-            expect(typeof loanApprovalTool.inputSchema).toBe('object');
-
-            const input = {
-                loan: {
-                    amount: 1000,
-                    loanToValue: 1.5,
-                    numberOfMonthlyPayments: 1000,
-                    startDate: "2025-06-17T14:40:26Z"
-                },
-                borrower: {
-                    SSN: {
-                        areaNumber: "123",
-                        groupCode: "45",
-                        serialNumber: "6789"
-                    },
-                    birthDate: "1990-01-01T00:00:00Z",
-                    creditScore: 750,
-                    firstName: "Alice",
-                    lastName: "Doe",
-                    latestBankruptcy: {
-                        chapter: 11,
-                        date: "2010-01-01T00:00:00Z",
-                        reason: "Medical debt"
-                    },
-                    yearlyIncome: 85000,
-                    zipCode: "12345"
-                },
-                currentTime: new Date().toISOString()
-            };
+            validateToolListing(toolList.tools);
 
             try {
                 const response = await client.callTool({
-                    name: toolName,
-                    arguments: input
-                }, );
-                expect(response).toBeDefined();
-                expect(response.isError).toBe(undefined);
-                const content = response.content as Array<{type: string, text: string}>;
-                expect(content).toBeDefined();
-                expect(Array.isArray(content)).toBe(true);
-                expect(content).toHaveLength(1);
-                const actualContent = content[0];
-                expect(actualContent.text).toEqual(JSON.stringify(output));
+                    name: TEST_EXPECTATIONS.toolName,
+                    arguments: TEST_INPUT
+                });
+                validateToolExecution(response);
             } catch (error) {
                 console.error('Tool call failed:', error);
                 throw error;

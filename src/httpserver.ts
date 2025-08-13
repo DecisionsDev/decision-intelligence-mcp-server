@@ -4,8 +4,9 @@ import { randomUUID } from "node:crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import * as http from "node:http";
 
-export function runHTTPServer(server: McpServer) {
+export function runHTTPServer(server: McpServer): http.Server {
     const app = express();
     app.use(express.json());
 
@@ -81,5 +82,5 @@ export function runHTTPServer(server: McpServer) {
     // Handle DELETE requests for session termination
     app.delete('/mcp', handleSessionRequest);
 
-    app.listen(3000);
+    return app.listen(3000);
 }
