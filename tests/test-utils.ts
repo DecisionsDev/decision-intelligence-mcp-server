@@ -9,10 +9,10 @@ const hostname = 'example.com';
 export const url = `${protocol}://${hostname}`;
 
 const testConfiguration = {
-    decisionServiceId: 'test/Loan Approval',
+    apiKey: 'validKey123',
     decisionId: 'test/loan_approval/loanApprovalDecisionService/3-2025-06-18T13:00:39.447Z',
+    decisionServiceId: 'test/Loan Approval',
     operationId: 'approval',
-    toolName: toolName,
     output: {
         "insurance": {
             "rate": 2.5,
@@ -63,13 +63,14 @@ const testExpectations = {
 
 // Setup nock mocks for testing
 export function setupNockMocks(): void {
-    const { decisionId, decisionServiceId, operationId, toolName, output } = testConfiguration;
+    const { apiKey, decisionId, decisionServiceId, operationId, toolName, output } = testConfiguration;
     const uri = '/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/' + 
                 encodeURIComponent(operationId) + '/execute?decisionServiceId=' + 
                 encodeURIComponent(decisionServiceId);
     const metadataName = `mcpToolName.${operationId}`;
     nock(url)
         .get('/deploymentSpaces/development/metadata?names=decisionServiceId')
+        .matchHeader('apikey', apiKey)
         .reply(200, [{
             'decisionServiceId': {
                 'name': 'decisionServiceId',
@@ -79,6 +80,7 @@ export function setupNockMocks(): void {
             }
         }])
         .get(`/deploymentSpaces/development/decisions/${encodeURIComponent(decisionId)}/metadata`)
+        .matchHeader('apikey', apiKey)
         .reply(200, {
             map : {
                 [metadataName] : {
@@ -90,8 +92,10 @@ export function setupNockMocks(): void {
             }
         })
         .get(`/selectors/lastDeployedDecisionService/deploymentSpaces/development/openapi?decisionServiceId=${decisionServiceId}&outputFormat=JSON/openapi`)
+        .matchHeader('apikey', apiKey)
         .replyWithFile(200, 'tests/loanvalidation-openapi.json')
         .post(uri)
+        .matchHeader('apikey', apiKey)
         .reply(200, output);
 }
 

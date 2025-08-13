@@ -272,7 +272,7 @@ describe('CLI Configuration', () => {
                     '--url', url,
                     '--transport', 'STDIO'
                 ]);
-            }).toThrow('No decision runtime credentials provide: please set either the APIKEY or both USERNAME and PASSWORD environment variables - or use the corresponding command line arguments');
+            }).toThrow('Decision runtime credentials are missing: please provide either an API key, a username and a Zen API key, or a username and a password');
         });
 
         describe('With API key', () => {
@@ -300,7 +300,7 @@ describe('CLI Configuration', () => {
                         '--apikey', '   ',
                         '--transport', 'STDIO'
                     ]);
-                }).toThrow('The decision runtime API key cannot be empty');
+                }).toThrow('The DI decision runtime API key cannot be empty');
             });
 
             test('should use API key from environment variable', () => {
@@ -328,7 +328,7 @@ describe('CLI Configuration', () => {
                     '--transport', 'STDIO'
                 ]);
 
-                expect(mockDebug).toHaveBeenCalledWith('Credentials(apikey: ***)');
+                expect(mockDebug).toHaveBeenCalledWith('DI API Key(API key: ***)');
             });
         });
 
@@ -512,7 +512,7 @@ describe('CLI Configuration', () => {
                     '--apikey', apiKey,
                     '--transport', 'INVALID'
                 ]);
-            }).toThrow(`The decision runtime API key cannot be empty`); // Should throw on invalid API key first
+            }).toThrow(`The DI decision runtime API key cannot be empty`); // Should throw on invalid API key first
         });
 
         test('should provide descriptive error messages', () => {
