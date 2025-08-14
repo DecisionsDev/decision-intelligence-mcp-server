@@ -1,8 +1,8 @@
-# MCP server for IBM Decision Intelligence
+# MCP server for IBM Decision Intelligence and IBM Automation Decision Services
 
 [![Build and test](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml/badge.svg)](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![npm Version](https://badge.fury.io/js/di-mcp-server.svg)](https://www.npmjs.com/package/di-mcp-server) ![npm Downloads](https://img.shields.io/npm/dw/di-mcp-server)
 
-This Model Context Protocol (MCP) server empowers AI assistants by accessing decisions from IBM Decision Intelligence.
+This Model Context Protocol (MCP) server empowers AI assistants by accessing decisions from IBM Decision Intelligence or IBM Automation Decision Services.
 
 The MCP server is available as an npm package in the free npm registry at https://www.npmjs.com/package/di-mcp-server.
 
@@ -17,9 +17,9 @@ flowchart LR
         client["MCP Client"] <-- MCP/STDIO --> server("DI MCP Server")
     end
 
-    server -- HTTPS --> runtime("DI Runtime")
+    server -- HTTPS --> runtime("Decision Runtime")
 
-    subgraph Decision Intelligence SaaS
+    subgraph id["Decision Intelligence<br>or Automation Decision Services"]
         runtime
     end
 
@@ -27,6 +27,7 @@ flowchart LR
     client <-- MCP/HTTP --> server2("DI MCP Server") -- HTTPS --> runtime
 
 ```
+
 <a id="getting_started"></a>
 ## Getting started with the MCP server
 You can use the MCP server available in the npm registry. If you want to develop your own MCP server or contribute to the development, see [Developing the MCP server](#developing).
@@ -34,14 +35,17 @@ You can use the MCP server available in the npm registry. If you want to develop
 You can run the MCP server with npx to expose each operation of the last deployed version of a decision service as a MCP tool:
 
 ```bash
-npx -y di-mcp-server --apikey <APIKEY> --url <RUNTIME_BASE_URL> --transport <TRANSPORT> --runtime <RUNTIME>
+npx -y di-mcp-server <CREDENTIALS> --url <RUNTIME_BASE_URL> --transport <TRANSPORT> --runtime <RUNTIME>
 ```
 
 where
-- `APIKEY` is the API key to access the decision runtime.
-- `RUNTIME_BASE_URL` is the base URL of the decision runtime REST API. Its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant.
+- `CREDENTIALS` is one of the following options:
+   - `--apikey <DI_API_KEY>` where `DI_API_KEY` is the API key for accessing the decision runtime of IBM Decision Intelligence.
+   - `--username <USERNAME> --password <PASSWORD>` where `USERNAME` and `PASSWORD` are the basic authentication credentials to connect to the decision runtime of IBM Automation Decision Services. 
+   - `--username <USERNAME> --apikey <ZEN_API_KEY>` where `USERNAME` and `ZEN_API_KEY` are the Zen API key credentials to access the decision runtime of IBM Automation Decision Services (see [Authorizing HTTP requests by using the Zen API key](https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/25.0.0?topic=administering-authorizing-http-requests-by-using-zen-api-key))
+- `RUNTIME_BASE_URL` is the base URL of the decision runtime REST API. For IBM Decision Intelligence its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant.
 - `TRANSPORT` is either `STDIO` (default) or `HTTP`.
-- `RUNTIME` is either `DI` (default) for using the decision runtime of Decision Intelligence or `ADS` for using the decision runtime of Cloud Pak for Business Automation or Automation Decision Services.
+- `RUNTIME` is either `DI` (default) or `ADS` for using the decision runtime of respectively IBM Decision Intelligence or IBM Automation Decision Services.
 
 Example:
 
@@ -339,13 +343,15 @@ APIKEY=<APIKEY> URL=<URL> npm run dev
 
 ## Environment variables
 
-| Name             | Description                                                                                |
-|------------------|--------------------------------------------------------------------------------------------|
-| APIKEY           | API key to access the decision runtime.                                                     |
-| DEBUG            | When the value is `true`, the debug messages are written to the `stderr` of the MCP server. |
-| RUNTIME          | The target decision runtime: `DI` (default) or `ADS`.                                       |
-| TRANSPORT        | The transport protocol: `STDIO` (default) or `HTTP`.                                        |
-| URL              | Base URL of the decision runtime                                                           |
+| Name      | Description                                                                                                                      |
+|-----------|----------------------------------------------------------------------------------------------------------------------------------|
+| APIKEY    | API key to access the decision runtime of either IBM Decision Intelligence or IBM Automation Decision Services                   |
+| DEBUG     | When the value is `true`, the debug messages are written to the `stderr` of the MCP server                                       |
+| PASSWORD  | Password to access the decision runtime of IBM Automation Decision Services with basic authentication                            |
+| RUNTIME   | The target decision runtime: `DI` (default) or `ADS`                                                                             |
+| TRANSPORT | The transport protocol: `STDIO` (default) or `HTTP`                                                                              |
+| URL       | Base URL of the decision runtime                                                                                                 |
+| USERNAME  | Username to access the decision runtime of IBM Automation Decision Services either with basic authentication or Zen API key</br> |
 
 ## License
 [Apache 2.0](LICENSE)
