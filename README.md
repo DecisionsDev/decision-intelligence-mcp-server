@@ -34,12 +34,15 @@ You can use the MCP server available in the npm registry. If you want to develop
 You can run the MCP server with npx to expose each operation of the last deployed version of a decision service as a MCP tool:
 
 ```bash
-npx -y di-mcp-server --apikey <APIKEY> --url <RUNTIME_BASE_URL> --transport <TRANSPORT> --runtime <RUNTIME>
+npx -y di-mcp-server <CREDENTIALS> --url <RUNTIME_BASE_URL> --transport <TRANSPORT> --runtime <RUNTIME>
 ```
 
 where
-- `APIKEY` is the API key to access the decision runtime.
-- `RUNTIME_BASE_URL` is the base URL of the decision runtime REST API. Its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant.
+- `CREDENTIALS` is one of the following options::
+   - `--apikey <DI_API_KEY>` where `DI_API_KEY` is the API key for accessing the decision runtime of Decision Intelligence.
+   - `--username <USERNAME> --password <PASSWORD>` where `USERNAME` and `PASSWORD` are the basic authentication credentials to connect to the decision runtime of Cloud Pak for Business Automation or Automation Decision Services. 
+   - `--username <USERNAME> --apikey <ZEN_API_KEY>` where `USERNAME` and `ZEN_API_KEY` are the Zen API key credentials to access the the decision runtime of Cloud Pak for Business Automation (see [Authorizing HTTP requests by using the Zen API key](https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/25.0.0?topic=administering-authorizing-http-requests-by-using-zen-api-key))
+- `- `RUNTIME_BASE_URL` is the base URL of the decision runtime REST API. Its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant.
 - `TRANSPORT` is either `STDIO` (default) or `HTTP`.
 - `RUNTIME` is either `DI` (default) for using the decision runtime of Decision Intelligence or `ADS` for using the decision runtime of Cloud Pak for Business Automation or Automation Decision Services.
 
@@ -339,13 +342,15 @@ APIKEY=<APIKEY> URL=<URL> npm run dev
 
 ## Environment variables
 
-| Name             | Description                                                                                |
-|------------------|--------------------------------------------------------------------------------------------|
-| APIKEY           | API key to access the decision runtime.                                                     |
-| DEBUG            | When the value is `true`, the debug messages are written to the `stderr` of the MCP server. |
-| RUNTIME          | The target decision runtime: `DI` (default) or `ADS`.                                       |
-| TRANSPORT        | The transport protocol: `STDIO` (default) or `HTTP`.                                        |
-| URL              | Base URL of the decision runtime                                                           |
+| Name      | Description                                                                                |
+|-----------|--------------------------------------------------------------------------------------------|
+| APIKEY    | API key to access the decision runtime with either Decision Intelligence or Zen API key    |
+| DEBUG     | When the value is `true`, the debug messages are written to the `stderr` of the MCP server |
+| PASSWORD  | Password to access the decision runtime with basic authentication                          |
+| RUNTIME   | The target decision runtime: `DI` (default) or `ADS`                                       |
+| TRANSPORT | The transport protocol: `STDIO` (default) or `HTTP`                                        |
+| URL       | Base URL of the decision runtime                                                           |
+| USERNAME  | Username to access the decision runtime with basic authentication or Zen API key</br>      |
 
 ## License
 [Apache 2.0](LICENSE)
