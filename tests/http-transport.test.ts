@@ -6,11 +6,9 @@ import { DecisionRuntime } from "../src/decision-runtime.js";
 import { createMcpServer } from "../src/mcp-server.js";
 import { Server } from "http";
 import { TEST_CONFIG, TEST_INPUT, TEST_EXPECTATIONS, setupNockMocks, validateToolListing, validateToolExecution } from "./test-utils.js";
+import { AddressInfo } from 'net';
 
 describe('HTTP Transport', () => {
-    const port = 3000; // Use the default port from runHTTPServer
-    const httpServerUrl = `http://localhost:${port}/mcp`;
-
     beforeAll(() => {
         setupNockMocks();
     });
@@ -47,7 +45,8 @@ describe('HTTP Transport', () => {
             );
             
             // Connect client to server via HTTP
-            clientTransport = new StreamableHTTPClientTransport(new URL(httpServerUrl));
+            const address = httpServer.address() as AddressInfo;
+            clientTransport = new StreamableHTTPClientTransport(new URL(`http://localhost:${address.port}/mcp`));
             
             await client.connect(clientTransport);
             
