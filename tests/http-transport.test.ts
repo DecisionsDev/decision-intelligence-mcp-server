@@ -5,8 +5,12 @@ import { Configuration } from "../src/command-line.js";
 import { DecisionRuntime } from "../src/decision-runtime.js";
 import { createMcpServer } from "../src/mcp-server.js";
 import { Server } from "http";
-import { TEST_CONFIG, TEST_INPUT, TEST_EXPECTATIONS, setupNockMocks, validateToolListing, validateToolExecution } from "./test-utils.js";
 import { AddressInfo } from 'net';
+import {
+    url,
+    setupNockMocks,
+    validateClient
+} from "./test-utils.js";
 
 describe('HTTP Transport', () => {
     beforeAll(() => {
@@ -15,7 +19,7 @@ describe('HTTP Transport', () => {
 
     test('should properly list and execute tool when configured with HTTP transport', async () => {
         // Create a custom configuration for HTTP transport
-        const configuration = new Configuration('validkey123', DecisionRuntime.DI, undefined, TEST_CONFIG.url, '1.2.3', true);
+        const configuration = new Configuration('validkey123', DecisionRuntime.DI, undefined, url, '1.2.3', true);
         
         let server: McpServer | undefined;
         let httpServer: Server | undefined;
@@ -28,7 +32,7 @@ describe('HTTP Transport', () => {
             const result = await createMcpServer('test-server', configuration);
             server = result.server;
             httpServer = result.httpServer;
-            
+
             if (!httpServer) {
                 throw new Error('HTTP server not returned from createMcpServer');
             }
@@ -47,24 +51,7 @@ describe('HTTP Transport', () => {
             // Connect client to server via HTTP
             const address = httpServer.address() as AddressInfo;
             clientTransport = new StreamableHTTPClientTransport(new URL(`http://localhost:${address.port}/mcp`));
-            
-            await client.connect(clientTransport);
-            
-            // Test tool listing
-            const toolList = await client.listTools();
-            validateToolListing(toolList.tools);
-            
-            // Test tool execution
-            try {
-                const response = await client.callTool({
-                    name: TEST_EXPECTATIONS.tool.name,
-                    arguments: TEST_INPUT
-                });
-                validateToolExecution(response);
-            } catch (error) {
-                console.error('Tool call failed:', error);
-                throw error;
-            }
+            await validateClient(client, clientTransport)
         } finally {
             // Clean up resources in reverse order of creation
             if (client) {
