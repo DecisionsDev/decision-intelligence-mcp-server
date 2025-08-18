@@ -2,12 +2,12 @@ import axios from 'axios';
 import { OpenAPIV3_1 } from "openapi-types";
 import {Configuration} from "./command-line.js";
 
-export function executeDecision(configuration :Configuration, decisionId:string, operation:string, input:object|undefined) {
-    const url = configuration.url + "/deploymentSpaces/development/decisions/"
+export function executeDecision(configuration :Configuration, deploymentSpace: string, decisionId:string, operation:string, input:object|undefined) {
+    const url = configuration.url + "/deploymentSpaces/" + encodeURIComponent(deploymentSpace) + "/decisions/"
         + encodeURIComponent(decisionId)
         + "/operations/"
         + encodeURIComponent(operation)
-        +"/execute";
+        + "/execute";
 
     return axios.post(url, input, { headers: getJsonContentTypeHeaders(configuration) })
         .then(function (response) {
@@ -22,8 +22,8 @@ function getJsonContentTypeHeaders(configuration: Configuration) {
     };
 }
 
-export function executeLastDeployedDecisionService(configuration: Configuration, serviceId:string, operation:string, input: object) {
-    const url = configuration.url + "/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/"
+export function executeLastDeployedDecisionService(configuration: Configuration, deploymentSpace: string, serviceId:string, operation:string, input: object) {
+    const url = configuration.url +  "/selectors/lastDeployedDecisionService/deploymentSpaces/" + encodeURIComponent(deploymentSpace) + "/operations/"
       + encodeURIComponent(operation)
       + "/execute?decisionServiceId=" + encodeURIComponent(serviceId);
 
@@ -65,9 +65,9 @@ export function getDecisionServiceIds(metadata: MetadataType[]): string[] {
     return ids;
 }
 
-export function getDecisionOpenapi(configuration: Configuration, decisionId:string) {
-    const url = configuration.url + "/deploymentSpaces/development/decisions/"
-        + encodeURIComponent(decisionId) 
+export function getDecisionOpenapi(configuration: Configuration, deploymentSpace: string, decisionId:string) {
+    const url = configuration.url + "/deploymentSpaces/"  + encodeURIComponent(deploymentSpace)
+        + "/decisions/" + encodeURIComponent(decisionId)
         + "/openapi";
 
     return axios.get(url, { headers: getHeaders(configuration) })
@@ -85,8 +85,8 @@ function getHeaders(configuration: Configuration) {
     };
 }
 
-export function getDecisionServiceOpenAPI(configuration: Configuration, decisionServiceId:string) {
-    const url = configuration.url + "/selectors/lastDeployedDecisionService/deploymentSpaces/development"
+export function getDecisionServiceOpenAPI(configuration: Configuration, deploymentSpace: string, decisionServiceId:string) {
+    const url = configuration.url + "/selectors/lastDeployedDecisionService/deploymentSpaces/" + encodeURIComponent(deploymentSpace)
         + "/openapi?decisionServiceId="
         + encodeURIComponent(decisionServiceId) + "&outputFormat=JSON"
         + "/openapi";

@@ -1,9 +1,8 @@
 import {debug} from "./debug.js";
 import {getDecisionMetadata} from './diruntimeclient.js';
-import {Constants} from "./constants.js";
 import {Configuration} from "./command-line.js";
 
-export async function getToolName(configuration: Configuration, info: Record<string, string>, operationId: string, decisionServiceId: string, toolNames: string[]): Promise<string> {
+export async function getToolName(configuration: Configuration, deploymentSpace: string, info: Record<string, string>, operationId: string, decisionServiceId: string, toolNames: string[]): Promise<string> {
     const serviceName = info["x-ibm-ads-decision-service-name"];
     debug("decisionServiceName", serviceName);
     const decisionId = info["x-ibm-ads-decision-id"];
@@ -20,7 +19,7 @@ export async function getToolName(configuration: Configuration, info: Record<str
         [key: string]: MetadataEntry;
     };
 
-    const metadata: { map: MetadataMap } = await getDecisionMetadata(configuration, Constants.DEVELOPMENT_DEPLOYMENT_SPACE, decisionId)
+    const metadata: { map: MetadataMap } = await getDecisionMetadata(configuration, deploymentSpace, decisionId)
     debug("metadata", JSON.stringify(metadata, null, " "));
 
     const metadataName = `mcpToolName.${operationId}`;

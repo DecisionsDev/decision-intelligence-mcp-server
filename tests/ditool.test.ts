@@ -47,8 +47,9 @@ describe('getToolName', () => {
 
     const url = 'https://example.com';
     const decisionId = 'decision-id';
+    const deploymentSpace = `development`;
     nock(url)
-        .get(`/deploymentSpaces/development/decisions/${decisionId}/metadata`)
+        .get(`/deploymentSpaces/${deploymentSpace}/decisions/${decisionId}/metadata`)
         .reply(200, decisionMetadata)
         .get(`/deploymentSpaces/development/decisions/${decisionId}/metadata`)
         .reply(200, { map : {}});
@@ -61,12 +62,12 @@ describe('getToolName', () => {
     }
 
     test('should use the appropriate metadata if provided', () => {
-        return expect(getToolName(configuration, info, operationId, 'decision-service-id', [])).resolves.
+        return expect(getToolName(configuration, deploymentSpace, info, operationId, 'decision-service-id', [])).resolves.
             toBe(toolName);
     });
 
     test('should invoke generateToolName if the appropriate metadata is not provided', async () => {
-        return expect(getToolName(configuration, info, operationId, 'decision-service-id', [])).resolves.
+        return expect(getToolName(configuration, deploymentSpace, info, operationId, 'decision-service-id', [])).resolves.
             toBe(`${decisionServiceName}_${operationId}`);
     });
 });

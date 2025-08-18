@@ -1,7 +1,8 @@
-import {Configuration, createConfiguration} from '../src/command-line.js';
+import {createConfiguration, Configuration} from '../src/command-line.js';
 import {debug, setDebug} from '../src/debug.js';
 import {DecisionRuntime, parseDecisionRuntime} from '../src/decision-runtime.js';
 import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
+import {Credentials} from "../src/credentials.js";
 
 // Mock the debug function and setDebug function
 jest.mock('../src/debug', () => ({
@@ -375,7 +376,8 @@ describe('CLI Configuration', () => {
                 transport: expect.any(StdioServerTransport),
                 url: url,
                 version: version,
-                debugEnabled: originalEnv.DEBUG === 'true'
+                debugEnabled: originalEnv.DEBUG === 'true',
+                deploymentSpaces: ['development']
             });
         });
 
@@ -407,15 +409,18 @@ describe('CLI Configuration', () => {
             process.env.APIKEY = 'env-api-key';
             process.env.TRANSPORT = 'STDIO';
             process.env.RUNTIME = 'DI';
+            process.env.DEPLOYMENT_SPACES = 'prod,dev,staging';
 
             const urlFromCli = 'https://cli-api.example.com';
             const cliApiKey = 'cli-api-key-123';
+            const deploymentSpaces = ['toto','titi','tutu'];
             const config = createConfiguration([
                 'node', 'cli.js',
                 '--url', urlFromCli,
                 '--apikey', cliApiKey,
                 '--transport', 'HTTP',
-                '--runtime', 'ADS'
+                '--runtime', 'ADS',
+                '--deploymentSpaces', deploymentSpaces.join(',')
             ]);
 
             expect(config).toMatchObject({
@@ -425,6 +430,7 @@ describe('CLI Configuration', () => {
                 runtime: DecisionRuntime.ADS,
                 transport: undefined,
                 url: urlFromCli,
+                deploymentSpaces: deploymentSpaces
             });
         });
 
@@ -495,10 +501,161 @@ describe('CLI Configuration', () => {
                     runtime: Configuration.defaultRuntime(),
                     transport: expect.any(StdioServerTransport),
                     url: url,
+                    deploymentSpaces: ['development']
                 });
             } finally {
                 process.argv = originalArgv;
             }
+        });
+    });
+
+    describe('validateDeploymentSpaces', () => {
+        const deploymentSpaces = ['development', 'production', 'test'];
+        test('should accept valid deployment spaces', () => {
+            const config = createConfiguration([
+                'node', 'cli.js',
+                '--url', url,
+                '--apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--deploymentSpaces', deploymentSpaces.join(',')
+            ]);
+
+            expect(config.deploymentSpaces).toEqual(deploymentSpaces);
+        });
+
+        test('should accept deployment space with white spaces', () => {
+            const deploymentSpace = 'toto     toto';
+            const config = createConfiguration([
+                'node', 'cli.js',
+                '--url', url,
+                '--apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--deploymentSpaces', `  ${deploymentSpace}        `
+            ]);
+
+            expect(config.deploymentSpaces).toEqual([deploymentSpace]);
+        });
+
+        test('should trim deployment spaces', () => {
+            const config = createConfiguration([
+                'node', 'cli.js',
+                '--url', url,
+                '--apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--deploymentSpaces', '     development         ,  production     ,  test  '
+            ]);
+
+            expect(config.deploymentSpaces).toEqual(deploymentSpaces);
+        });
+
+        test('should use default deployment spaces when parsed array is empty', () => {
+            const config = createConfiguration([
+                'node', 'cli.js',
+                '--url', url,
+                '--apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--deploymentSpaces', '     ,     ,       ,     '
+            ]);
+
+            expect(config.deploymentSpaces).toEqual(Configuration.defaultDeploymentSpaces());
+        });
+
+        test('should create Configuration with default deploymentSpaces when not provided', () => {
+            const config = createConfiguration([
+                'node', 'cli.js',
+                '--url', url,
+                '--apikey', 'validkey123',
+                '--transport', 'STDIO'
+            ]);
+
+            expect(config.deploymentSpaces).toEqual(Configuration.defaultDeploymentSpaces());
+        });
+
+        test('should throw error for invalid deployment spaces that cannot be URI encoded', () => {
+            // Create a deployment space name that will cause encodeURIComponent to throw
+            // This is a surrogate pair that is deliberately malformed
+            const invalidSpace = 'test\uD800space'; // Unpaired surrogate, will cause encodeURIComponent to throw
+
+            // Mock the encodeURIComponent to throw for our specific test case
+            const originalEncodeURIComponent = global.encodeURIComponent;
+            global.encodeURIComponent = jest.fn().mockImplementation((str) => {
+                if (str === invalidSpace) {
+                    throw new URIError('URI malformed');
+                }
+                return originalEncodeURIComponent(str);
+            });
+
+            try {
+                expect(() => {
+                    createConfiguration([
+                        'node', 'cli.js',
+                        '--url', url,
+                        '--apikey', 'validkey123',
+                        '--transport', 'STDIO',
+                        '--deploymentSpaces', `development,${invalidSpace}`
+                    ]);
+                }).toThrow(`Invalid deployment space '${invalidSpace}' cannot be URI encoded.`);
+            } finally {
+                // Restore the original function
+                global.encodeURIComponent = originalEncodeURIComponent;
+            }
+        });
+
+        test('should throw error listing all invalid deployment spaces when multiple are invalid', () => {
+            // Create three deployment space names that will cause encodeURIComponent to throw
+            const invalidSpace1 = 'test\uD800space1';
+            const invalidSpace2 = 'test\uD800space2';
+            const invalidSpace3 = 'test\uD800space3';
+
+            // Mock the encodeURIComponent to throw for our specific test cases
+            const originalEncodeURIComponent = global.encodeURIComponent;
+            global.encodeURIComponent = jest.fn().mockImplementation((str) => {
+                if ([invalidSpace1, invalidSpace2, invalidSpace3].includes(str)) {
+                    throw new URIError('URI malformed');
+                }
+                return originalEncodeURIComponent(str);
+            });
+
+            try {
+                expect(() => {
+                    createConfiguration([
+                        'node', 'cli.js',
+                        '--url', url,
+                        '--apikey', 'validkey123',
+                        '--transport', 'STDIO',
+                        '--deploymentSpaces', `development,${invalidSpace1},${invalidSpace2},${invalidSpace3},production`
+                    ]);
+                }).toThrow(`Invalid deployment spaces '${invalidSpace1}', '${invalidSpace2}', '${invalidSpace3}' cannot be URI encoded.`);
+            } finally {
+                // Restore the original function
+                global.encodeURIComponent = originalEncodeURIComponent;
+            }
+        });
+
+        test('should use deployment spaces from environment variable', () => {
+            process.env.DEPLOYMENT_SPACES = 'env-space-1,env-space-2';
+
+            const config = createConfiguration([
+                'node', 'cli.js',
+                '--url', url,
+                '--apikey', 'validkey123',
+                '--transport', 'STDIO'
+            ]);
+
+            expect(config.deploymentSpaces).toEqual(['env-space-1', 'env-space-2']);
+        });
+
+        test('should call debug function with deployment spaces', () => {
+            const deploymentSpaces = 'dev,prod';
+            createConfiguration([
+                'node', 'cli.js',
+                '--url', url,
+                '--apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--deploymentSpaces', deploymentSpaces
+            ]);
+
+            expect(mockDebug).toHaveBeenCalledWith(`DEPLOYMENT SPACES=${deploymentSpaces}`);
         });
     });
 
