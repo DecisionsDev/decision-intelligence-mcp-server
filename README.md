@@ -235,6 +235,92 @@ As for Claude Desktop, you can specify the API key and base URL of the decision 
 
 For more information, see Cursor's documentation about [_Installing MCP servers_](https://docs.cursor.com/en/context/mcp#installing-mcp-servers).
 
+### Using Custom Tool Names for Decision Intelligence
+
+When integrating Decision Intelligence with AI tools, you may need to customize the tool names to meet specific requirements or limitations of the target platform, such as:
+
+- Maximum length restrictions
+- Forbidden characters
+- Naming conventions
+
+#### Default Tool Naming Algorithm
+
+By default, tool names are generated as follows:
+1. Combines the decision service name with the operation ID: `decisionServiceName operationID`
+2. Replaces spaces and forward slashes with underscores: `decisionServiceName_operationID`
+3. Handles name collisions by using the decision service ID: use `decisionServiceID_operationID` if `decisionServiceName_operationID` already exists 
+
+#### Customizing Tool Names with the Decision Intelligence REST API
+
+If the default naming doesn't meet your requirements, you can set custom tool names using decision metadata:
+
+##### Either directly
+
+With a command-line tool like `curl`, or a browser extension like `Postman`, you can set the `mcpToolName.<OPERATION_ID>` metadata property for any operation:
+
+```bash
+curl -X 'PUT' \
+  'https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1/deploymentSpaces/development/decisions/DECISION_ID/metadata' \
+  -H 'accept: */*' \
+  -H 'Authorization: apikey YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "map": {
+    "mcpToolName.OPERATION_ID": {
+      "name": "mcpToolName.OPERATION_ID",
+      "kind": "PLAIN",
+      "readOnly": false,
+      "value": "YourCustomToolName"
+    }
+  }
+}'
+```
+where
+- `TENANT_NAME` is the name of the tenant.
+- `DECISION_ID` is the decision's unique identifier
+- `DI_API_KEY` is the Decision Intelligence API key
+- `OPERATION_ID` is the operation unique identifier
+- `YourCustomToolName` is the desired tool name
+
+##### Or with Swagger UI
+
+Alternatively, you can also use the Decision Intelligence REST API Swagger UI to update the tool name:
+1. Access the Decision Intelligence REST API Swagger UI by navigating to the URL of your Decision Manager instance (`https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/swagger-ui/#`)
+2. Find the PUT endpoint for /deploymentSpaces/{deploymentSpaceId}/decisions/{decisionId}/metadata, expand it, click **Try it out**
+3. Click the **lock icon** to Authorize the request with the DI API key
+4. Fill in the required parameters:
+   - `deploymentSpaceId`: `development`
+   - `decisionId`: the decision's unique identifier
+   - In the request body, provide the metadata JSON as illustrated below
+      ```json
+      {
+        "map": {
+          "mcpToolName.OPERATION_ID": {
+            "name": "mcpToolName.OPERATION_ID",
+            "kind": "PLAIN",
+            "readOnly": false,
+            "value": "YourCustomToolName"
+          }
+        }
+      }
+     ```
+   [![Thumbnail](./doc/di-rest-api-thumbnail.png)](doc/di-rest-api.png)
+5. Execute the request
+
+
+#### Best Practices for Custom Tool Names
+
+When creating custom tool names, consider these best practices:
+
+1. **Keep names concise**: Shorter names are easier to remember and use
+2. **Use consistent patterns**: Apply the same naming convention across all tools
+3. **Avoid special characters**: Stick to alphanumeric characters and underscores
+4. **Consider case sensitivity**: Some platforms are case-sensitive, others aren't
+5. **Test compatibility**: Verify that your custom names work with your target AI platform
+6. **Document your naming scheme**: Maintain documentation of your custom naming conventions
+
+By using custom tool names, you can ensure that your Decision Intelligence tools integrate seamlessly with any AI platform while maintaining readability and consistency.
+
 <a id="developing"></a>
 ## Developing the MCP server
 
