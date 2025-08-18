@@ -5,7 +5,7 @@ import { DecisionRuntime } from "../src/decision-runtime.js";
 import { createMcpServer } from "../src/mcp-server.js";
 import { Server } from "http";
 import { AddressInfo } from 'net';
-import {Credentials} from "../src/credentials";
+import {Credentials} from "../src/credentials.js";
 import {setupNockMocks, validateClient} from "./test-utils.js";
 
 describe('HTTP Transport', () => {
@@ -34,7 +34,7 @@ describe('HTTP Transport', () => {
             // Create client transport to connect server via HTTP
             const address = httpServer.address() as AddressInfo;
             clientTransport = new StreamableHTTPClientTransport(new URL(`http://localhost:${address.port}/mcp`));
-            await validateClient(clientTransport)
+            await validateClient(clientTransport, configuration.deploymentSpaces);
         } finally {
             if (clientTransport) {
                 try {

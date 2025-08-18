@@ -16,7 +16,8 @@ export class Configuration {
         public transport: StdioServerTransport | undefined,
         public url: string,
         public version: string,
-        public debugEnabled: boolean
+        public debugEnabled: boolean,
+        public deploymentSpaces: string[] = Configuration.defaultDeploymentSpaces()
     ) {
         this.runtime = runtime || Configuration.defaultRuntime();
     }
@@ -27,6 +28,10 @@ export class Configuration {
 
     static defaultTransport(): string {
         return Configuration.STDIO;
+    }
+
+    static defaultDeploymentSpaces(): string[] {
+        return ['development'];
     }
 
     isDiRuntime(): boolean {
@@ -85,6 +90,41 @@ function validateDecisionRuntime(runtime: string): DecisionRuntime {
     return decisionRuntime;
 }
 
+function validateDeploymentSpaces(parseDeploymentSpaceOption: string | undefined): string[] {
+    debug("DEPLOYMENT SPACES=" + parseDeploymentSpaceOption);
+    const deploymentSpaces = parseDeploymentSpaces(parseDeploymentSpaceOption);
+    const invalidDeploymentSpaces: string[] = [];
+    for (const deploymentSpace of deploymentSpaces) {
+        try {
+            encodeURIComponent(deploymentSpace);
+        } catch {
+            invalidDeploymentSpaces.push(deploymentSpace);
+        }
+    }
+
+    const nbOfInvalidDeploymentSpaces = invalidDeploymentSpaces.length;
+    if (nbOfInvalidDeploymentSpaces > 0) {
+        if (nbOfInvalidDeploymentSpaces === 1) {
+            throw new Error(`Invalid deployment space '${invalidDeploymentSpaces[0]}' cannot be URI encoded.`);
+        }
+        throw new Error(`Invalid deployment spaces '${invalidDeploymentSpaces.join("', '")}' cannot be URI encoded.`);
+    }
+    return deploymentSpaces;
+}
+
+function parseDeploymentSpaces(deploymentSpaces: string | undefined): string[] {
+    if (deploymentSpaces !== undefined) {
+        const parsedDeploymentSpaces = deploymentSpaces
+            .split(',')
+            .map(ds => ds.trim())
+            .filter(ds => ds.length > 0);
+        if (parsedDeploymentSpaces.length > 0) {
+            return parsedDeploymentSpaces;
+        }
+    }
+    return Configuration.defaultDeploymentSpaces();
+}
+
 export function createConfiguration(cliArguments?: readonly string[]): Configuration {
     const program = new Command();
     const version = String(process.env.npm_package_version);
@@ -98,7 +138,8 @@ export function createConfiguration(cliArguments?: readonly string[]): Configura
         .option('--username <string>', "Username for the decision runtime. Or set the 'USERNAME' environment variable")
         .option('--password <string>', "Password for the decision runtime. Or set 'PASSWORD' environment variable)")
         .option('--transport <transport>', "Transport mode: 'STDIO' or 'HTTP'")
-        .option("--runtime <runtime>", "Target decision runtime: 'DI' or 'ADS'. Default value is 'DI'");
+        .option("--runtime <runtime>", "Target decision runtime: 'DI' or 'ADS'. Default value is 'DI'")
+        .option('--deploymentSpaces <list>', "Comma-separated list of deployment spaces to scan (default: 'development')");
 
     program.parse(cliArguments);
 
@@ -111,7 +152,8 @@ export function createConfiguration(cliArguments?: readonly string[]): Configura
     const runtime = validateDecisionRuntime(options["runtime"] || process.env.RUNTIME);
     const transport = validateTransport(options.transport || process.env.TRANSPORT);
     const url = validateUrl(options.url || process.env.URL);
+    const deploymentSpaces = validateDeploymentSpaces(options.deploymentSpaces || process.env.DEPLOYMENT_SPACES);
 
     // Create and return configuration object
-    return new Configuration(credentials, runtime, transport, url, version, debugFlag);
+    return new Configuration(credentials, runtime, transport, url, version, debugFlag, deploymentSpaces);
 }

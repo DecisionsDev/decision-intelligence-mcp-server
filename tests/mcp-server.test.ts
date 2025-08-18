@@ -69,7 +69,7 @@ describe('Mcp Server', () => {
     const fakeStdout = new PassThrough();
     const transport = new StdioServerTransport(fakeStdin, fakeStdout);
     const clientTransport = new StreamClientTransport(fakeStdout, fakeStdin);
-    const configuration = new Configuration(Credentials.createDiApiKeyCredentials('dummy.api.key'),  DecisionRuntime.DI,  transport, 'https://example.com', '1.2.3', true);
+    const configuration = new Configuration(Credentials.createDiApiKeyCredentials('dummy.api.key'),  DecisionRuntime.DI,  transport, 'https://example.com', '1.2.3', true, ['staging', 'production']);
 
     beforeAll(() => {
         setupNockMocks(configuration);
@@ -81,7 +81,7 @@ describe('Mcp Server', () => {
             const result = await createMcpServer('toto', configuration);
             server = result.server;
             expect(server.isConnected()).toEqual(true);
-            await validateClient(clientTransport);
+            await validateClient(clientTransport, configuration.deploymentSpaces);
         } finally {
             await clientTransport?.close();
             await transport?.close();

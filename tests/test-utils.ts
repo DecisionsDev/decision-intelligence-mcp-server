@@ -1,69 +1,34 @@
 import nock from "nock";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type {Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
-import {Configuration} from "../src/command-line";
+import {Configuration} from "../src/command-line.js";
 
-export const testConfiguration = {
-    decisionServiceId: 'test/Loan Approval',
-    decisionId: 'test/loan_approval/loanApprovalDecisionService/3-2025-06-18T13:00:39.447Z',
-    operationId: 'approval',
-    output: {
-        "insurance": {
-            "rate": 2.5,
+// Shared test data
+const decisionServiceId = 'test/Loan Approval';
+const decisionId = 'test/loan_approval/loanApprovalDecisionService/3-2025-06-18T13:00:39.447Z';
+const operationId = 'approval';
+const executionOutput = {
+    "insurance": {
+        "rate": 2.5,
             "required": true
-        },
-        "approval": {
-            "approved": true,
+    },
+    "approval": {
+        "approved": true,
             "message": "Loan approved based on income and credit score"
-        }
-    }
-};
-
-const testInput = {
-    loan: {
-        amount: 1000,
-        loanToValue: 1.5,
-        numberOfMonthlyPayments: 1000,
-        startDate: "2025-06-17T14:40:26Z"
-    },
-    borrower: {
-        SSN: {
-            areaNumber: "123",
-            groupCode: "45",
-            serialNumber: "6789"
-        },
-        birthDate: "1990-01-01T00:00:00Z",
-        creditScore: 750,
-        firstName: "Alice",
-        lastName: "Doe",
-        latestBankruptcy: {
-            chapter: 11,
-            date: "2010-01-01T00:00:00Z",
-            reason: "Medical debt"
-        },
-        yearlyIncome: 85000,
-        zipCode: "12345"
-    },
-    currentTime: new Date().toISOString()
-};
-
-const testExpectations = {
-    tool: {
-        name: 'my tool name',
-        title: 'approval',
-        description: 'Execute approval'
     }
 };
 
 // Setup nock mocks for testing
 export function setupNockMocks(configuration: Configuration): void {
-    const { decisionId, decisionServiceId, operationId, output } = testConfiguration;
     const metadataName = `mcpToolName.${operationId}`;
     const credentials = configuration.credentials;
     const headerValue = credentials.getAuthorizationHeaderValue();
     const headerKey = credentials.getAuthorizationHeaderKey();
-    nock(configuration.url)
-        .get('/deploymentSpaces/development/metadata?names=decisionServiceId')
+    for(const deploymentSpace of configuration.deploymentSpaces) {
+        const deploymentSpaceId = encodeURIComponent(deploymentSpace);
+        const decisionService = encodeURIComponent(decisionServiceId);
+        nock(configuration.url)
+        .get(`/deploymentSpaces/${deploymentSpaceId}/metadata?names=decisionServiceId`)
         .matchHeader(headerKey, headerValue)
         .reply(200, [{
             'decisionServiceId': {
@@ -73,7 +38,7 @@ export function setupNockMocks(configuration: Configuration): void {
                 'value': decisionServiceId
             }
         }])
-        .get(`/deploymentSpaces/development/decisions/${encodeURIComponent(decisionId)}/metadata`)
+        .get(`/deploymentSpaces/${deploymentSpaceId}/decisions/${encodeURIComponent(decisionId)}/metadata`)
         .matchHeader(headerKey, headerValue)
         .reply(200, {
             map : {
@@ -81,24 +46,22 @@ export function setupNockMocks(configuration: Configuration): void {
                     'name': metadataName,
                     'kind': 'PLAIN',
                     'readOnly': false,
-                    'value': testExpectations.tool.name
+                    'value': deploymentSpaceId
                 }
             }
         })
-        .get(`/selectors/lastDeployedDecisionService/deploymentSpaces/development/openapi?decisionServiceId=${decisionServiceId}&outputFormat=JSON/openapi`)
+        .get(`/selectors/lastDeployedDecisionService/deploymentSpaces/${deploymentSpaceId}/openapi?decisionServiceId=${decisionService}&outputFormat=JSON/openapi`)
         .matchHeader(headerKey, headerValue)
         .replyWithFile(200, 'tests/loanvalidation-openapi.json')
-        .post('/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/' +
-            encodeURIComponent(operationId) + '/execute?decisionServiceId=' +
-            encodeURIComponent(decisionServiceId))
+        .post(`/selectors/lastDeployedDecisionService/deploymentSpaces/${deploymentSpaceId}/operations/${encodeURIComponent(operationId)}/execute?decisionServiceId=${decisionService}`)
         .matchHeader(headerKey, headerValue)
-        .reply(200, output);
+        .reply(200, executionOutput);
+    }
 }
 
-export async function validateClient(clientTransport: Transport) {
-    const client = new Client(
-        {
-            name: "http-client-test",
+export async function validateClient(clientTransport: Transport, deploymentSpaces: string[]): Promise<void> {
+    const client = new Client({
+            name: "client",
             version: "1.0.0",
         },
         {
@@ -106,44 +69,86 @@ export async function validateClient(clientTransport: Transport) {
         }
     );
 
-    await client.connect(clientTransport);
-    const toolList = await client.listTools();
-    validateToolListing(toolList.tools);
-
     try {
-        const response = await client.callTool({
-            name: testExpectations.tool.name,
-            arguments: testInput
+        await client.connect(clientTransport);
+        const toolList = await client.listTools();
+        const tools = toolList.tools;
+
+        expect(Array.isArray(tools)).toBe(true);
+        expect(tools).toHaveLength(deploymentSpaces.length);
+
+        deploymentSpaces.forEach((deploymentSpace, index) => {
+            const loanApprovalTool = tools[index];
+            expect(loanApprovalTool).toEqual(
+                expect.objectContaining({
+                    name: `${deploymentSpace}`,
+                    title: operationId,
+                    description: 'Execute approval'
+                },)
+            );
+            expect(loanApprovalTool).toHaveProperty('inputSchema');
+            expect(typeof loanApprovalTool.inputSchema).toBe('object');
         });
-        validateToolExecution(response);
+
+        const toolNames: string[] = tools.map((tool) => {
+            return tool.name;
+        });
+
+        await validateToolExecutions(toolNames);
+
+        async function validateToolExecutions(toolNames: string[]): Promise<void> {
+            const executionInput = {
+                loan: {
+                    amount: 1000,
+                    loanToValue: 1.5,
+                    numberOfMonthlyPayments: 1000,
+                    startDate: "2025-06-17T14:40:26Z"
+                },
+                borrower: {
+                    SSN: {
+                        areaNumber: "123",
+                        groupCode: "45",
+                        serialNumber: "6789"
+                    },
+                    birthDate: "1990-01-01T00:00:00Z",
+                    creditScore: 750,
+                    firstName: "Alice",
+                    lastName: "Doe",
+                    latestBankruptcy: {
+                        chapter: 11,
+                        date: "2010-01-01T00:00:00Z",
+                        reason: "Medical debt"
+                    },
+                    yearlyIncome: 85000,
+                    zipCode: "12345"
+                },
+                currentTime: new Date().toISOString()
+            };
+
+            for (const toolName of toolNames) {
+                try {
+                    const response = await client.callTool({
+                        name: toolName,
+                        arguments: executionInput
+                    });
+
+                    expect(response).toBeDefined();
+                    const content = response.content as Array<{type: string, text: string}>;
+                    expect(content).toBeDefined();
+                    expect(Array.isArray(content)).toBe(true);
+                    expect(content).toHaveLength(1);
+                    const actualContent = content[0];
+                    expect(actualContent.text).toEqual(JSON.stringify(executionOutput));
+                } catch (error) {
+                    console.error(`An unexpected error occurred while calling tool '${toolName}':`, error);
+                    throw error;
+                }
+            }
+        }
     } catch (error) {
         console.error('Tool call failed:', error);
         throw error;
     } finally {
         await client.close();
     }
-}
-
-function validateToolListing(tools: any[]): void {
-    expect(Array.isArray(tools)).toBe(true);
-    expect(tools).toHaveLength(1);
-    
-    const loanApprovalTool = tools[0];
-    expect(loanApprovalTool).toEqual(
-        expect.objectContaining(testExpectations.tool)
-    );
-    
-    expect(loanApprovalTool).toHaveProperty('inputSchema');
-    expect(typeof loanApprovalTool.inputSchema).toBe('object');
-}
-
-function validateToolExecution(response: any): void {
-    expect(response).toBeDefined();
-    expect(response.isError).toBe(undefined);
-    const content = response.content as Array<{type: string, text: string}>;
-    expect(content).toBeDefined();
-    expect(Array.isArray(content)).toBe(true);
-    expect(content).toHaveLength(1);
-    const actualContent = content[0];
-    expect(actualContent.text).toEqual(JSON.stringify(testConfiguration.output));
 }

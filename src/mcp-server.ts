@@ -53,7 +53,7 @@ function getToolDefinition(path: OpenAPIV3_1.PathItemObject, components: OpenAPI
     };
 }
 
-async function registerTool(server: McpServer, configuration: Configuration, decisionOpenAPI: OpenAPIV3_1.Document, decisionServiceId: string, toolNames: string[]) {
+async function registerTool(server: McpServer, configuration: Configuration, deploymentSpace: string, decisionOpenAPI: OpenAPIV3_1.Document, decisionServiceId: string, toolNames: string[]) {
     for (const key in decisionOpenAPI.paths) {
         debug("Found operationName", key);
 
@@ -86,7 +86,7 @@ async function registerTool(server: McpServer, configuration: Configuration, dec
         debug("inputSchema", inputSchema);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const toolName = await getToolName(configuration, (decisionOpenAPI as any).info, operationId, decisionServiceId, toolNames)
+        const toolName = await getToolName(configuration, deploymentSpace, (decisionOpenAPI as any).info, operationId, decisionServiceId, toolNames);
         debug("toolName", toolName, toolNames);
         toolNames.push(toolName);
 
@@ -96,7 +96,7 @@ async function registerTool(server: McpServer, configuration: Configuration, dec
             async (input) => {
                 const decInput = input;
                 debug("Execute decision with", JSON.stringify(decInput, null, " "))
-                const str = await executeLastDeployedDecisionService(configuration, decisionServiceId, operationId, decInput);
+                const str = await executeLastDeployedDecisionService(configuration, deploymentSpace, decisionServiceId, operationId, decInput);
                 return {
                     content: [{ type: "text", text: str}]
                 };
@@ -112,17 +112,19 @@ export async function createMcpServer(name: string, configuration: Configuration
         version: version
     });
 
-    const spaceMetadata = await getMetadata(configuration, 'development');
-    debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
-    const serviceIds = getDecisionServiceIds(spaceMetadata);
-    debug("serviceIds", JSON.stringify(serviceIds, null, " "));
-
     const toolNames: string[] = [];
-    for (const serviceId of serviceIds) {
-        debug("serviceId", serviceId);
-        const openapi = await getDecisionServiceOpenAPI(configuration, serviceId);
-        
-        await registerTool(server, configuration, openapi, serviceId, toolNames);
+    for (const deploymentSpace of configuration.deploymentSpaces) {
+        debug("deploymentSpace", deploymentSpace);
+        const spaceMetadata = await getMetadata(configuration, deploymentSpace);
+        debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
+        const serviceIds = getDecisionServiceIds(spaceMetadata);
+        debug("serviceIds", JSON.stringify(serviceIds, null, " "));
+
+        for (const serviceId of serviceIds) {
+            debug("serviceId", serviceId);
+            const openapi = await getDecisionServiceOpenAPI(configuration, deploymentSpace, serviceId);
+            await registerTool(server, configuration, deploymentSpace, openapi, serviceId, toolNames);
+        }
     }
 
     if (configuration.isHttpTransport()) {

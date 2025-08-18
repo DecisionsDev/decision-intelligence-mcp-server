@@ -1,4 +1,4 @@
-import {executeDecision, getDecisionMetadata, getDecisionOpenapi, getDecisionServiceIds, getDecisionServiceOpenAPI, getMetadata} from '../src/diruntimeclient.js';
+import {executeDecision, executeLastDeployedDecisionService, getDecisionMetadata, getDecisionOpenapi, getDecisionServiceIds, getDecisionServiceOpenAPI, getMetadata} from '../src/diruntimeclient.js';
 import nock from 'nock';
 import { default as loanValidationOpenapi } from '../tests/loanvalidation-openapi.json';
 import {Credentials} from "../src/credentials.js";
@@ -42,7 +42,6 @@ const basicAuthConfiguration = new Configuration(Credentials.createBasicAuthCred
 const decisionId = 'decisionId';
 const operationId = 'operationId';
 const executionResponse = { answer: 42 };
-const deploymentSpaceId = 'toto';
 const decisionMetadata = {
     map : {
         "decisionServiceId": {
@@ -54,21 +53,28 @@ const decisionMetadata = {
     }
 };
 
+const deploymentSpaceWithWhiteSpaces = `toto    toto`;
 nock(url)
-    .get('/deploymentSpaces/development/metadata?names=decisionServiceId')
+    .get('/deploymentSpaces/test/metadata?names=decisionServiceId')
     .matchHeader('authorization', `Basic ${encodedUsernamePassword}`)
     .reply(200, metadata)
     .get('/deploymentSpaces/nonexistent/metadata?names=decisionServiceId')
     .reply(404)
-    .get('/selectors/lastDeployedDecisionService/deploymentSpaces/development/openapi?decisionServiceId=ID1&outputFormat=JSON/openapi')
+    .get('/selectors/lastDeployedDecisionService/deploymentSpaces/production/openapi?decisionServiceId=ID1&outputFormat=JSON/openapi')
     .matchHeader('apikey', apikey)
     .reply(200, loanValidationOpenapi)
-    .post(`/deploymentSpaces/development/decisions/${decisionId}/operations/${operationId}/execute`, {})
+    .post('/selectors/lastDeployedDecisionService/deploymentSpaces/foo.bar/operations/execute/execute?decisionServiceId=ID1')
+    .matchHeader('apikey', apikey)
+    .reply(200, { result: 'default-success' })
+    .get('/deploymentSpaces/staging/decisions/decision123/openapi')
+    .matchHeader('authorization', `ZenApiKey ${encodedUsernameApiKey}`)
+    .reply(200, { openapi: '3.0.0' })
+    .post(`/deploymentSpaces/${encodeURIComponent(deploymentSpaceWithWhiteSpaces)}/decisions/${decisionId}/operations/${operationId}/execute`, {})
     .matchHeader('authorization', `ZenApiKey ${encodedUsernameApiKey}`)
     .reply(200, executionResponse)
-    .get(`/deploymentSpaces/development/decisions/${decisionId}/openapi`)
+    .get(`/deploymentSpaces/tutu/decisions/${decisionId}/openapi`)
     .reply(200, loanValidationOpenapi)
-    .get(`/deploymentSpaces/${deploymentSpaceId}/decisions/${decisionId}/metadata`)
+    .get(`/deploymentSpaces/toto/decisions/${decisionId}/metadata`)
     .matchHeader('authorization', `Basic ${encodedUsernamePassword}`)
     .reply(200, decisionMetadata);
 
@@ -76,41 +82,56 @@ test('getDecisionServiceIds', () => {
     expect(getDecisionServiceIds(metadata)).toEqual(["ID1", "ID2"]);
 });
 
-test('getMetadata', async () => {
-    return getMetadata(basicAuthConfiguration, 'development')
+test(`getMetadata with 'test' deployment space`, async () => {
+    return getMetadata(basicAuthConfiguration, 'test')
         .then(data => {
             expect(data).toEqual(metadata);
     });
 });
 
-test('getMetadata with not exist deploymentSpace', async () => {
+test('getMetadata with non existent deploymentSpace', async () => {
     await expect(getMetadata(zenApiKeyConfiguration, 'nonexistent'))
         .rejects.toThrow('Request failed with status code 404');
 });
 
-test('getDecisionServiceOpenAPI', async() => {
-    return getDecisionServiceOpenAPI(diApiKeyConfiguration, 'ID1')
+test(`getDecisionServiceOpenAPI with 'production' deploymentSpace`, async() => {
+    return getDecisionServiceOpenAPI(diApiKeyConfiguration, 'production', 'ID1')
         .then(data => {
             expect(data).toEqual(loanValidationOpenapi);
         })
 });
 
-test('executeDecision', async () => {
-    return executeDecision(zenApiKeyConfiguration, decisionId, operationId, {})
+test(`executeLastDeployedDecisionService with 'foo.bar' deploymentSpace`, async() => {
+    const input = { data: 'test' };
+    return executeLastDeployedDecisionService(diApiKeyConfiguration, 'foo.bar', 'ID1', 'execute', input)
+        .then(data => {
+            expect(JSON.parse(data)).toEqual({ result: 'default-success' });
+        })
+});
+
+test(`getDecisionOpenapi with 'staging' deploymentSpace`, async() => {
+    return getDecisionOpenapi(zenApiKeyConfiguration, 'staging', 'decision123')
+        .then(data => {
+            expect(data).toEqual({ openapi: '3.0.0' });
+        })
+});
+
+test(`executeDecision with '${deploymentSpaceWithWhiteSpaces}' deploymentSpace`, async () => {
+    return executeDecision(zenApiKeyConfiguration, deploymentSpaceWithWhiteSpaces, decisionId, operationId, {})
         .then(data => {
             expect(data).toEqual(JSON.stringify(executionResponse));
         });
 });
 
-test('getDecisionMetadata', async () => {
-    return getDecisionMetadata(basicAuthConfiguration, deploymentSpaceId, decisionId)
+test(`getDecisionMetadata with 'toto' deploymentSpace`, async () => {
+    return getDecisionMetadata(basicAuthConfiguration, 'toto', decisionId)
         .then(data => {
             expect(data).toEqual(decisionMetadata);
         })
 });
 
-test('getDecisionOpenApi', async () => {
-    return getDecisionOpenapi(zenApiKeyConfiguration, decisionId)
+test(`getDecisionOpenApi with 'tutu' deploymentSpace`, async () => {
+    return getDecisionOpenapi(zenApiKeyConfiguration, 'tutu', decisionId)
         .then(data => {
             expect(data).toEqual(loanValidationOpenapi);
         });
