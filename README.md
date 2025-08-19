@@ -341,15 +341,15 @@ APIKEY=<APIKEY> URL=<URL> npm run dev
 
 ## Environment variables
 
-| Name      | Description                                                                                |
-|-----------|--------------------------------------------------------------------------------------------|
-| APIKEY    | API key to access the decision runtime with either Decision Intelligence  |
-| DEBUG     | When the value is `true`, the debug messages are written to the `stderr` of the MCP server |
-| PASSWORD  | Password to access the decision runtime with basic authentication                          |
-| RUNTIME   | The target decision runtime: `DI` (default) or `ADS`                                       |
-| TRANSPORT | The transport protocol: `STDIO` (default) or `HTTP`                                        |
-| URL       | Base URL of the decision runtime                                                           |
-| USERNAME  | Username to access the decision runtime with basic authentication |
+| Name      | Description                                                                                                       |
+|-----------|-------------------------------------------------------------------------------------------------------------------|
+| APIKEY    | API key to access the decision runtime with either Decision Intelligence or IBM Automation Decision Services      |
+| DEBUG     | When the value is `true`, the debug messages are written to the `stderr` of the MCP server                        |
+| PASSWORD  | Password to access the decision runtime with basic authentication                                                 |
+| RUNTIME   | The target decision runtime: `DI` (default) or `ADS`                                                              |
+| TRANSPORT | The transport protocol: `STDIO` (default) or `HTTP`                                                               |
+| URL       | Base URL of the decision runtime                                                                                  |
+| USERNAME  | Username to access the decision runtime with basic authentication or API key for IBM Automation Decision Services |
 
 ## License
 [Apache 2.0](LICENSE)
