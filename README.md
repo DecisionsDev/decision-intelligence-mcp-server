@@ -349,7 +349,7 @@ APIKEY=<APIKEY> URL=<URL> npm run dev
 | RUNTIME   | The target decision runtime: `DI` (default) or `ADS`                                       |
 | TRANSPORT | The transport protocol: `STDIO` (default) or `HTTP`                                        |
 | URL       | Base URL of the decision runtime                                                           |
-| USERNAME  | Username to access the decision runtime with basic authentication or Zen API key</br>      |
+| USERNAME  | Username to access the decision runtime with basic authentication |
 
 ## License
 [Apache 2.0](LICENSE)
