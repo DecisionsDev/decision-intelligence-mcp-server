@@ -17,9 +17,9 @@ flowchart LR
         client["MCP Client"] <-- MCP/STDIO --> server("DI MCP Server")
     end
 
-    server -- HTTPS --> runtime("DI Runtime")
+    server -- HTTPS --> runtime("Decision Runtime")
 
-    subgraph Decision Intelligence SaaS
+    subgraph id["Decision Intelligence<br>or Automation Decision Services"]
         runtime
     end
 
@@ -27,6 +27,7 @@ flowchart LR
     client <-- MCP/HTTP --> server2("DI MCP Server") -- HTTPS --> runtime
 
 ```
+
 <a id="getting_started"></a>
 ## Getting started with the MCP server
 You can use the MCP server available in the npm registry. If you want to develop your own MCP server or contribute to the development, see [Developing the MCP server](#developing).
