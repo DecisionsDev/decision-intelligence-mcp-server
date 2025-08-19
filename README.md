@@ -343,7 +343,7 @@ APIKEY=<APIKEY> URL=<URL> npm run dev
 
 | Name      | Description                                                                                |
 |-----------|--------------------------------------------------------------------------------------------|
-| APIKEY    | API key to access the decision runtime with either Decision Intelligence or Zen API key    |
+| APIKEY    | API key to access the decision runtime with either Decision Intelligence  |
 | DEBUG     | When the value is `true`, the debug messages are written to the `stderr` of the MCP server |
 | PASSWORD  | Password to access the decision runtime with basic authentication                          |
 | RUNTIME   | The target decision runtime: `DI` (default) or `ADS`                                       |
