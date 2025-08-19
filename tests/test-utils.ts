@@ -1,17 +1,11 @@
 import nock from "nock";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type {Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
-
-// Shared test data
-const toolName = 'my tool name';
-const protocol =  'https';
-const hostname = 'example.com';
-export const url = `${protocol}://${hostname}`;
+import {Configuration} from "../src/command-line";
 
 const testConfiguration = {
-    apiKey: 'validKey123',
-    decisionId: 'test/loan_approval/loanApprovalDecisionService/3-2025-06-18T13:00:39.447Z',
     decisionServiceId: 'test/Loan Approval',
+    decisionId: 'test/loan_approval/loanApprovalDecisionService/3-2025-06-18T13:00:39.447Z',
     operationId: 'approval',
     output: {
         "insurance": {
@@ -55,22 +49,22 @@ const testInput = {
 
 const testExpectations = {
     tool: {
-        name: toolName,
+        name: 'my tool name',
         title: 'approval',
         description: 'Execute approval'
     }
 };
 
 // Setup nock mocks for testing
-export function setupNockMocks(): void {
-    const { apiKey, decisionId, decisionServiceId, operationId, toolName, output } = testConfiguration;
-    const uri = '/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/' + 
-                encodeURIComponent(operationId) + '/execute?decisionServiceId=' + 
-                encodeURIComponent(decisionServiceId);
+export function setupNockMocks(configuration: Configuration): void {
+    const { decisionId, decisionServiceId, operationId, output } = testConfiguration;
     const metadataName = `mcpToolName.${operationId}`;
-    nock(url)
+    const credentials = configuration.credentials;
+    const headerValue = credentials.getAuthorizationHeaderValue();
+    const headerKey = credentials.getAuthorizationHeaderKey();
+    nock(configuration.url)
         .get('/deploymentSpaces/development/metadata?names=decisionServiceId')
-        .matchHeader('apikey', apiKey)
+        .matchHeader(headerKey, headerValue)
         .reply(200, [{
             'decisionServiceId': {
                 'name': 'decisionServiceId',
@@ -80,22 +74,24 @@ export function setupNockMocks(): void {
             }
         }])
         .get(`/deploymentSpaces/development/decisions/${encodeURIComponent(decisionId)}/metadata`)
-        .matchHeader('apikey', apiKey)
+        .matchHeader(headerKey, headerValue)
         .reply(200, {
             map : {
                 [metadataName] : {
                     'name': metadataName,
                     'kind': 'PLAIN',
                     'readOnly': false,
-                    'value': toolName
+                    'value': testExpectations.tool.name
                 }
             }
         })
         .get(`/selectors/lastDeployedDecisionService/deploymentSpaces/development/openapi?decisionServiceId=${decisionServiceId}&outputFormat=JSON/openapi`)
-        .matchHeader('apikey', apiKey)
+        .matchHeader(headerKey, headerValue)
         .replyWithFile(200, 'tests/loanvalidation-openapi.json')
-        .post(uri)
-        .matchHeader('apikey', apiKey)
+        .post('/selectors/lastDeployedDecisionService/deploymentSpaces/development/operations/' +
+            encodeURIComponent(operationId) + '/execute?decisionServiceId=' +
+            encodeURIComponent(decisionServiceId))
+        .matchHeader(headerKey, headerValue)
         .reply(200, output);
 }
 

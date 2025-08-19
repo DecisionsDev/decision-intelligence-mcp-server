@@ -5,20 +5,19 @@ import { Configuration } from "../src/command-line.js";
 import { DecisionRuntime } from "../src/decision-runtime.js";
 import { createMcpServer } from "../src/mcp-server.js";
 import { Server } from "http";
-import { TEST_CONFIG, TEST_INPUT, TEST_EXPECTATIONS, setupNockMocks, validateToolListing, validateToolExecution } from "./test-utils.js";
 import { AddressInfo } from 'net';
-import {setupNockMocks, url, validateClient} from "./test-utils.js";
 import {Credentials} from "../src/credentials";
+import {setupNockMocks, validateClient} from "./test-utils.js";
 
 describe('HTTP Transport', () => {
+    const configuration = new Configuration(Credentials.createDiApiKeyCredentials('validApiKey123'),  DecisionRuntime.DI,  undefined, 'https://foo.bar.bra,fr', '1.2.3', true);
+
     beforeAll(() => {
-        setupNockMocks();
+        setupNockMocks(configuration);
     });
 
     test('should properly list and execute tool when configured with HTTP transport', async () => {
         // Create a custom configuration for HTTP transport
-        const configuration = new Configuration(Credentials.createDiApiKeyCredentials(TEST_CONFIG.apiKey),  DecisionRuntime.DI,  undefined, url, '1.2.3', true);
-
         let server: McpServer | undefined;
         let httpServer: Server | undefined;
         let client: Client | undefined;

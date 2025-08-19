@@ -8,13 +8,9 @@ import {DecisionRuntime} from "../src/decision-runtime.js";
 import {createMcpServer} from "../src/mcp-server.js";
 import {PassThrough, Readable, Writable} from 'stream';
 import {Credentials} from "../src/credentials.js";
-import {setupNockMocks, url, validateClient} from "./test-utils.js";
+import {setupNockMocks, validateClient} from "./test-utils.js";
 
 describe('Mcp Server', () => {
-
-    beforeAll(() => {
-        setupNockMocks();
-    });
 
     class StreamClientTransport implements Transport {
         public onmessage?: (message: JSONRPCMessage, extra?: MessageExtraInfo) => void;
@@ -70,12 +66,17 @@ describe('Mcp Server', () => {
         }
     }
 
-    test('should properly list and execute tool when configured with STDIO transport', async () => {
-        const fakeStdin = new PassThrough();
-        const fakeStdout = new PassThrough();
-        const transport = new StdioServerTransport(fakeStdin, fakeStdout);
-        const clientTransport = new StreamClientTransport(fakeStdout, fakeStdin);
-        const configuration = new Configuration(Credentials.createDiApiKeyCredentials(TEST_CONFIG.apiKey),  DecisionRuntime.DI,  transport, url, '1.2.3', true);
+    const fakeStdin = new PassThrough();
+    const fakeStdout = new PassThrough();
+    const transport = new StdioServerTransport(fakeStdin, fakeStdout);
+    const clientTransport = new StreamClientTransport(fakeStdout, fakeStdin);
+    const configuration = new Configuration(Credentials.createDiApiKeyCredentials('dummy.api.key'),  DecisionRuntime.DI,  transport, 'https://example.com', '1.2.3', true);
+
+    beforeAll(() => {
+        setupNockMocks(configuration);
+    });
+
+test('should properly list and execute tool when configured with STDIO transport', async () => {
         let server: McpServer | undefined;
         let client: Client | undefined;
         try {
