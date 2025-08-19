@@ -44,7 +44,7 @@ where
    - `--username <USERNAME> --apikey <ZEN_API_KEY>` where `USERNAME` and `ZEN_API_KEY` are the Zen API key credentials to access the the decision runtime of Cloud Pak for Business Automation (see [Authorizing HTTP requests by using the Zen API key](https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/25.0.0?topic=administering-authorizing-http-requests-by-using-zen-api-key))
 - `- `RUNTIME_BASE_URL` is the base URL of the decision runtime REST API. Its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant.
 - `TRANSPORT` is either `STDIO` (default) or `HTTP`.
-- `RUNTIME` is either `DI` (default) for using the decision runtime of Decision Intelligence or `ADS` for using the decision runtime of Cloud Pak for Business Automation or Automation Decision Services.
+- `RUNTIME` is either `DI` (default) for using the decision runtime of Decision Intelligence or IBM Automation Decision Services.
 
 Example:
 
