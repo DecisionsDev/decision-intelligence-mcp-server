@@ -1,4 +1,4 @@
-# MCP server for IBM Decision Intelligence
+# MCP server for IBM Decision Intelligence and IBM Automation Decision Services
 
 [![Build and test](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml/badge.svg)](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![npm Version](https://badge.fury.io/js/di-mcp-server.svg)](https://www.npmjs.com/package/di-mcp-server) ![npm Downloads](https://img.shields.io/npm/dw/di-mcp-server)
 
