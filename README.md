@@ -31,7 +31,7 @@ flowchart LR
 ## Getting started with the MCP server
 You can use the MCP server available in the npm registry. If you want to develop your own MCP server or contribute to the development, see [Developing the MCP server](#developing).
 
-You can run the MCP server with `npx` to expose as MCP tools the operations of the last deployed version of all decision services:
+You can run the MCP server with npx to expose each operation of the last deployed version of a decision service as a MCP tool:
 
 ```bash
 npx -y di-mcp-server <CREDENTIALS> --url <RUNTIME_BASE_URL> --transport <TRANSPORT> --runtime <RUNTIME>
@@ -236,6 +236,41 @@ As for Claude Desktop, you can specify the API key and base URL of the decision 
       ```
 
 For more information, see Cursor's documentation about [_Installing MCP servers_](https://docs.cursor.com/en/context/mcp#installing-mcp-servers).
+
+### Using Custom Tool Names
+
+When integrating with MCP hosts, you may need to customize the tool names to meet specific requirements or limitations, such as:
+- Maximum length restrictions
+- Forbidden characters
+- Naming conventions
+
+#### Default Tool Naming Algorithm
+
+By default, tool names are generated as follows:
+1. Combines the decision service name with the operation ID: `decisionServiceName operationID`
+2. Replaces spaces and forward slashes with underscores: `decisionServiceName_operationID`
+3. Handles name collisions by using the decision service ID: use `decisionServiceID_operationID` if `decisionServiceName_operationID` already exists 
+
+#### Customizing Tool Names with the decision REST API
+
+If the default naming strategy doesn't meet the requirements of your MCP hosts, you can specify custom tool names by setting the `mcpToolName.OPERATION_ID` decision metadata:
+```json
+{
+  "map": {
+    [..]
+    "mcpToolName.OPERATION_ID": {
+      "name": "mcpToolName.OPERATION_ID",
+      "kind": "PLAIN",
+      "readOnly": false,
+      "value": "YourCustomToolName"
+    }
+    [..]
+  }
+}
+```
+where
+- `OPERATION_ID` is the operation unique identifier
+- `YourCustomToolName` is the desired tool name for the operation
 
 <a id="developing"></a>
 ## Developing the MCP server

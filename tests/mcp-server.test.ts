@@ -1,4 +1,4 @@
-import {JSONRPCMessage, MessageExtraInfo} from "@modelcontextprotocol/sdk/types.js";
+import {JSONRPCMessage, MessageExtraInfo, Result} from "@modelcontextprotocol/sdk/types.js";
 import {Client} from "@modelcontextprotocol/sdk/client/index.js";
 import {McpServer} from "@modelcontextprotocol/sdk/server/mcp.js";
 import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -8,7 +8,11 @@ import {DecisionRuntime} from "../src/decision-runtime.js";
 import {createMcpServer} from "../src/mcp-server.js";
 import {PassThrough, Readable, Writable} from 'stream';
 import {Credentials} from "../src/credentials.js";
-import { TEST_CONFIG, TEST_INPUT, TEST_EXPECTATIONS, setupNockMocks, validateToolListing, validateToolExecution } from "./test-utils.js";
+import {
+    url,
+    setupNockMocks,
+    validateClient
+} from "./test-utils.js";
 
 describe('Mcp Server', () => {
 
@@ -90,20 +94,7 @@ describe('Mcp Server', () => {
                 {
                     capabilities: {},
                 });
-            await client.connect(clientTransport);
-            const toolList = await client.listTools();
-            validateToolListing(toolList.tools);
-
-            try {
-                const response = await client.callTool({
-                    name: TEST_EXPECTATIONS.toolName,
-                    arguments: TEST_INPUT
-                });
-                validateToolExecution(response);
-            } catch (error) {
-                console.error('Tool call failed:', error);
-                throw error;
-            }
+            await validateClient(client, clientTransport);
         } finally {
             await clientTransport?.close();
             await transport?.close();

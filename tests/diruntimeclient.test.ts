@@ -1,5 +1,7 @@
 import {
-    executeDecision, getDecisionOpenapi,
+    executeDecision,
+    getDecisionMetadata,
+    getDecisionOpenapi,
     getDecisionServiceIds,
     getDecisionServiceOpenAPI,
     getMetadata
@@ -47,6 +49,19 @@ const basicAuthConfiguration = new Configuration(Credentials.createBasicAuthCred
 const decisionId = 'decisionId';
 const operationId = 'operationId';
 const executionResponse = { answer: 42 };
+const deploymentSpaceId = 'toto';
+const decisionId = 'toto'
+const decisionMetadata = {
+    map : {
+        "decisionServiceId": {
+            "name": "decisionServiceId",
+            "kind": "PLAIN",
+            "readOnly": true,
+            "value": "ID1"
+        }
+    }
+};
+
 nock(url)
     .get('/deploymentSpaces/development/metadata?names=decisionServiceId')
     .matchHeader('authorization', `Basic ${encodedUsernamePassword}`)
@@ -61,6 +76,10 @@ nock(url)
     .reply(200, executionResponse)
     .get(`/deploymentSpaces/development/decisions/${decisionId}/openapi`)
     .reply(200, loanValidationOpenapi);
+    .get(`/deploymentSpaces/${deploymentSpaceId}/decisions/${decisionId}/metadata`)
+    .matchHeader('authorization', `Basic ${encodedUsernamePassword}`)
+    .reply(200, decisionMetadata)
+;
 
 test('getDecisionServiceIds', () => {
     expect(getDecisionServiceIds(metadata)).toEqual(["ID1", "ID2"]);
@@ -97,4 +116,11 @@ test('getDecisionOpenApi', async () => {
         .then(data => {
             expect(data).toEqual(loanValidationOpenapi);
         });
+});
+
+test('getDecisionMetadata', async () => {
+    return getDecisionMetadata(basicAuthConfiguration, deploymentSpaceId, decisionId)
+        .then(data => {
+            expect(data).toEqual(decisionMetadata);
+        })
 });

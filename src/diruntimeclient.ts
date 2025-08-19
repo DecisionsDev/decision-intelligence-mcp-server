@@ -34,10 +34,17 @@ export function executeLastDeployedDecisionService(configuration: Configuration,
       });
 }
 
+export async function getDecisionMetadata(configuration: Configuration, deploymentSpace: string, decisionId: string) {
+    const url = configuration.url + `/deploymentSpaces/${encodeURIComponent(deploymentSpace)}/decisions/${encodeURIComponent(decisionId)}/metadata`;
+
+    const response = await axios.get(url, {headers: getHeaders(configuration)});
+    return response.data;
+}
+
 
 export function getMetadata(configuration: Configuration, deploymentSpace:string) {
     const url = configuration.url + "/deploymentSpaces"
-        + "/" + deploymentSpace
+        + "/" + encodeURIComponent(deploymentSpace)
         + "/metadata?names=decisionServiceId";
 
     return axios.get(url, { headers: getHeaders(configuration) })

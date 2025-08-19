@@ -16,6 +16,7 @@ import { OpenAPIV3_1 } from "openapi-types";
 import { ZodRawShape } from "zod";
 import { Configuration } from "./command-line.js";
 import http from "node:http";
+import {Constants} from "./constants.js";
 
 function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): ZodRawShape {
     const params: ZodRawShape = {}
@@ -53,28 +54,28 @@ function getToolDefinition(path: OpenAPIV3_1.PathItemObject, components: OpenAPI
     };
 }
 
-function registerTool(server: McpServer, configuration: Configuration, decisionOpenAPI: OpenAPIV3_1.Document, decisionServiceId: string, toolNames: string[]) {
+async function registerTool(server: McpServer, configuration: Configuration, decisionOpenAPI: OpenAPIV3_1.Document, decisionServiceId: string, toolNames: string[]) {
     for (const key in decisionOpenAPI.paths) {
         debug("Found operationName", key);
 
         const value = decisionOpenAPI.paths[key];
 
         if (value == undefined || value.post == undefined) {           
-            debug("invalid openapi for path", key)
+            debug("Invalid openapi for path", key)
             continue ;
         }
 
         const operationId = value.post.operationId;
 
         if (operationId == undefined) {
-            debug("no operationId for ", JSON.stringify(value))
+            debug("No operationId for ", JSON.stringify(value))
             continue ;
         }
         
         const toolDef = getToolDefinition(value, decisionOpenAPI.components);
 
         if (toolDef == null) {
-            debug("no tooldef for ", key);
+            debug("No tooldef for ", key);
             continue ;
         }
 
@@ -86,10 +87,7 @@ function registerTool(server: McpServer, configuration: Configuration, decisionO
         debug("inputSchema", inputSchema);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const serviceName = (decisionOpenAPI as any).info["x-ibm-ads-decision-service-name"];
-        debug("decisionServiceName", serviceName);
-
-        const toolName = getToolName(operationId, serviceName, decisionServiceId, toolNames);
+        const toolName = await getToolName(configuration, (decisionOpenAPI as any).info, operationId, decisionServiceId, toolNames)
         debug("toolName", toolName, toolNames);
         toolNames.push(toolName);
 
@@ -115,7 +113,7 @@ export async function createMcpServer(name: string, configuration: Configuration
         version: version
     });
 
-    const spaceMetadata = await getMetadata(configuration, "development");
+    const spaceMetadata = await getMetadata(configuration, Constants.DEVELOPMENT_DEPLOYMENT_SPACE);
     debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
     const serviceIds = getDecisionServiceIds(spaceMetadata);
     debug("serviceIds", JSON.stringify(serviceIds, null, " "));
@@ -125,7 +123,7 @@ export async function createMcpServer(name: string, configuration: Configuration
         debug("serviceId", serviceId);
         const openapi = await getDecisionServiceOpenAPI(configuration, serviceId);
         
-        registerTool(server,configuration, openapi, serviceId, toolNames);
+        await registerTool(server, configuration, openapi, serviceId, toolNames);
     }
 
     if (configuration.isHttpTransport()) {
