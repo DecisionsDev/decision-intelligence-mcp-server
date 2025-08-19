@@ -41,10 +41,9 @@ export async function getDecisionMetadata(configuration: Configuration, deployme
     return response.data;
 }
 
-
 export function getMetadata(configuration: Configuration, deploymentSpace:string) {
     const url = configuration.url + "/deploymentSpaces"
-        + "/" + encodeURIComponent(deploymentSpace)
+        + "/" + deploymentSpace
         + "/metadata?names=decisionServiceId";
 
     return axios.get(url, { headers: getHeaders(configuration) })

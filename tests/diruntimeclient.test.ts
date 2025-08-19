@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
     executeDecision,
     getDecisionMetadata,
@@ -8,6 +9,11 @@ import {
 } from '../src/diruntimeclient.js';
 import nock from 'nock';
 import { default as loanValidationOpenapi } from '../tests/loanvalidation-openapi.json';
+=======
+import nock from 'nock';
+import { default as loanValidationOpenapi } from '../tests/loanvalidation-openapi.json';
+import {executeDecision, getDecisionMetadata, getDecisionOpenapi, getDecisionServiceIds, getDecisionServiceOpenAPI, getMetadata} from '../src/diruntimeclient.js';
+>>>>>>> 6443dfebb641d8c7cce26b112ad741d7fc8e2286
 import {Credentials} from "../src/credentials.js";
 import {Configuration} from "../src/command-line.js";
 import {DecisionRuntime} from "../src/decision-runtime.js";
@@ -77,8 +83,13 @@ nock(url)
     .reply(200, loanValidationOpenapi)
     .get(`/deploymentSpaces/${deploymentSpaceId}/decisions/${decisionId}/metadata`)
     .matchHeader('authorization', `Basic ${encodedUsernamePassword}`)
+<<<<<<< HEAD
     .reply(200, decisionMetadata)
 ;
+=======
+    .reply(200, decisionMetadata);
+
+>>>>>>> 6443dfebb641d8c7cce26b112ad741d7fc8e2286
 
 test('getDecisionServiceIds', () => {
     expect(getDecisionServiceIds(metadata)).toEqual(["ID1", "ID2"]);
@@ -110,6 +121,7 @@ test('executeDecision', async () => {
         });
 });
 
+<<<<<<< HEAD
 test('getDecisionOpenApi', async () => {
     return getDecisionOpenapi(zenApiKeyConfiguration, decisionId)
         .then(data => {
@@ -117,9 +129,21 @@ test('getDecisionOpenApi', async () => {
         });
 });
 
+=======
+>>>>>>> 6443dfebb641d8c7cce26b112ad741d7fc8e2286
 test('getDecisionMetadata', async () => {
     return getDecisionMetadata(basicAuthConfiguration, deploymentSpaceId, decisionId)
         .then(data => {
             expect(data).toEqual(decisionMetadata);
         })
 });
+<<<<<<< HEAD
+=======
+
+test('getDecisionOpenApi', async () => {
+    return getDecisionOpenapi(zenApiKeyConfiguration, decisionId)
+        .then(data => {
+            expect(data).toEqual(loanValidationOpenapi);
+        });
+});
+>>>>>>> 6443dfebb641d8c7cce26b112ad741d7fc8e2286

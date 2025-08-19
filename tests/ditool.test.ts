@@ -2,8 +2,12 @@ import {getToolName, generateToolName} from '../src/ditool.js';
 import {Configuration} from "../src/command-line.js";
 import {DecisionRuntime} from "../src/decision-runtime.js";
 import nock from "nock";
+<<<<<<< HEAD
 import {Credentials} from "../src/credentials";
 import {testConfiguration} from "./test-utils";
+=======
+import {Credentials} from "../src/credentials.js";
+>>>>>>> 6443dfebb641d8c7cce26b112ad741d7fc8e2286
 
 describe('generateToolName', () => {
 
@@ -54,8 +58,12 @@ describe('getToolName', () => {
         .get(`/deploymentSpaces/development/decisions/${decisionId}/metadata`)
         .reply(200, { map : {}});
 
+<<<<<<< HEAD
     const credentials = Credentials.createDiApiKeyCredentials('apiKey');
     const configuration = new Configuration(credentials, DecisionRuntime.DI, undefined, url, '1.2.3', false);
+=======
+    const configuration = new Configuration(Credentials.createDiApiKeyCredentials('apiKey'),  DecisionRuntime.DI,  undefined, url, '1.2.3', false);
+>>>>>>> 6443dfebb641d8c7cce26b112ad741d7fc8e2286
     const decisionServiceName = 'decision-service-name';
     const info = {
         ['x-ibm-ads-decision-service-name'] : decisionServiceName,
