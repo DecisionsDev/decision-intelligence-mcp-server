@@ -50,7 +50,6 @@ const decisionId = 'decisionId';
 const operationId = 'operationId';
 const executionResponse = { answer: 42 };
 const deploymentSpaceId = 'toto';
-const decisionId = 'toto'
 const decisionMetadata = {
     map : {
         "decisionServiceId": {
@@ -75,7 +74,7 @@ nock(url)
     .matchHeader('authorization', `ZenApiKey ${encodedUsernameApiKey}`)
     .reply(200, executionResponse)
     .get(`/deploymentSpaces/development/decisions/${decisionId}/openapi`)
-    .reply(200, loanValidationOpenapi);
+    .reply(200, loanValidationOpenapi)
     .get(`/deploymentSpaces/${deploymentSpaceId}/decisions/${decisionId}/metadata`)
     .matchHeader('authorization', `Basic ${encodedUsernamePassword}`)
     .reply(200, decisionMetadata)

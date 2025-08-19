@@ -6,9 +6,9 @@ import type {Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
 const toolName = 'my tool name';
 const protocol =  'https:';
 const hostname = 'example.com';
-export const url = `${protocol}//${hostname}`;
 
-const testConfiguration = {
+export const testConfiguration = {
+    url : `${protocol}//${hostname}`,
     apiKey: 'validKey123',
     decisionServiceId: 'test/Loan Approval',
     decisionId: 'test/loan_approval/loanApprovalDecisionService/3-2025-06-18T13:00:39.447Z',
@@ -69,7 +69,7 @@ export function setupNockMocks(): void {
                 encodeURIComponent(operationId) + '/execute?decisionServiceId=' + 
                 encodeURIComponent(decisionServiceId);
     const metadataName = `mcpToolName.${operationId}`;
-    nock(url)
+    nock(testConfiguration.url)
         .get('/deploymentSpaces/development/metadata?names=decisionServiceId')
         .matchHeader('apikey', apiKey)
         .reply(200, [{

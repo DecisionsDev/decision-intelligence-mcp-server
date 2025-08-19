@@ -1,4 +1,4 @@
-import {JSONRPCMessage, MessageExtraInfo, Result} from "@modelcontextprotocol/sdk/types.js";
+import {JSONRPCMessage, MessageExtraInfo} from "@modelcontextprotocol/sdk/types.js";
 import {Client} from "@modelcontextprotocol/sdk/client/index.js";
 import {McpServer} from "@modelcontextprotocol/sdk/server/mcp.js";
 import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -8,11 +8,7 @@ import {DecisionRuntime} from "../src/decision-runtime.js";
 import {createMcpServer} from "../src/mcp-server.js";
 import {PassThrough, Readable, Writable} from 'stream';
 import {Credentials} from "../src/credentials.js";
-import {
-    url,
-    setupNockMocks,
-    validateClient
-} from "./test-utils.js";
+import {setupNockMocks, testConfiguration, validateClient} from "./test-utils.js";
 
 describe('Mcp Server', () => {
 
@@ -79,7 +75,7 @@ describe('Mcp Server', () => {
         const fakeStdout = new PassThrough();
         const transport = new StdioServerTransport(fakeStdin, fakeStdout);
         const clientTransport = new StreamClientTransport(fakeStdout, fakeStdin);
-        const configuration = new Configuration(Credentials.createDiApiKeyCredentials(TEST_CONFIG.apiKey),  DecisionRuntime.DI,  transport, TEST_CONFIG.url, '1.2.3', true);
+        const configuration = new Configuration(Credentials.createDiApiKeyCredentials(testConfiguration.apiKey),  DecisionRuntime.DI,  transport, testConfiguration.url, '1.2.3', true);
         let server: McpServer | undefined;
         let client: Client | undefined;
         try {

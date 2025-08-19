@@ -2,6 +2,8 @@ import {getToolName, generateToolName} from '../src/ditool.js';
 import {Configuration} from "../src/command-line.js";
 import {DecisionRuntime} from "../src/decision-runtime.js";
 import nock from "nock";
+import {Credentials} from "../src/credentials";
+import {testConfiguration} from "./test-utils";
 
 describe('generateToolName', () => {
 
@@ -52,12 +54,14 @@ describe('getToolName', () => {
         .get(`/deploymentSpaces/development/decisions/${decisionId}/metadata`)
         .reply(200, { map : {}});
 
-    const configuration = new Configuration( 'apiKey', DecisionRuntime.DI, undefined, url, '1.2.3', false);
+    const credentials = Credentials.createDiApiKeyCredentials('apiKey');
+    const configuration = new Configuration(credentials, DecisionRuntime.DI, undefined, url, '1.2.3', false);
     const decisionServiceName = 'decision-service-name';
     const info = {
         ['x-ibm-ads-decision-service-name'] : decisionServiceName,
         ['x-ibm-ads-decision-id'] : decisionId
     }
+
     test('should use the appropriate metadata if provided', () => {
         return expect(getToolName(configuration, info, operationId, 'decision-service-id', [])).resolves.
             toBe(toolName);
