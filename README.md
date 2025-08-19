@@ -31,7 +31,7 @@ flowchart LR
 ## Getting started with the MCP server
 You can use the MCP server available in the npm registry. If you want to develop your own MCP server or contribute to the development, see [Developing the MCP server](#developing).
 
-You can run the MCP server with `npx` to expose as MCP tools the operations of the last deployed version of all decision services:
+You can run the MCP server with npx to expose each operation of the last deployed version of a decision service as a MCP tool:
 
 ```bash
 npx -y di-mcp-server --apikey <APIKEY> --url <RUNTIME_BASE_URL> --transport <TRANSPORT> --runtime <RUNTIME>
@@ -42,7 +42,6 @@ where
 - `RUNTIME_BASE_URL` is the base URL of the decision runtime REST API. Its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant.
 - `TRANSPORT` is either `STDIO` (default) or `HTTP`.
 - `RUNTIME` is either `DI` (default) for using the decision runtime of Decision Intelligence or `ADS` for using the decision runtime of Cloud Pak for Business Automation or Automation Decision Services.
-
 
 Example:
 
