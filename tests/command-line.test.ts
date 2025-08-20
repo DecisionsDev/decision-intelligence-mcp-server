@@ -511,6 +511,8 @@ describe('CLI Configuration', () => {
 
     describe('validateDeploymentSpaces', () => {
         const deploymentSpaces = ['development', 'production', 'test'];
+        const encodedDeploymentSpaces = deploymentSpaces.map(ds => encodeURIComponent(ds));
+        const encodedDefaultDeploymentSpaces = Configuration.defaultDeploymentSpaces().map(ds => encodeURIComponent(ds));
         test('should accept valid deployment spaces', () => {
             const config = createConfiguration([
                 'node', 'cli.js',
@@ -520,7 +522,7 @@ describe('CLI Configuration', () => {
                 '--deploymentSpaces', deploymentSpaces.join(',')
             ]);
 
-            expect(config.deploymentSpaces).toEqual(deploymentSpaces);
+            expect(config.deploymentSpaces).toEqual(encodedDeploymentSpaces);
         });
 
         test('should accept deployment space with white spaces', () => {
@@ -533,7 +535,7 @@ describe('CLI Configuration', () => {
                 '--deploymentSpaces', `  ${deploymentSpace}        `
             ]);
 
-            expect(config.deploymentSpaces).toEqual([deploymentSpace]);
+            expect(config.deploymentSpaces).toEqual([encodeURIComponent(deploymentSpace)]);
         });
 
         test('should trim deployment spaces', () => {
@@ -545,7 +547,7 @@ describe('CLI Configuration', () => {
                 '--deploymentSpaces', '     development         ,  production     ,  test  '
             ]);
 
-            expect(config.deploymentSpaces).toEqual(deploymentSpaces);
+            expect(config.deploymentSpaces).toEqual(encodedDeploymentSpaces);
         });
 
         test('should use default deployment spaces when parsed array is empty', () => {
@@ -557,7 +559,7 @@ describe('CLI Configuration', () => {
                 '--deploymentSpaces', '     ,     ,       ,     '
             ]);
 
-            expect(config.deploymentSpaces).toEqual(Configuration.defaultDeploymentSpaces());
+            expect(config.deploymentSpaces).toEqual(encodedDefaultDeploymentSpaces);
         });
 
         test('should create Configuration with default deploymentSpaces when not provided', () => {
@@ -568,7 +570,7 @@ describe('CLI Configuration', () => {
                 '--transport', 'STDIO'
             ]);
 
-            expect(config.deploymentSpaces).toEqual(Configuration.defaultDeploymentSpaces());
+            expect(config.deploymentSpaces).toEqual(encodedDefaultDeploymentSpaces);
         });
 
         test('should throw error for invalid deployment spaces that cannot be URI encoded', () => {
@@ -633,7 +635,8 @@ describe('CLI Configuration', () => {
         });
 
         test('should use deployment spaces from environment variable', () => {
-            process.env.DEPLOYMENT_SPACES = 'env-space-1,env-space-2';
+            const deploymentSpaces = ['env-space-1', 'env-space-2'];
+            process.env.DEPLOYMENT_SPACES = deploymentSpaces.join(',');
 
             const config = createConfiguration([
                 'node', 'cli.js',
@@ -642,7 +645,7 @@ describe('CLI Configuration', () => {
                 '--transport', 'STDIO'
             ]);
 
-            expect(config.deploymentSpaces).toEqual(['env-space-1', 'env-space-2']);
+            expect(config.deploymentSpaces).toEqual(deploymentSpaces.map(ds => encodeURIComponent(ds)));
         });
 
         test('should call debug function with deployment spaces', () => {

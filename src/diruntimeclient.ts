@@ -2,8 +2,8 @@ import axios from 'axios';
 import { OpenAPIV3_1 } from "openapi-types";
 import {Configuration} from "./command-line.js";
 
-export function executeDecision(configuration :Configuration, deploymentSpace: string, decisionId:string, operation:string, input:object|undefined) {
-    const url = configuration.url + "/deploymentSpaces/" + encodeURIComponent(deploymentSpace) + "/decisions/"
+export function executeDecision(configuration: Configuration, deploymentSpace: string, decisionId: string, operation: string, input: object|undefined) {
+    const url = configuration.url + "/deploymentSpaces/" + deploymentSpace + "/decisions/"
         + encodeURIComponent(decisionId)
         + "/operations/"
         + encodeURIComponent(operation)
@@ -22,9 +22,9 @@ function getJsonContentTypeHeaders(configuration: Configuration) {
     };
 }
 
-export function executeLastDeployedDecisionService(configuration: Configuration, deploymentSpace: string, serviceId:string, operation:string, input: object) {
-    const url = configuration.url +  "/selectors/lastDeployedDecisionService/deploymentSpaces/" + encodeURIComponent(deploymentSpace) + "/operations/"
-      + encodeURIComponent(operation)
+export function executeLastDeployedDecisionService(configuration: Configuration, deploymentSpace: string, serviceId: string, operation: string, input: object) {
+    const url = configuration.url + "/selectors/lastDeployedDecisionService/deploymentSpaces/" + deploymentSpace
+      + "/operations/" + encodeURIComponent(operation)
       + "/execute?decisionServiceId=" + encodeURIComponent(serviceId);
 
     return axios.post(url, input, { headers: getJsonContentTypeHeaders(configuration) })
@@ -34,7 +34,7 @@ export function executeLastDeployedDecisionService(configuration: Configuration,
 }
 
 export async function getDecisionMetadata(configuration: Configuration, deploymentSpace: string, decisionId: string) {
-    const url = configuration.url + `/deploymentSpaces/${encodeURIComponent(deploymentSpace)}/decisions/${encodeURIComponent(decisionId)}/metadata`;
+    const url = configuration.url + `/deploymentSpaces/${deploymentSpace}/decisions/${encodeURIComponent(decisionId)}/metadata`;
 
     const response = await axios.get(url, {headers: getHeaders(configuration)});
     return response.data;
@@ -42,7 +42,7 @@ export async function getDecisionMetadata(configuration: Configuration, deployme
 
 export function getMetadata(configuration: Configuration, deploymentSpace:string) {
     const url = configuration.url + "/deploymentSpaces"
-        + "/" + encodeURIComponent(deploymentSpace)
+        + "/" + deploymentSpace
         + "/metadata?names=decisionServiceId";
 
     return axios.get(url, { headers: getHeaders(configuration) })
@@ -65,8 +65,8 @@ export function getDecisionServiceIds(metadata: MetadataType[]): string[] {
     return ids;
 }
 
-export function getDecisionOpenapi(configuration: Configuration, deploymentSpace: string, decisionId:string) {
-    const url = configuration.url + "/deploymentSpaces/"  + encodeURIComponent(deploymentSpace)
+export function getDecisionOpenapi(configuration: Configuration, deploymentSpace: string, decisionId: string) {
+    const url = configuration.url + "/deploymentSpaces/" + deploymentSpace
         + "/decisions/" + encodeURIComponent(decisionId)
         + "/openapi";
 
@@ -85,8 +85,8 @@ function getHeaders(configuration: Configuration) {
     };
 }
 
-export function getDecisionServiceOpenAPI(configuration: Configuration, deploymentSpace: string, decisionServiceId:string) {
-    const url = configuration.url + "/selectors/lastDeployedDecisionService/deploymentSpaces/" + encodeURIComponent(deploymentSpace)
+export function getDecisionServiceOpenAPI(configuration: Configuration, deploymentSpace: string, decisionServiceId: string) {
+    const url = configuration.url + "/selectors/lastDeployedDecisionService/deploymentSpaces/"  + deploymentSpace
         + "/openapi?decisionServiceId="
         + encodeURIComponent(decisionServiceId) + "&outputFormat=JSON"
         + "/openapi";

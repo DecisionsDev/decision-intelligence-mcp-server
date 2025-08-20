@@ -94,9 +94,11 @@ function validateDeploymentSpaces(parseDeploymentSpaceOption: string | undefined
     debug("DEPLOYMENT SPACES=" + parseDeploymentSpaceOption);
     const deploymentSpaces = parseDeploymentSpaces(parseDeploymentSpaceOption);
     const invalidDeploymentSpaces: string[] = [];
+    const encodedDeploymentSpaces: string[] = [];
+
     for (const deploymentSpace of deploymentSpaces) {
         try {
-            encodeURIComponent(deploymentSpace);
+            encodedDeploymentSpaces.push(encodeURIComponent(deploymentSpace));
         } catch {
             invalidDeploymentSpaces.push(deploymentSpace);
         }
@@ -109,7 +111,7 @@ function validateDeploymentSpaces(parseDeploymentSpaceOption: string | undefined
         }
         throw new Error(`Invalid deployment spaces '${invalidDeploymentSpaces.join("', '")}' cannot be URI encoded.`);
     }
-    return deploymentSpaces;
+    return encodedDeploymentSpaces;
 }
 
 function parseDeploymentSpaces(deploymentSpaces: string | undefined): string[] {
