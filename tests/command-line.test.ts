@@ -420,7 +420,7 @@ describe('CLI Configuration', () => {
                 '--apikey', cliApiKey,
                 '--transport', 'HTTP',
                 '--runtime', 'ADS',
-                '--deploymentSpaces', deploymentSpaces.join(',')
+                '--deployment-spaces', deploymentSpaces.join(',')
             ]);
 
             expect(config).toMatchObject({
@@ -519,7 +519,7 @@ describe('CLI Configuration', () => {
                 '--url', url,
                 '--apikey', 'validkey123',
                 '--transport', 'STDIO',
-                '--deploymentSpaces', deploymentSpaces.join(',')
+                '--deployment-spaces', deploymentSpaces.join(',')
             ]);
 
             expect(config.deploymentSpaces).toEqual(encodedDeploymentSpaces);
@@ -532,7 +532,7 @@ describe('CLI Configuration', () => {
                 '--url', url,
                 '--apikey', 'validkey123',
                 '--transport', 'STDIO',
-                '--deploymentSpaces', `  ${deploymentSpace}        `
+                '--deployment-spaces', `  ${deploymentSpace}        `
             ]);
 
             expect(config.deploymentSpaces).toEqual([encodeURIComponent(deploymentSpace)]);
@@ -544,7 +544,7 @@ describe('CLI Configuration', () => {
                 '--url', url,
                 '--apikey', 'validkey123',
                 '--transport', 'STDIO',
-                '--deploymentSpaces', '     development         ,  production     ,  test  '
+                '--deployment-spaces', '     development         ,  production     ,  test  '
             ]);
 
             expect(config.deploymentSpaces).toEqual(encodedDeploymentSpaces);
@@ -556,7 +556,7 @@ describe('CLI Configuration', () => {
                 '--url', url,
                 '--apikey', 'validkey123',
                 '--transport', 'STDIO',
-                '--deploymentSpaces', '     ,     ,       ,     '
+                '--deployment-spaces', '     ,     ,       ,     '
             ]);
 
             expect(config.deploymentSpaces).toEqual(encodedDefaultDeploymentSpaces);
@@ -594,7 +594,7 @@ describe('CLI Configuration', () => {
                         '--url', url,
                         '--apikey', 'validkey123',
                         '--transport', 'STDIO',
-                        '--deploymentSpaces', `development,${invalidSpace}`
+                        '--deployment-spaces', `development,${invalidSpace}`
                     ]);
                 }).toThrow(`Invalid deployment space '${invalidSpace}' cannot be URI encoded.`);
             } finally {
@@ -625,7 +625,7 @@ describe('CLI Configuration', () => {
                         '--url', url,
                         '--apikey', 'validkey123',
                         '--transport', 'STDIO',
-                        '--deploymentSpaces', `development,${invalidSpace1},${invalidSpace2},${invalidSpace3},production`
+                        '--deployment-spaces', `development,${invalidSpace1},${invalidSpace2},${invalidSpace3},production`
                     ]);
                 }).toThrow(`Invalid deployment spaces '${invalidSpace1}', '${invalidSpace2}', '${invalidSpace3}' cannot be URI encoded.`);
             } finally {
@@ -655,7 +655,7 @@ describe('CLI Configuration', () => {
                 '--url', url,
                 '--apikey', 'validkey123',
                 '--transport', 'STDIO',
-                '--deploymentSpaces', deploymentSpaces
+                '--deployment-spaces', deploymentSpaces
             ]);
 
             expect(mockDebug).toHaveBeenCalledWith(`DEPLOYMENT SPACES=${deploymentSpaces}`);

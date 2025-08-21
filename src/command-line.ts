@@ -141,7 +141,7 @@ export function createConfiguration(cliArguments?: readonly string[]): Configura
         .option('--password <string>', "Password for the decision runtime. Or set 'PASSWORD' environment variable)")
         .option('--transport <transport>', "Transport mode: 'STDIO' or 'HTTP'")
         .option("--runtime <runtime>", "Target decision runtime: 'DI' or 'ADS'. Default value is 'DI'")
-        .option('--deploymentSpaces <list>', "Comma-separated list of deployment spaces to scan (default: 'development')");
+        .option('--deployment-spaces <list>', "Comma-separated list of deployment spaces to scan (default: 'development')");
 
     program.parse(cliArguments);
 
