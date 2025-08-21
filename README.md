@@ -35,7 +35,7 @@ You can use the MCP server available in the npm registry. If you want to develop
 You can run the MCP server with npx to expose each operation of the last deployed version of a decision service as a MCP tool:
 
 ```bash
-npx -y di-mcp-server <CREDENTIALS> --url <RUNTIME_BASE_URL> [--transport <TRANSPORT>] [--runtime <RUNTIME>] [--deploymentSpaces <DEPLOYMENT_SPACES>]
+npx -y di-mcp-server <CREDENTIALS> --url <RUNTIME_BASE_URL> [--transport <TRANSPORT>] [--runtime <RUNTIME>] [--deployment-spaces <DEPLOYMENT_SPACES>]
 ```
 
 where
