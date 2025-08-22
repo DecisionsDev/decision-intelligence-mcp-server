@@ -127,9 +127,8 @@ function parseDeploymentSpaces(deploymentSpaces: string | undefined): string[] {
     return Configuration.defaultDeploymentSpaces();
 }
 
-export function createConfiguration(cliArguments?: readonly string[]): Configuration {
+export function createConfiguration(version: string, cliArguments?: readonly string[]): Configuration {
     const program = new Command();
-    const version = String(process.env.npm_package_version);
     program
         .name("di-mcp-server")
         .description("MCP Server for IBM Decision Intelligence")
