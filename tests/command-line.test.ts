@@ -2,7 +2,6 @@ import {createConfiguration, Configuration} from '../src/command-line.js';
 import {debug, setDebug} from '../src/debug.js';
 import {DecisionRuntime, parseDecisionRuntime} from '../src/decision-runtime.js';
 import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
-import {Credentials} from "../src/credentials.js";
 
 // Mock the debug function and setDebug function
 jest.mock('../src/debug', () => ({
@@ -22,7 +21,6 @@ jest.mock('../src/decision-runtime', () => ({
 }));
 const mockParseDecisionRuntime = parseDecisionRuntime as jest.MockedFunction<typeof parseDecisionRuntime>;
 
-const version = '2.0.0';
 describe('CLI Configuration', () => {
     let originalEnv: NodeJS.ProcessEnv;
 
@@ -49,13 +47,14 @@ describe('CLI Configuration', () => {
         process.env = originalEnv;
     });
 
+    const version = '2.0.0';
     const protocol = 'https:';
     const hostname = 'api.example.com';
     const url = `${protocol}//${hostname}`;
 
     describe('validateUrl', () => {
         test('should return URL string argument for valid URL', () => {
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -63,11 +62,12 @@ describe('CLI Configuration', () => {
             ]);
 
             expect(config.url).toBe(url);
+            expect(config.version).toBe(version);
         });
 
         test('should throw error when URL is undefined', () => {
             expect(() => {
-                createConfiguration([
+                createConfiguration(version, [
                     'node', 'cli.js',
                     '--apikey', 'validkey123',
                     '--transport', 'STDIO'
@@ -77,7 +77,7 @@ describe('CLI Configuration', () => {
 
         test('should throw error for invalid URL format', () => {
             expect(() => {
-                createConfiguration([
+                createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', 'invalid-url',
                     '--apikey', 'validkey123',
@@ -90,7 +90,7 @@ describe('CLI Configuration', () => {
             const urlFromEnv = 'https://env-api.example.com';
             process.env.URL = urlFromEnv;
 
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--apikey', 'validkey123',
                 '--transport', 'STDIO'
@@ -100,7 +100,7 @@ describe('CLI Configuration', () => {
         });
 
         test('should call debug function with URL', () => {
-            createConfiguration([
+            createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -113,14 +113,14 @@ describe('CLI Configuration', () => {
 
     describe('validateTransport', () => {
         test('should accept valid transports', () => {
-            const stdioConfig = createConfiguration([
+            const stdioConfig = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
                 '--transport', 'STDIO'
             ]);
 
-            const httpConfig = createConfiguration([
+            const httpConfig = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -133,7 +133,7 @@ describe('CLI Configuration', () => {
 
         test('should throw error for invalid transport', () => {
             expect(() => {
-                createConfiguration([
+                createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', url,
                     '--apikey', 'validkey123',
@@ -145,7 +145,7 @@ describe('CLI Configuration', () => {
         test('should use transport from environment variable', () => {
             process.env.TRANSPORT = 'HTTP';
 
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123'
@@ -158,7 +158,7 @@ describe('CLI Configuration', () => {
             // Clear environment variable
             delete process.env.TRANSPORT;
 
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123'
@@ -168,7 +168,7 @@ describe('CLI Configuration', () => {
         });
 
         test('should call debug function with transport', () => {
-            createConfiguration([
+            createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -181,7 +181,7 @@ describe('CLI Configuration', () => {
 
     describe('validateDecisionRuntime', () => {
         test('should accept valid decision runtimes', () => {
-            const diConfig = createConfiguration([
+            const diConfig = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -189,7 +189,7 @@ describe('CLI Configuration', () => {
                 '--runtime', 'DI'
             ]);
 
-            const adsConfig = createConfiguration([
+            const adsConfig = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -202,7 +202,7 @@ describe('CLI Configuration', () => {
         });
 
         test('should default to DI when not specified', () => {
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -216,7 +216,7 @@ describe('CLI Configuration', () => {
             mockParseDecisionRuntime.mockReturnValue(undefined);
 
             expect(() => {
-                createConfiguration([
+                createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', url,
                     '--apikey', 'validkey123',
@@ -229,7 +229,7 @@ describe('CLI Configuration', () => {
         test('should use decision runtime from environment variable', () => {
             process.env.RUNTIME = 'ADS';
 
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -240,7 +240,7 @@ describe('CLI Configuration', () => {
         });
 
         test('should call debug function with decision runtime', () => {
-            createConfiguration([
+            createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -252,7 +252,7 @@ describe('CLI Configuration', () => {
         });
 
         test('should call parseDecisionRuntime function', () => {
-            createConfiguration([
+            createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -268,7 +268,7 @@ describe('CLI Configuration', () => {
 
         test('should throw error when no credentials are defined', () => {
             expect(() => {
-                createConfiguration([
+                createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', url,
                     '--transport', 'STDIO'
@@ -279,7 +279,7 @@ describe('CLI Configuration', () => {
         describe('With API key', () => {
             const apiKey = 'validkey123';
             test('should accept valid API keys', () => {
-                const config = createConfiguration([
+                const config = createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', url,
                     '--apikey', apiKey,
@@ -295,7 +295,7 @@ describe('CLI Configuration', () => {
 
             test('should throw error for empty API key', () => {
                 expect(() => {
-                    createConfiguration([
+                    createConfiguration(version, [
                         'node', 'cli.js',
                         '--url', url,
                         '--apikey', '   ',
@@ -308,7 +308,7 @@ describe('CLI Configuration', () => {
                 const envApiKey = 'env-api-key-123';
                 process.env.APIKEY = envApiKey;
 
-                const config = createConfiguration([
+                const config = createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', url,
                     '--transport', 'STDIO'
@@ -322,7 +322,7 @@ describe('CLI Configuration', () => {
             });
 
             test('should call debug function with API key', () => {
-                createConfiguration([
+                createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', url,
                     '--apikey', apiKey,
@@ -340,7 +340,7 @@ describe('CLI Configuration', () => {
     describe('createConfiguration', () => {
         const apiKey = 'validkey123';
         test('should create complete configuration object', () => {
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--debug',
                 '--url', url,
@@ -366,7 +366,7 @@ describe('CLI Configuration', () => {
             process.env.APIKEY = apiKey;
             process.env.TRANSPORT = 'STDIO';
 
-            const config = createConfiguration(['node', 'cli.js']);
+            const config = createConfiguration(version, ['node', 'cli.js']);
 
             expect(config).toMatchObject({
                 credentials: {
@@ -386,7 +386,7 @@ describe('CLI Configuration', () => {
             process.env.APIKEY = apiKey;
             process.env.TRANSPORT = 'STDIO';
 
-            const config = createConfiguration(['node', 'cli.js', '--debug']);
+            const config = createConfiguration(version, ['node', 'cli.js', '--debug']);
 
             expect(config.debugEnabled).toBe(true);
             expect(mockSetDebug).toHaveBeenCalledWith(true);
@@ -398,7 +398,7 @@ describe('CLI Configuration', () => {
             process.env.APIKEY = apiKey;
             process.env.TRANSPORT = 'STDIO';
 
-            const config = createConfiguration(['node', 'cli.js']);
+            const config = createConfiguration(version, ['node', 'cli.js']);
 
             expect(config.debugEnabled).toBe(true);
             expect(mockSetDebug).toHaveBeenCalledWith(true);
@@ -414,7 +414,7 @@ describe('CLI Configuration', () => {
             const urlFromCli = 'https://cli-api.example.com';
             const cliApiKey = 'cli-api-key-123';
             const deploymentSpaces = ['toto','titi','tutu'];
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', urlFromCli,
                 '--apikey', cliApiKey,
@@ -439,7 +439,7 @@ describe('CLI Configuration', () => {
             process.env.APIKEY = apiKey;
             process.env.TRANSPORT = 'STDIO';
 
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--runtime', 'DI'
             ]);
@@ -453,7 +453,7 @@ describe('CLI Configuration', () => {
             process.env.APIKEY = apiKey;
             process.env.TRANSPORT = 'STDIO';
 
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--runtime', 'ADS'
             ]);
@@ -466,12 +466,12 @@ describe('CLI Configuration', () => {
             process.env.URL = url;
             process.env.APIKEY = apiKey;
 
-            const stdioConfig = createConfiguration([
+            const stdioConfig = createConfiguration(version, [
                 'node', 'cli.js',
                 '--transport', 'STDIO'
             ]);
 
-            const httpConfig = createConfiguration([
+            const httpConfig = createConfiguration(version, [
                 'node', 'cli.js',
                 '--transport', 'HTTP'
             ]);
@@ -491,7 +491,7 @@ describe('CLI Configuration', () => {
                 process.env.APIKEY = apiKey;
 
                 // Should use process.argv when no arguments provided
-                const config = createConfiguration();
+                const config = createConfiguration(version);
 
                 expect(config).toBeDefined();
                 expect(config).toMatchObject({
@@ -514,7 +514,7 @@ describe('CLI Configuration', () => {
         const encodedDeploymentSpaces = deploymentSpaces.map(ds => encodeURIComponent(ds));
         const encodedDefaultDeploymentSpaces = Configuration.defaultDeploymentSpaces().map(ds => encodeURIComponent(ds));
         test('should accept valid deployment spaces', () => {
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -527,7 +527,7 @@ describe('CLI Configuration', () => {
 
         test('should accept deployment space with white spaces', () => {
             const deploymentSpace = 'toto     toto';
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -539,7 +539,7 @@ describe('CLI Configuration', () => {
         });
 
         test('should trim deployment spaces', () => {
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -551,7 +551,7 @@ describe('CLI Configuration', () => {
         });
 
         test('should use default deployment spaces when parsed array is empty', () => {
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -563,7 +563,7 @@ describe('CLI Configuration', () => {
         });
 
         test('should create Configuration with default deploymentSpaces when not provided', () => {
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -589,7 +589,7 @@ describe('CLI Configuration', () => {
 
             try {
                 expect(() => {
-                    createConfiguration([
+                    createConfiguration(version, [
                         'node', 'cli.js',
                         '--url', url,
                         '--apikey', 'validkey123',
@@ -620,7 +620,7 @@ describe('CLI Configuration', () => {
 
             try {
                 expect(() => {
-                    createConfiguration([
+                    createConfiguration(version, [
                         'node', 'cli.js',
                         '--url', url,
                         '--apikey', 'validkey123',
@@ -638,7 +638,7 @@ describe('CLI Configuration', () => {
             const deploymentSpaces = ['env-space-1', 'env-space-2'];
             process.env.DEPLOYMENT_SPACES = deploymentSpaces.join(',');
 
-            const config = createConfiguration([
+            const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -650,7 +650,7 @@ describe('CLI Configuration', () => {
 
         test('should call debug function with deployment spaces', () => {
             const deploymentSpaces = 'dev,prod';
-            createConfiguration([
+            createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
                 '--apikey', 'validkey123',
@@ -666,7 +666,7 @@ describe('CLI Configuration', () => {
         test('should fail fast on first validation error', () => {
             const apiKey = ' ';
             expect(() => {
-                createConfiguration([
+                createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', 'invalid-url',
                     '--apikey', apiKey,
@@ -677,7 +677,7 @@ describe('CLI Configuration', () => {
 
         test('should provide descriptive error messages', () => {
             expect(() => {
-                createConfiguration([
+                createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', url,
                     '--apikey', 'validkey123',
