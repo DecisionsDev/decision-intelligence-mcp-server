@@ -1,4 +1,4 @@
-import { expandJSONSchemaDefinition } from '../src/jsonschema';
+import { expandJSONSchemaDefinition } from '../src/jsonschema.js';
 import { expect, test } from '@jest/globals';
 
 test('expandJSONSchemaDefinition returns empty object for empty input', () => {
