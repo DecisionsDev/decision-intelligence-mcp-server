@@ -4,7 +4,7 @@
 
 This Model Context Protocol (MCP) server empowers AI assistants by accessing decisions from IBM Decision Intelligence or IBM Automation Decision Services.
 
-The MCP server is available as an npm package in the free npm registry at https://www.npmjs.com/package/di-mcp-server.
+The MCP server for Decision Intelligence and Automation Decision Services is available as an npm package in the free npm registry at https://www.npmjs.com/package/di-mcp-server.
 
 It supports both STDIO and streamable HTTP transports for local or remote deployments for supporting any MCP clients.
 
@@ -43,12 +43,12 @@ npx -y di-mcp-server <CREDENTIALS> --url <RUNTIME_BASE_URL> [--transport <TRANSP
 
 where
 - `CREDENTIALS` is one of the following options:
-   - `--apikey <DI_API_KEY>` where `DI_API_KEY` is the API key for accessing the decision runtime of IBM Decision Intelligence.
-   - `--username <USERNAME> --password <PASSWORD>` where `USERNAME` and `PASSWORD` are the basic authentication credentials to connect to the decision runtime of IBM Automation Decision Services. 
-   - `--username <USERNAME> --apikey <ZEN_API_KEY>` where `USERNAME` and `ZEN_API_KEY` are the Zen API key credentials to access the decision runtime of IBM Automation Decision Services (see [Authorizing HTTP requests by using the Zen API key](https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/25.0.0?topic=administering-authorizing-http-requests-by-using-zen-api-key))
-- `RUNTIME_BASE_URL` is the base URL of the decision runtime REST API. For IBM Decision Intelligence its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant.
+   - `--apikey <DI_API_KEY>` where `DI_API_KEY` is the API key to access the decision runtime for Decision Intelligence.
+   - `--username <USERNAME> --password <PASSWORD>` where `USERNAME` and `PASSWORD` are the basic authentication credentials to connect to the decision runtime for Automation Decision Services. 
+   - `--username <USERNAME> --apikey <ZEN_API_KEY>` where `USERNAME` and `ZEN_API_KEY` are the Zen API key credentials to access the decision runtime for Automation Decision Services (see [Authorizing HTTP requests by using the Zen API key](https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/25.0.0?topic=administering-authorizing-http-requests-by-using-zen-api-key))
+- `RUNTIME_BASE_URL` is the base URL of the decision runtime REST API. For Decision Intelligence its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant.
 - `TRANSPORT` (optional) is the transport protocol, either `STDIO` (default) or `HTTP`.
-- `RUNTIME` (optional) is the decision runtime, either `DI` (default) or `ADS` for using the decision runtime of respectively IBM Decision Intelligence or IBM Automation Decision Services.
+- `RUNTIME` (optional) is the decision runtime, either `DI` (default) or `ADS` for using the decision runtime for respectively Decision Intelligence or Automation Decision Services.
 - `DEPLOYMENT_SPACES` (optional) is a comma-separated list of deployment spaces to scan (defaults to `development`).
 
 - Example:
@@ -70,15 +70,15 @@ You can integrate decision services into IBM watsonx Orchestrate by adding the M
 
    [![Thumbnail](./doc/wo1-thumbnail.png)](doc/wo1.png)
 
-2. Click **Import**
+2. Click **Import**.
 
    [![Thumbnail](./doc/wo2-thumbnail.png)](doc/wo2.png)
 
-3. Then click **Import from mcp server**
+3. Click **Import from MCP server**.
 
    [![Thumbnail](./doc/wo3-thumbnail.png)](doc/wo3.png)
 
-4. Click **Add MCP server**
+4. Click **Add MCP server**.
 
    [![Thumbnail](./doc/wo4-thumbnail.png)](doc/wo4.png)
 
@@ -92,43 +92,45 @@ You can integrate decision services into IBM watsonx Orchestrate by adding the M
 
    Your agent is now empowered with decisions.
 
-#### Use a connection to specify the APIKEY and URL environment variables
+#### Specifying the APIKEY and URL environment variables
 
-1. Open the main menu, then click **Manage**, then click **Connections**, to open the Connection settings
+You can use the connection setting to specity the API key and URL environment variables.
+
+1. Open the main menu, expand **Manage**, and then click **Connections**. The Connection settings opens.
 
    [![Thumbnail](./doc/wxO-connection-01-thumbnail.png)](doc/wxO-connection-01.png)
 
-2. Click **Add new connection** to launch the **Add new connection** wizard
+2. Click **Add new connection** to launch the **Add new connection** wizard.
 
    [![Thumbnail](./doc/wxO-connection-02-thumbnail.png)](doc/wxO-connection-02.png)
 
-3. Fill in the **Connection ID** and **Display name** fields, then click **Save and continue**
+3. Enter the **Connection ID** and **Display name** fields, and then click **Save and continue**.
 
    [![Thumbnail](./doc/wxO-connection-03-thumbnail.png)](doc/wxO-connection-03.png)
 
 4. In the **Configure draft connection** panel:
-   - Select **Key Value Pair** as **Authentication Type**
-   - Fill-in the **Key** and **Value** fields to define the `APIKEY` environment variable
-   - Then click **Add key value pair**
+   - Select **Key Value Pair** as **Authentication Type**.
+   - Enter the **Key** and **Value** fields to define the `APIKEY` environment variable.
+   - Click **Add key value pair**.
 
    [![Thumbnail](./doc/wxO-connection-04-thumbnail.png)](doc/wxO-connection-04.png)
 
-5. Fill-in the **Key** and **Value** fields to define the `URL` environment variable, then click **Connect**
+5. Enter the **Key** and **Value** fields to define the `URL` environment variable, and then click **Connect**.
 
    [![Thumbnail](./doc/wxO-connection-05-thumbnail.png)](doc/wxO-connection-05.png)
 
-6. When the draft connection is connected, click **Next**
+6. When the draft connection is connected, click **Next**.
 
    [![Thumbnail](./doc/wxO-connection-06-thumbnail.png)](doc/wxO-connection-06.png)
 
-7. Similarly configure the live connection, then click **Add connection**
+7. Similarly configure the live connection. When it is done, click **Add connection**.
 
    [![Thumbnail](./doc/wxO-connection-07-thumbnail.png)](doc/wxO-connection-07.png)
 
 8. In the **Add MCP Server** wizard:
-   - Select the display name corresponding to the connection you just configured
-   - Fill-in the `npx` command **WITHOUT** the `--apikey` and `--url` arguments
-   - Click **Connect** then **Done**
+   - Select the display name corresponding to the connection you just configured.
+   - Enter the `npx` command **WITHOUT** the `--apikey` and `--url` arguments.
+   - Click **Connect**, and then click  **Done**.
 
     [![Thumbnail](./doc/wxO-connection-08-thumbnail.png)](doc/wxO-connection-08.png)
 
@@ -190,19 +192,22 @@ For more information, see https://modelcontextprotocol.io/quickstart/user.
 
 ### Integrating decision services into Cursor
 
-1. In Cursor, click the cog wheel icon to open Cursor settings
+You can integrate decision services into Cursor by adding the MCP server.
 
-2. Click **Tools & Integration** in the setting categories listed on the left-hand side
+1. In Cursor, click the cog wheel icon to open the Cursor settings.
+
+2. Click **Tools & Integration** in the settings categories that are listed on the left.
 
    [![Thumbnail](./doc/cursor1-thumbnail.png)](doc/cursor1.png)
 
-3. Click **+ New MCP Server**, this will open Cursor's `mcp.json` configuration file
+3. Click **+ New MCP Server**, to open Cursor's `mcp.json` configuration file.
 
    [![Thumbnail](./doc/cursor2-thumbnail.png)](doc/cursor2.png)
 
 4. Add a new MCP server entry.
-As for Claude Desktop, you can specify the API key and base URL of the decision runtime REST API using:
-   - Either command line arguments:
+
+   As for Claude Desktop, you can specify the API key and base URL of the decision runtime REST API using with one of the following methods:
+   - Using command line arguments:
       ```json
       {
           [..]
@@ -222,7 +227,7 @@ As for Claude Desktop, you can specify the API key and base URL of the decision 
           [..]
       }
       ```
-   - Or environment variables: 
+   - Using environment variables: 
       ```json
       {
           [..]
@@ -240,23 +245,23 @@ As for Claude Desktop, you can specify the API key and base URL of the decision 
       }
       ```
 
-For more information, see Cursor's documentation about [_Installing MCP servers_](https://docs.cursor.com/en/context/mcp#installing-mcp-servers).
+For more information, see Cursor's documentation about [_Installing MCP servers_](https://docs.cursor.com/en/context/mcp#installing-mcp-servers) in the Cursor documentation.
 
-### Using Custom Tool Names
+### Using custom tool names
 
-When integrating with MCP hosts, you may need to customize the tool names to meet specific requirements or limitations, such as:
+When you integrate with MCP hosts, you might need to customize the tool names to meet specific requirements or limitations, such as:
 - Maximum length restrictions
 - Forbidden characters
 - Naming conventions
 
-#### Default Tool Naming Algorithm
+#### Default tool naming algorithm
 
-By default, tool names are generated as follows:
+By default, tool names are generated in the following way:
 1. Combines the decision service name with the operation ID: `decisionServiceName operationID`
 2. Replaces spaces and forward slashes with underscores: `decisionServiceName_operationID`
 3. Handles name collisions by using the decision service ID: use `decisionServiceID_operationID` if `decisionServiceName_operationID` already exists 
 
-#### Customizing Tool Names with the decision REST API
+#### Customizing tool names with the decision runtime REST API
 
 If the default naming strategy doesn't meet the requirements of your MCP hosts, you can specify custom tool names by setting the `mcpToolName.OPERATION_ID` decision metadata:
 ```json
@@ -308,9 +313,9 @@ Run the following command to test the MCP server:
 npm test
 ```
 
-### Code Coverage
+### Code coverage
 
-The project is configured with Jest's built-in code coverage capabilities. To generate a code coverage report:
+The project is configured with Jest's built-in code coverage capabilities. To generate a code coverage report, run the following command:
 
 ```bash
 npm run test:coverage
@@ -327,7 +332,7 @@ The coverage report includes:
 - Function coverage: percentage of functions called
 - Line coverage: percentage of executable lines executed
 
-Coverage thresholds are set to 70% for statements, branches, functions, and lines. If coverage falls below these thresholds, the test command will fail.
+Coverage thresholds are set to 70% for statements, branches, functions, and lines. If the coverage falls below these thresholds, the test command fails.
 
 To view the detailed HTML coverage report, open `coverage/lcov-report/index.html` in your browser after running the coverage command.
 ### Running the MCP server in development mode with `nodemon`
@@ -349,14 +354,14 @@ APIKEY=<APIKEY> URL=<URL> npm run dev
 
 | Name              | Description                                                                                                                      |
 |-------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| APIKEY            | API key to access the decision runtime of either IBM Decision Intelligence or IBM Automation Decision Services                   |
+| APIKEY            | API key to access the decision runtime for either Decision Intelligence or Automation Decision Services                   |
 | DEPLOYMENT_SPACES | Optional comma-separated list of deployment spaces to scan (default: `development`)                                              |
 | DEBUG             | When the value is `true`, the debug messages are written to the `stderr` of the MCP server                                       |
-| PASSWORD          | Password to access the decision runtime of IBM Automation Decision Services with basic authentication                            |
+| PASSWORD          | Password to access the decision runtime for Automation Decision Services with basic authentication                            |
 | RUNTIME           | Optional target decision runtime: `DI` (default) or `ADS`                                                                        |
 | TRANSPORT         | Optional transport protocol: `STDIO` (default) or `HTTP`                                                                         |
 | URL               | Base URL of the decision runtime                                                                                                 |
-| USERNAME          | Username to access the decision runtime of IBM Automation Decision Services either with basic authentication or Zen API key</br> |
+| USERNAME          | Username to access the decision runtime for Automation Decision Services either with basic authentication or Zen API key</br> |
 
 ## License
 [Apache 2.0](LICENSE)
