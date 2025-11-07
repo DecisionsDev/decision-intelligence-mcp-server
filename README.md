@@ -40,8 +40,30 @@ flowchart LR
 You can use the MCP server available in the npm registry.
 If you want to develop your own MCP server or contribute to the development, see [Developing the MCP server](DEVELOPING.md).
 
-You can run the MCP server with npx to expose each operation of the last deployed version of a decision service as a MCP tool:
+You can run the MCP server with npx to expose each operation of the last deployed version of a decision service as a MCP tool.
 
+### For IBM Decision Intelligence:
+
+Create the MCP server using decisions deployed in IBM Decision Intelligence:
+```bash
+npx -y di-mcp-server --apikey HRJcDNlNXZVWlk9 --url https://mytenant.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1
+```
+
+### For IBM Automation Decision Services
+
+Create the MCP server using decisions deployed in IBM Automation Decision Services using the Zen APIKey authentication:
+```bash
+npx -y di-mcp-server --apikey HRJcDNlNXZVWlk9 --url https://myads-hostname/ads/runtime/api/v1
+```
+
+Create the MCP server using decisions deployed in IBM Automation Decision Services using the basic authentication:
+```bash
+npx -y di-mcp-server --username <YOUR_USERNAME> --password <YOUR_PASSWORD> --url https://myads-hostname/ads/runtime/api/v1
+```
+
+### Command line syntax
+
+Syntax of the command line:
 ```bash
 npx -y di-mcp-server <CREDENTIALS> --url <RUNTIME_BASE_URL> [--transport <TRANSPORT>] [--runtime <RUNTIME>] [--deployment-spaces <DEPLOYMENT_SPACES>]
 ```
@@ -55,12 +77,6 @@ where
 - `TRANSPORT` (optional) is the transport protocol, either `STDIO` (default) or `HTTP`.
 - `RUNTIME` (optional) is the decision runtime, either `DI` (default) or `ADS` for using the decision runtime for respectively Decision Intelligence or Automation Decision Services.
 - `DEPLOYMENT_SPACES` (optional) is a comma-separated list of deployment spaces to scan (defaults to `development`).
-
-- Example:
-
-```bash
-npx -y di-mcp-server --apikey HRJcDNlNXZVWlk9 --url https://mytenant.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1
-```
 
 <a id="ai_applications"></a>
 ## Integrating decision services into AI applications
