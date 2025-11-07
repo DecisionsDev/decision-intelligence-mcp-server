@@ -2,9 +2,9 @@
 
 [![Build and test](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml/badge.svg)](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![npm Version](https://badge.fury.io/js/di-mcp-server.svg)](https://www.npmjs.com/package/di-mcp-server) ![npm Downloads](https://img.shields.io/npm/dw/di-mcp-server)
 
-This Model Context Protocol (MCP) server empowers AI assistants by accessing decisions from IBM Decision Intelligence or IBM Automation Decision Services.
+This Model Context Protocol (MCP) server empowers AI assistants by accessing decisions from [IBM Decision Intelligence](https://www.ibm.com/products/decision-intelligence) or [IBM Automation Decision Services](https://www.ibm.com/products/automation-decision-services).
 
-The MCP server for Decision Intelligence and Automation Decision Services is available as an npm package in the free npm registry at https://www.npmjs.com/package/di-mcp-server.
+The MCP server is available as an npm package in the free npm registry at https://www.npmjs.com/package/di-mcp-server.
 
 It supports both STDIO and streamable HTTP transports for local or remote deployments for supporting any MCP clients.
 
@@ -36,7 +36,9 @@ flowchart LR
 
 <a id="getting_started"></a>
 ## Getting started with the MCP server
-You can use the MCP server available in the npm registry. If you want to develop your own MCP server or contribute to the development, see [Developing the MCP server](#developing).
+
+You can use the MCP server available in the npm registry.
+If you want to develop your own MCP server or contribute to the development, see [Developing the MCP server](DEVELOPING.md).
 
 You can run the MCP server with npx to expose each operation of the last deployed version of a decision service as a MCP tool:
 
@@ -286,72 +288,6 @@ where
 - `YourCustomToolName` is the desired tool name for the operation
 
 <a id="developing"></a>
-## Developing the MCP server
-
-You can develop your own MCP server by using the source files that are available here.
-
-### Getting source files
-
-Run the following command to get the source files of the MCP server:
-
-```bash
-git clone https://github.com/DecisionsDev/di-mcp-server.git
-cd di-mcp-server
-```
-
-### Building the MCP server
-
-Run the following commands to build the MCP server from the source files:
-
-```bash
-npm install
-npm run build
-```
-
-### Testing the MCP server
-
-Run the following command to test the MCP server:
-
-```bash
-npm test
-```
-
-### Code coverage
-
-The project is configured with Jest's built-in code coverage capabilities. To generate a code coverage report, run the following command:
-
-```bash
-npm run test:coverage
-```
-
-This will:
-1. Run all tests in the project
-2. Generate a coverage report showing which parts of the code are covered by tests
-3. Create detailed reports in the `coverage` directory
-
-The coverage report includes:
-- Statement coverage: percentage of code statements executed
-- Branch coverage: percentage of control structures (if/else, switch) executed
-- Function coverage: percentage of functions called
-- Line coverage: percentage of executable lines executed
-
-Coverage thresholds are set to 70% for statements, branches, functions, and lines. If the coverage falls below these thresholds, the test command fails.
-
-To view the detailed HTML coverage report, open `coverage/lcov-report/index.html` in your browser after running the coverage command.
-### Running the MCP server in development mode with `nodemon`
-
-Run the MCP server with `nodemon` and the `DEBUG` environment variable:
-- The server is restarted whenever changes are detected on the source code.
-- Debug output is enabled.
-
-#### Using command line options
-```bash
-npm run dev -- --apikey <APIKEY> --url <URL>
-```
-#### Using environment variables
-```bash
-APIKEY=<APIKEY> URL=<URL> npm run dev
-```
 
 ## Environment variables
 
