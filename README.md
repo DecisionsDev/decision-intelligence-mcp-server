@@ -30,7 +30,10 @@ flowchart LR
 
 <a id="resources"></a>
 ## Resources
+
 - [Supercharge your AI Assistants with the decisioning capabilities of IBM Decision Intelligence](https://community.ibm.com/community/user/blogs/jean-philippe-orsini/2025/08/22/decision-intelligence-mcp-server): step by step instructions to use this MCP server for IBM Decision Intelligence
+- [Trusted automated decisions in Agentic application with IBM Decision Intelligence and MCP](https://www.youtube.com/watch?v=GEgelNg4uaM): this video shows how an agentic application can leverage automated decision services defined and hosted in the IBM Decision Intelligence platform to make accurate and explainable decisions
+
 <a id="getting_started"></a>
 ## Getting started with the MCP server
 You can use the MCP server available in the npm registry. If you want to develop your own MCP server or contribute to the development, see [Developing the MCP server](#developing).
