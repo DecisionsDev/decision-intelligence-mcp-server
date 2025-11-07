@@ -78,9 +78,7 @@ where
 - `RUNTIME` (optional) is the decision runtime, either `DI` (default) or `ADS` for using the decision runtime for respectively Decision Intelligence or Automation Decision Services.
 - `DEPLOYMENT_SPACES` (optional) is a comma-separated list of deployment spaces to scan (defaults to `development`).
 
-#### Environment variables
-
-Environment variables can be used in addition to the command line options.
+The following environment variables can be used in addition to the command line options.
 | Name              | Description                                                                                                                      |
 |-------------------|----------------------------------------------------------------------------------------------------------------------------------|
 | APIKEY            | API key to access the decision runtime for either Decision Intelligence or Automation Decision Services                   |
