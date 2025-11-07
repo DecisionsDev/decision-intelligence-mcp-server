@@ -78,6 +78,21 @@ where
 - `RUNTIME` (optional) is the decision runtime, either `DI` (default) or `ADS` for using the decision runtime for respectively Decision Intelligence or Automation Decision Services.
 - `DEPLOYMENT_SPACES` (optional) is a comma-separated list of deployment spaces to scan (defaults to `development`).
 
+#### Environment variables
+
+Environment variables can be used in addition to the command line options.
+| Name              | Description                                                                                                                      |
+|-------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| APIKEY            | API key to access the decision runtime for either Decision Intelligence or Automation Decision Services                   |
+| DEPLOYMENT_SPACES | Optional comma-separated list of deployment spaces to scan (default: `development`)                                              |
+| DEBUG             | When the value is `true`, the debug messages are written to the `stderr` of the MCP server                                       |
+| PASSWORD          | Password to access the decision runtime for Automation Decision Services with basic authentication                            |
+| RUNTIME           | Optional target decision runtime: `DI` (default) or `ADS`                                                                        |
+| TRANSPORT         | Optional transport protocol: `STDIO` (default) or `HTTP`                                                                         |
+| URL               | Base URL of the decision runtime                                                                                                 |
+| USERNAME          | Username to access the decision runtime for Automation Decision Services either with basic authentication or Zen API key</br> |
+
+
 <a id="ai_applications"></a>
 ## Integrating decision services into AI applications
 
@@ -268,21 +283,21 @@ You can integrate decision services into Cursor by adding the MCP server.
 
 For more information, see Cursor's documentation about [_Installing MCP servers_](https://docs.cursor.com/en/context/mcp#installing-mcp-servers) in the Cursor documentation.
 
-### Using custom tool names
+## Using custom tool names
 
 When you integrate with MCP hosts, you might need to customize the tool names to meet specific requirements or limitations, such as:
 - Maximum length restrictions
 - Forbidden characters
 - Naming conventions
 
-#### Default tool naming algorithm
+### Default tool naming algorithm
 
 By default, tool names are generated in the following way:
 1. Combines the decision service name with the operation ID: `decisionServiceName operationID`
 2. Replaces spaces and forward slashes with underscores: `decisionServiceName_operationID`
 3. Handles name collisions by using the decision service ID: use `decisionServiceID_operationID` if `decisionServiceName_operationID` already exists 
 
-#### Customizing tool names with the decision runtime REST API
+### Customizing tool names with the decision runtime REST API
 
 If the default naming strategy doesn't meet the requirements of your MCP hosts, you can specify custom tool names by setting the `mcpToolName.OPERATION_ID` decision metadata:
 ```json
@@ -304,19 +319,6 @@ where
 - `YourCustomToolName` is the desired tool name for the operation
 
 <a id="developing"></a>
-
-## Environment variables
-
-| Name              | Description                                                                                                                      |
-|-------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| APIKEY            | API key to access the decision runtime for either Decision Intelligence or Automation Decision Services                   |
-| DEPLOYMENT_SPACES | Optional comma-separated list of deployment spaces to scan (default: `development`)                                              |
-| DEBUG             | When the value is `true`, the debug messages are written to the `stderr` of the MCP server                                       |
-| PASSWORD          | Password to access the decision runtime for Automation Decision Services with basic authentication                            |
-| RUNTIME           | Optional target decision runtime: `DI` (default) or `ADS`                                                                        |
-| TRANSPORT         | Optional transport protocol: `STDIO` (default) or `HTTP`                                                                         |
-| URL               | Base URL of the decision runtime                                                                                                 |
-| USERNAME          | Username to access the decision runtime for Automation Decision Services either with basic authentication or Zen API key</br> |
 
 ## License
 [Apache 2.0](LICENSE)
