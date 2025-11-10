@@ -42,21 +42,27 @@ If you want to develop your own MCP server or contribute to the development, see
 
 You can run the MCP server with npx to expose each operation of the last deployed version of a decision service as a MCP tool.
 
-### For IBM Decision Intelligence:
+### For IBM Decision Intelligence
 
 Create the MCP server using decisions deployed in IBM Decision Intelligence:
 ```bash
-npx -y di-mcp-server --apikey HRJcDNlNXZVWlk9 --url https://mytenant.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1
+npx -y di-mcp-server --apikey <YOUR_DI_APIKEY> --url https://mytenant.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1
 ```
 
 ### For IBM Automation Decision Services
 
+#### Zen APIKey authentication
+
 Create the MCP server using decisions deployed in IBM Automation Decision Services using the Zen APIKey authentication:
+
 ```bash
-npx -y di-mcp-server --apikey HRJcDNlNXZVWlk9 --url https://myads-hostname/ads/runtime/api/v1
+npx -y di-mcp-server --username <YOUR_USERNAME> --apikey <YOUR_ZEN_APIKEY> --url https://myads-hostname/ads/runtime/api/v1
 ```
 
+#### Basic authentication
+
 Create the MCP server using decisions deployed in IBM Automation Decision Services using the basic authentication:
+
 ```bash
 npx -y di-mcp-server --username <YOUR_USERNAME> --password <YOUR_PASSWORD> --url https://myads-hostname/ads/runtime/api/v1
 ```
