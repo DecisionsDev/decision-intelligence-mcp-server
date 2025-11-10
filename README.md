@@ -2,9 +2,9 @@
 
 [![Build and test](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml/badge.svg)](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![npm Version](https://badge.fury.io/js/di-mcp-server.svg)](https://www.npmjs.com/package/di-mcp-server) ![npm Downloads](https://img.shields.io/npm/dw/di-mcp-server)
 
-This Model Context Protocol (MCP) server empowers AI assistants by accessing decisions from IBM Decision Intelligence or IBM Automation Decision Services.
+This Model Context Protocol (MCP) server empowers AI assistants by accessing decisions from [IBM Decision Intelligence](https://www.ibm.com/products/decision-intelligence) or [IBM Automation Decision Services](https://www.ibm.com/products/automation-decision-services).
 
-The MCP server for Decision Intelligence and Automation Decision Services is available as an npm package in the free npm registry at https://www.npmjs.com/package/di-mcp-server.
+The MCP server is available as an npm package in the free npm registry at https://www.npmjs.com/package/di-mcp-server.
 
 It supports both STDIO and streamable HTTP transports for local or remote deployments for supporting any MCP clients.
 
@@ -36,10 +36,40 @@ flowchart LR
 
 <a id="getting_started"></a>
 ## Getting started with the MCP server
-You can use the MCP server available in the npm registry. If you want to develop your own MCP server or contribute to the development, see [Developing the MCP server](#developing).
 
-You can run the MCP server with npx to expose each operation of the last deployed version of a decision service as a MCP tool:
+You can use the MCP server available in the npm registry.
+If you want to develop your own MCP server or contribute to the development, see [Developing the MCP server](DEVELOPING.md).
 
+You can run the MCP server with npx to expose each operation of the last deployed version of a decision service as a MCP tool.
+
+### For IBM Decision Intelligence
+
+Create the MCP server using decisions deployed in IBM Decision Intelligence:
+```bash
+npx -y di-mcp-server --apikey <YOUR_DI_APIKEY> --url https://mytenant.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1
+```
+
+### For IBM Automation Decision Services
+
+#### Zen APIKey authentication
+
+Create the MCP server using decisions deployed in IBM Automation Decision Services using the Zen APIKey authentication:
+
+```bash
+npx -y di-mcp-server --username <YOUR_USERNAME> --apikey <YOUR_ZEN_APIKEY> --url https://myads-hostname/ads/runtime/api/v1
+```
+
+#### Basic authentication
+
+Create the MCP server using decisions deployed in IBM Automation Decision Services using the basic authentication:
+
+```bash
+npx -y di-mcp-server --username <YOUR_USERNAME> --password <YOUR_PASSWORD> --url https://myads-hostname/ads/runtime/api/v1
+```
+
+### Command line syntax
+
+Syntax of the command line:
 ```bash
 npx -y di-mcp-server <CREDENTIALS> --url <RUNTIME_BASE_URL> [--transport <TRANSPORT>] [--runtime <RUNTIME>] [--deployment-spaces <DEPLOYMENT_SPACES>]
 ```
@@ -54,11 +84,18 @@ where
 - `RUNTIME` (optional) is the decision runtime, either `DI` (default) or `ADS` for using the decision runtime for respectively Decision Intelligence or Automation Decision Services.
 - `DEPLOYMENT_SPACES` (optional) is a comma-separated list of deployment spaces to scan (defaults to `development`).
 
-- Example:
+The following environment variables can be used in addition to the command line options.
+| Name              | Description                                                                                                                      |
+|-------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| APIKEY            | API key to access the decision runtime for either Decision Intelligence or Automation Decision Services                   |
+| DEPLOYMENT_SPACES | Optional comma-separated list of deployment spaces to scan (default: `development`)                                              |
+| DEBUG             | When the value is `true`, the debug messages are written to the `stderr` of the MCP server                                       |
+| PASSWORD          | Password to access the decision runtime for Automation Decision Services with basic authentication                            |
+| RUNTIME           | Optional target decision runtime: `DI` (default) or `ADS`                                                                        |
+| TRANSPORT         | Optional transport protocol: `STDIO` (default) or `HTTP`                                                                         |
+| URL               | Base URL of the decision runtime                                                                                                 |
+| USERNAME          | Username to access the decision runtime for Automation Decision Services either with basic authentication or Zen API key</br> |
 
-```bash
-npx -y di-mcp-server --apikey HRJcDNlNXZVWlk9 --url https://mytenant.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1
-```
 
 <a id="ai_applications"></a>
 ## Integrating decision services into AI applications
@@ -250,21 +287,21 @@ You can integrate decision services into Cursor by adding the MCP server.
 
 For more information, see Cursor's documentation about [_Installing MCP servers_](https://docs.cursor.com/en/context/mcp#installing-mcp-servers) in the Cursor documentation.
 
-### Using custom tool names
+## Using custom tool names
 
 When you integrate with MCP hosts, you might need to customize the tool names to meet specific requirements or limitations, such as:
 - Maximum length restrictions
 - Forbidden characters
 - Naming conventions
 
-#### Default tool naming algorithm
+### Default tool naming algorithm
 
 By default, tool names are generated in the following way:
 1. Combines the decision service name with the operation ID: `decisionServiceName operationID`
 2. Replaces spaces and forward slashes with underscores: `decisionServiceName_operationID`
 3. Handles name collisions by using the decision service ID: use `decisionServiceID_operationID` if `decisionServiceName_operationID` already exists 
 
-#### Customizing tool names with the decision runtime REST API
+### Customizing tool names with the decision runtime REST API
 
 If the default naming strategy doesn't meet the requirements of your MCP hosts, you can specify custom tool names by setting the `mcpToolName.OPERATION_ID` decision metadata:
 ```json
@@ -286,85 +323,6 @@ where
 - `YourCustomToolName` is the desired tool name for the operation
 
 <a id="developing"></a>
-## Developing the MCP server
-
-You can develop your own MCP server by using the source files that are available here.
-
-### Getting source files
-
-Run the following command to get the source files of the MCP server:
-
-```bash
-git clone https://github.com/DecisionsDev/di-mcp-server.git
-cd di-mcp-server
-```
-
-### Building the MCP server
-
-Run the following commands to build the MCP server from the source files:
-
-```bash
-npm install
-npm run build
-```
-
-### Testing the MCP server
-
-Run the following command to test the MCP server:
-
-```bash
-npm test
-```
-
-### Code coverage
-
-The project is configured with Jest's built-in code coverage capabilities. To generate a code coverage report, run the following command:
-
-```bash
-npm run test:coverage
-```
-
-This will:
-1. Run all tests in the project
-2. Generate a coverage report showing which parts of the code are covered by tests
-3. Create detailed reports in the `coverage` directory
-
-The coverage report includes:
-- Statement coverage: percentage of code statements executed
-- Branch coverage: percentage of control structures (if/else, switch) executed
-- Function coverage: percentage of functions called
-- Line coverage: percentage of executable lines executed
-
-Coverage thresholds are set to 70% for statements, branches, functions, and lines. If the coverage falls below these thresholds, the test command fails.
-
-To view the detailed HTML coverage report, open `coverage/lcov-report/index.html` in your browser after running the coverage command.
-### Running the MCP server in development mode with `nodemon`
-
-Run the MCP server with `nodemon` and the `DEBUG` environment variable:
-- The server is restarted whenever changes are detected on the source code.
-- Debug output is enabled.
-
-#### Using command line options
-```bash
-npm run dev -- --apikey <APIKEY> --url <URL>
-```
-#### Using environment variables
-```bash
-APIKEY=<APIKEY> URL=<URL> npm run dev
-```
-
-## Environment variables
-
-| Name              | Description                                                                                                                      |
-|-------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| APIKEY            | API key to access the decision runtime for either Decision Intelligence or Automation Decision Services                   |
-| DEPLOYMENT_SPACES | Optional comma-separated list of deployment spaces to scan (default: `development`)                                              |
-| DEBUG             | When the value is `true`, the debug messages are written to the `stderr` of the MCP server                                       |
-| PASSWORD          | Password to access the decision runtime for Automation Decision Services with basic authentication                            |
-| RUNTIME           | Optional target decision runtime: `DI` (default) or `ADS`                                                                        |
-| TRANSPORT         | Optional transport protocol: `STDIO` (default) or `HTTP`                                                                         |
-| URL               | Base URL of the decision runtime                                                                                                 |
-| USERNAME          | Username to access the decision runtime for Automation Decision Services either with basic authentication or Zen API key</br> |
 
 ## License
 [Apache 2.0](LICENSE)
