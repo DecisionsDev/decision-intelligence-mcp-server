@@ -2,31 +2,17 @@
 
 [![Build and test](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml/badge.svg)](https://github.com/DecisionsDev/di-mcp-server/actions/workflows/build.yml) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![npm Version](https://badge.fury.io/js/di-mcp-server.svg)](https://www.npmjs.com/package/di-mcp-server) ![npm Downloads](https://img.shields.io/npm/dw/di-mcp-server)
 
+```mermaid
+flowchart LR
+   client("AI Assistant <br><br>(Claude, Watsonx Orchestrate, etc.)") -- MCP --> server("Decision Intelligence<br>MCP Server")
+   server -- HTTPS --> runtime("IBM Decision Intelligence <br>or IBM ADS <br><br>Decision Runtime")
+```
+
 This Model Context Protocol (MCP) server empowers AI assistants by accessing decisions from [IBM Decision Intelligence](https://www.ibm.com/products/decision-intelligence) or [IBM Automation Decision Services](https://www.ibm.com/products/automation-decision-services).
 
 The MCP server is available as an npm package in the free npm registry at https://www.npmjs.com/package/di-mcp-server.
 
 It supports both STDIO and streamable HTTP transports for local or remote deployments for supporting any MCP clients.
-
-```mermaid
-flowchart LR
-    github["di-mcp-server github repository"] -- publish --> registry
-    registry["NPM registry"] -- npx -y di-mcp-server--> server
-
-    subgraph MCP Host 
-        client["MCP Client"] <-- MCP/STDIO --> server("DI MCP Server")
-    end
-
-    server -- HTTPS --> runtime("Decision Runtime")
-
-    subgraph id["Decision Intelligence<br>or Automation Decision Services"]
-        runtime
-    end
-
-
-    client <-- MCP/HTTP --> server2("DI MCP Server") -- HTTPS --> runtime
-
-```
 
 <a id="resources"></a>
 ## Resources
@@ -322,7 +308,29 @@ where
 - `OPERATION_ID` is the operation unique identifier
 - `YourCustomToolName` is the desired tool name for the operation
 
-<a id="developing"></a>
+## Technical details
+
+```mermaid
+flowchart LR
+    github["di-mcp-server github repository"] -- publish --> registry
+    registry["NPM registry"] -- npx -y di-mcp-server--> server
+
+    subgraph MCP Host 
+        client["MCP Client"] <-- MCP/STDIO --> server("DI MCP Server")
+    end
+
+    server -- HTTPS --> runtime("Decision Runtime")
+
+    subgraph id["Decision Intelligence<br>or Automation Decision Services"]
+        runtime
+    end
+
+
+    client <-- MCP/HTTP --> server2("DI MCP Server") -- HTTPS --> runtime
+
+```
+
+
 
 ## License
 [Apache 2.0](LICENSE)
