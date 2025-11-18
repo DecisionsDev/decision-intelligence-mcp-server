@@ -19,6 +19,7 @@ It supports both STDIO and streamable HTTP transports for local or remote deploy
 
 - [Supercharge your AI Assistants with the decisioning capabilities of IBM Decision Intelligence](https://community.ibm.com/community/user/blogs/jean-philippe-orsini/2025/08/22/decision-intelligence-mcp-server): step by step instructions to use this MCP server for IBM Decision Intelligence
 - [Trusted automated decisions in Agentic application with IBM Decision Intelligence and MCP](https://www.youtube.com/watch?v=GEgelNg4uaM): this video shows how an agentic application can leverage automated decision services defined and hosted in the IBM Decision Intelligence platform to make accurate and explainable decisions
+- [Enrich your watsonx Orchestrate chat experience with IBM Decision Intelligence](https://medium.com/@orsinije/decision-intelligence-mcp-server-tutorial-watsonx-orchestrate-4d5a200fbe08): step by step instructions to use decisionning capability in IBM watsonx Orchestrate.
 
 <a id="getting_started"></a>
 ## Getting started with the MCP server
@@ -90,33 +91,7 @@ The MCP server for Decision Intelligence extends its capability by enabling AI a
 
 ### Integrating decision services into IBM watsonx Orchestrate
 
-You can integrate decision services into IBM watsonx Orchestrate by adding the MCP server.
-
-1. In the agent builder, click **Add tool**.
-
-   [![Thumbnail](./doc/wo1-thumbnail.png)](doc/wo1.png)
-
-2. Click **Import**.
-
-   [![Thumbnail](./doc/wo2-thumbnail.png)](doc/wo2.png)
-
-3. Click **Import from MCP server**.
-
-   [![Thumbnail](./doc/wo3-thumbnail.png)](doc/wo3.png)
-
-4. Click **Add MCP server**.
-
-   [![Thumbnail](./doc/wo4-thumbnail.png)](doc/wo4.png)
-
-5. Specify the name for the server and the `npx` command that is explained in the Getting started section.
-
-   [![Thumbnail](./doc/wo5-thumbnail.png)](doc/wo5.png)
-
-6. Close the dialog box, and select the tool that you want to add to your agent.
-
-   [![Thumbnail](./doc/wo6-thumbnail.png)](doc/wo6.png)
-
-   Your agent is now empowered with decisions.
+The article [Enrich your watsonx Orchestrate chat experience with IBM Decision Intelligence](https://medium.com/@orsinije/decision-intelligence-mcp-server-tutorial-watsonx-orchestrate-4d5a200fbe08) demontrates how to integrate the capability to discover and execute decisions in an IBM watsonx Orchestrate agent using the Decision Intelligence MCP server.
 
 #### Specifying the APIKEY and URL environment variables
 
