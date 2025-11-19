@@ -1,6 +1,5 @@
 import {getToolName, generateToolName} from '../src/ditool.js';
 import {Configuration} from "../src/command-line.js";
-import {DecisionRuntime} from "../src/decision-runtime.js";
 import nock from "nock";
 import {Credentials} from "../src/credentials.js";
 
@@ -54,7 +53,7 @@ describe('getToolName', () => {
         .get(`/deploymentSpaces/development/decisions/${decisionId}/metadata`)
         .reply(200, { map : {}});
 
-    const configuration = new Configuration(Credentials.createDiApiKeyCredentials('apiKey'),  DecisionRuntime.DI,  undefined, url, '1.2.3', false);
+    const configuration = new Configuration(Credentials.createDiApiKeyCredentials('apiKey'), undefined, url, '1.2.3', false);
     const decisionServiceName = 'decision-service-name';
     const info = {
         ['x-ibm-ads-decision-service-name'] : decisionServiceName,

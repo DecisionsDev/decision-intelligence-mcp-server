@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { Configuration } from "../src/command-line.js";
-import { DecisionRuntime } from "../src/decision-runtime.js";
 import { createMcpServer } from "../src/mcp-server.js";
 import { Server } from "http";
 import { AddressInfo } from 'net';
@@ -9,7 +8,7 @@ import {Credentials} from "../src/credentials.js";
 import {setupNockMocks, validateClient} from "./test-utils.js";
 
 describe('HTTP Transport', () => {
-    const configuration = new Configuration(Credentials.createDiApiKeyCredentials('validApiKey123'),  DecisionRuntime.DI,  undefined, 'https://foo.bar.bra,fr', '1.2.3', true);
+    const configuration = new Configuration(Credentials.createDiApiKeyCredentials('validApiKey123'),  undefined, 'https://foo.bar.bra,fr', '1.2.3', true);
 
     beforeAll(() => {
         setupNockMocks(configuration);
