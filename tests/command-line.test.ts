@@ -686,4 +686,31 @@ describe('CLI Configuration', () => {
             }).toThrow('Invalid transport protocol: \'WEBSOCKET\'. Must be one of: \'STDIO\', \'HTTP\'');
         });
     });
+
+    describe('getDecisionServiceIds', () => {
+        test('should get no decisionServiceIds', () => {
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--apikey', 'validkey123',
+                '--transport', 'STDIO'
+            ]);
+
+            expect(config.decisionServiceIds).toEqual(undefined);
+        });
+    });
+
+        describe('getDecisionServiceIds', () => {
+        test('should get decisionServiceIds', () => {
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--decision-service-ids', "A,B"
+            ]);
+
+            expect(config.decisionServiceIds).toEqual(["A", "B"]);
+        });
+    });
 });

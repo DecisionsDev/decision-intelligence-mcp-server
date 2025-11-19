@@ -17,7 +17,8 @@ export class Configuration {
         public url: string,
         public version: string,
         public debugEnabled: boolean,
-        public deploymentSpaces: string[] = Configuration.defaultDeploymentSpaces()
+        public deploymentSpaces: string[] = Configuration.defaultDeploymentSpaces(),
+        public decisionServiceIds: string[] | undefined = undefined
     ) {
         this.runtime = runtime || Configuration.defaultRuntime();
     }
@@ -127,6 +128,19 @@ function parseDeploymentSpaces(deploymentSpaces: string | undefined): string[] {
     return Configuration.defaultDeploymentSpaces();
 }
 
+function parseDecisionServiceIds(decisionServiceIds: string | undefined): string[] | undefined {
+    if (decisionServiceIds !== undefined) {
+        const ret = decisionServiceIds
+            .split(',')
+            .map(ids => ids.trim())
+            .filter(ids => ids.length > 0);
+        if (ret.length > 0) {
+            return ret;
+        }
+    }
+    return undefined;
+}
+
 export function createConfiguration(version: string, cliArguments?: readonly string[]): Configuration {
     const program = new Command();
     program
@@ -140,7 +154,8 @@ export function createConfiguration(version: string, cliArguments?: readonly str
         .option('--password <string>', "Password for the decision runtime. Or set 'PASSWORD' environment variable)")
         .option('--transport <transport>', "Transport mode: 'STDIO' or 'HTTP'")
         .option("--runtime <runtime>", "Target decision runtime: 'DI' or 'ADS'. Default value is 'DI'")
-        .option('--deployment-spaces <list>', "Comma-separated list of deployment spaces to scan (default: 'development')");
+        .option('--deployment-spaces <list>', "Comma-separated list of deployment spaces to scan (default: 'development')")
+        .option('--decision-service-ids <list>', 'If defined, comma-separated list of decision service ids to be exposed as tools');
 
     program.parse(cliArguments);
 
@@ -154,7 +169,8 @@ export function createConfiguration(version: string, cliArguments?: readonly str
     const transport = validateTransport(options.transport || process.env.TRANSPORT);
     const url = validateUrl(options.url || process.env.URL);
     const deploymentSpaces = validateDeploymentSpaces(options.deploymentSpaces || process.env.DEPLOYMENT_SPACES);
-
+    const decisionServiceIds = parseDecisionServiceIds(options.decisionServiceIds || process.env.DECISION_SERVICE_IDS);
+ 
     // Create and return configuration object
-    return new Configuration(credentials, runtime, transport, url, version, debugFlag, deploymentSpaces);
+    return new Configuration(credentials, runtime, transport, url, version, debugFlag, deploymentSpaces, decisionServiceIds);
 }

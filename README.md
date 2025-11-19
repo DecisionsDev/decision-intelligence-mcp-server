@@ -70,6 +70,7 @@ where
 - `TRANSPORT` (optional) is the transport protocol, either `STDIO` (default) or `HTTP`.
 - `RUNTIME` (optional) is the decision runtime, either `DI` (default) or `ADS` for using the decision runtime for respectively Decision Intelligence or Automation Decision Services.
 - `DEPLOYMENT_SPACES` (optional) is a comma-separated list of deployment spaces to scan (defaults to `development`).
+- `DECISION_SERVICE_IDS` (optional) If defined, comma-separated list of decision service ids to be exposed as tools
 
 The following environment variables can be used in addition to the command line options.
 | Name              | Description                                                                                                                      |
