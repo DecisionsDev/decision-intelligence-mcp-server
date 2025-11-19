@@ -698,9 +698,7 @@ describe('CLI Configuration', () => {
 
             expect(config.decisionServiceIds).toEqual(undefined);
         });
-    });
 
-        describe('getDecisionServiceIds', () => {
         test('should get decisionServiceIds', () => {
             const config = createConfiguration(version, [
                 'node', 'cli.js',
