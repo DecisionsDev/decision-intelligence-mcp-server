@@ -116,7 +116,7 @@ export async function createMcpServer(name: string, configuration: Configuration
     for (const deploymentSpace of configuration.deploymentSpaces) {
         debug("deploymentSpace", deploymentSpace);
         
-        var serviceIds = configuration.decisionServiceIds;
+        let serviceIds = configuration.decisionServiceIds;
         debug("decisionServiceIds", JSON.stringify(configuration.decisionServiceIds));
 
         if (serviceIds === undefined || serviceIds.length === 0) {
