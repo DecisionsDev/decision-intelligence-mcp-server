@@ -1,4 +1,5 @@
-import {CredentialKinds, Credentials} from "../src/credentials.js";
+import {AuthenticationMode} from '../src/authentication-mode.js';
+import {Credentials} from '../src/credentials.js';
 
 describe('Credentials', () => {
     let originalEnv: NodeJS.ProcessEnv;
@@ -14,7 +15,6 @@ describe('Credentials', () => {
         process.env = originalEnv;
     });
 
-    const apikey = 'apikey';
     const authorization = 'authorization';
 
     describe('for basic authentication', () => {
@@ -42,6 +42,7 @@ describe('Credentials', () => {
     });
 
     describe('for DI API key', () => {
+        const apikey = 'apikey';
         test(`should return '${apikey}' as header key`, () => {
             const credentials = Credentials.createDiApiKeyCredentials('toto');
             expect(credentials.getAuthorizationHeaderKey()).toBe(apikey);
@@ -87,182 +88,408 @@ describe('Credentials', () => {
 
     describe('validateCredentials', () => {
 
-        test(`should return DI APi key credentials`, () => {
-            const apikey = 'blah.blah.blah';
-            const credentials = Credentials.validateCredentials({ apikey });
-            expect(credentials!.kind).toBe(CredentialKinds.DI_API_KEY);
-            expect(credentials!.getAuthorizationHeaderValue()).toBe(apikey);
-        });
+        describe('should return', () => {
 
-        test(`should return Zen APi key credentials`, () => {
-            const apikey = 'blah.blah.blah';
-            const username = 'pim.pam.plouf';
-            const credentials = Credentials.validateCredentials({ apikey, username });
-            expect(credentials!.kind).toBe(CredentialKinds.ZEN_API_KEY);
-            const encoded= Buffer.from(`${username}:${apikey}`).toString('base64');
-            expect(credentials!.getAuthorizationHeaderValue()).toBe(`ZenApiKey ${encoded}`);
-        });
+            test(`DI APi key credentials by default`, () => {
+                const diApikey = 'blah.blah.blah';
+                const credentials = Credentials.validateCredentials({diApikey});
+                expect(credentials!.authenticationMode).toBe(AuthenticationMode.DI_API_KEY);
+                expect(credentials!.getAuthorizationHeaderValue()).toBe(diApikey);
+            });
 
-        test(`should return basic authentication credentials`, () => {
-            const password = 'blah.blah.blah';
-            const username = 'pim.pam.plouf';
-            const credentials = Credentials.validateCredentials({ password, username });
-            expect(credentials!.kind).toBe(CredentialKinds.BASIC_AUTH);
-            const encoded= Buffer.from(`${username}:${password}`).toString('base64');
-            expect(credentials!.getAuthorizationHeaderValue()).toBe(`Basic ${encoded}`);
-        });
+            test(`DI APi key credentials for 'DiApiKey' authenticationMode`, () => {
+                const diApikey = 'blah.blah.blah';
+                const authenticationMode = AuthenticationMode.DI_API_KEY;
+                const credentials = Credentials.validateCredentials({diApikey, authenticationMode});
+                expect(credentials!.authenticationMode).toBe(authenticationMode);
+                expect(credentials!.getAuthorizationHeaderValue()).toBe(diApikey);
+            });
 
-        test(`should throw an error if apikey is empty`, () => {
-            expect(() => {
-                Credentials.validateCredentials({ apikey: '      '});
-            }).toThrow(`The DI decision runtime API key cannot be empty`)
-        });
+            test(`Zen APi key credentials for 'ZenApiKey' authenticationMode`, () => {
+                const zenApikey = 'blah.blah.blah';
+                const zenUsername = 'pim.pam.plouf';
+                const authenticationMode = AuthenticationMode.ZEN_API_KEY;
+                const credentials = Credentials.validateCredentials({zenApikey, zenUsername, authenticationMode});
+                expect(credentials!.authenticationMode).toBe(authenticationMode);
+                const encoded= Buffer.from(`${zenUsername}:${zenApikey}`).toString('base64');
+                expect(credentials!.getAuthorizationHeaderValue()).toBe(`ZenApiKey ${encoded}`);
+            });
 
-        test(`should throw an error if username is empty`, () => {
-            expect(() => {
-                Credentials.validateCredentials({ username: '      ', password: 'tutu'});
-            }).toThrow(`The decision runtime username cannot be empty`)
-        });
-
-        test(`should throw an error if password is empty`, () => {
-            expect(() => {
-                Credentials.validateCredentials({ username: 'foo', password: '      '});
-            }).toThrow(`The decision runtime password cannot be empty`)
-        });
-
-        test(`should throw an error if both apikey and password are defined`, () => {
-            expect(() => {
-                Credentials.validateCredentials({ apikey: 'toto', password: 'titi'});
-            }).toThrow(`Decision runtime credentials: cannot provide both API key and password`)
-        });
-
-        test(`should throw an error if all three apikey, username and password are defined`, () => {
-            expect(() => {
-                Credentials.validateCredentials({ apikey: 'toto', username: 'titi', password: 'tutu'});
-            }).toThrow(`Decision runtime credentials: cannot provide both API key and password`)
-        });
-
-        test(`should throw an error when neither apikey nor username/password are defined`, () => {
-            expect(() => {
-                Credentials.validateCredentials({});
-            }).toThrow(`Decision runtime credentials are missing: please provide either an API key, a username and a Zen API key, or a username and a password`)
-        });
-
-        test('should use APIKEY environment variable when command line arguments are not provided', () => {
-            const apiKey = 'the api key'
-            process.env.APIKEY = apiKey;
-            expect(Credentials.validateCredentials({})).toMatchObject({
-                apikey: apiKey,
-                kind: CredentialKinds.DI_API_KEY
+            test(`basic authentication credentials for 'Basic' authenticationMode`, () => {
+                const basicUsername = 'pim.pam.plouf';
+                const basicPassword = 'mehh';
+                const authenticationMode = AuthenticationMode.BASIC;
+                const credentials = Credentials.validateCredentials({basicUsername, basicPassword, authenticationMode});
+                expect(credentials!.authenticationMode).toBe(authenticationMode);
+                const encoded= Buffer.from(`${basicUsername}:${basicPassword}`).toString('base64');
+                expect(credentials!.getAuthorizationHeaderValue()).toBe(`Basic ${encoded}`);
             });
         });
 
-        test('should prioritize command line arguments over environment variable', () => {
-            const apikey = 'the api key'
-            process.env.APIKEY = 'the other API key';
-            expect(Credentials.validateCredentials({apikey})).toMatchObject({
-                apikey: apikey,
-                kind: CredentialKinds.DI_API_KEY
+        describe('should throw an error', () => {
+
+            test(`when the authentication mode cannot be parsed`, () => {
+                const authenticationMode = 'toto'
+                expect(() => {
+                    Credentials.validateCredentials({authenticationMode: authenticationMode});
+                }).toThrow(`Invalid authentication mode: '${authenticationMode}'. Must be one of: 'diapikey', 'zenapikey', 'basic'`)
             });
 
-            const username = 'Antonio Dela Vega'
-            process.env.USERNAME = 'the other username';
-            expect(Credentials.validateCredentials({apikey, username})).toMatchObject({
-                apikey: apikey,
-                username: username,
-                kind: CredentialKinds.ZEN_API_KEY
+            test(`when apikey is not defined for 'DiApiKey' authenticationMode`, () => {
+                expect(() => {
+                    Credentials.validateCredentials({authenticationMode: AuthenticationMode.DI_API_KEY});
+                }).toThrow(`The DI API key must be defined`)
             });
 
-            const password = 'password'
-            process.env.APIKEY = undefined;
-            process.env.PASSWORD = 'the other password';
-            expect(Credentials.validateCredentials({password, username})).toMatchObject({
-                password: password,
-                username: username,
-                kind: CredentialKinds.BASIC_AUTH
+            test(`when apikey is empty for 'DiApiKey' authenticationMode`, () => {
+                expect(() => {
+                    Credentials.validateCredentials({diApikey: '      ', authenticationMode: AuthenticationMode.DI_API_KEY});
+                }).toThrow(`The DI API key cannot be empty`)
+            });
+
+            test(`when apikey is not defined for 'ZenApiKey' authenticationMode`, () => {
+                expect(() => {
+                    Credentials.validateCredentials({authenticationMode: AuthenticationMode.ZEN_API_KEY});
+                }).toThrow(`The Zen API key must be defined`)
+            });
+
+            test(`when apikey is empty for 'ZenApiKey' authenticationMode`, () => {
+                expect(() => {
+                    Credentials.validateCredentials({zenApikey: '      ', authenticationMode: AuthenticationMode.ZEN_API_KEY});
+                }).toThrow(`The Zen API key cannot be empty`)
+            });
+
+            test(`when username is not defined for 'ZenApiKey' authenticationMode`, () => {
+                expect(() => {
+                    Credentials.validateCredentials({zenApikey: 'apikey', authenticationMode: AuthenticationMode.ZEN_API_KEY});
+                }).toThrow(`The Zen username must be defined`)
+            });
+
+            test(`when username is empty for 'ZenApiKey' authenticationMode`, () => {
+                expect(() => {
+                    Credentials.validateCredentials({zenApikey: 'apikey', zenUsername: ' ', authenticationMode: AuthenticationMode.ZEN_API_KEY});
+                }).toThrow(`The Zen username cannot be empty`)
+            });
+
+            test(`when username is not defined ty for 'Basic' authenticationMode`, () => {
+                expect(() => {
+                    Credentials.validateCredentials({basicPassword: 'tutu', authenticationMode: AuthenticationMode.BASIC});
+                }).toThrow(`The username for basic authentication must be defined`)
+            });
+
+            test(`when username is empty for 'Basic' authenticationMode`, () => {
+                expect(() => {
+                    Credentials.validateCredentials({basicUsername: '      ', basicPassword: 'tutu', authenticationMode: AuthenticationMode.BASIC});
+                }).toThrow(`The username for basic authentication cannot be empty`)
+            });
+
+            test(`when password is not defined for 'Basic' authenticationMode`, () => {
+                expect(() => {
+                    Credentials.validateCredentials({basicUsername: 'foo', authenticationMode: AuthenticationMode.BASIC});
+                }).toThrow(`The password for basic authentication must be defined`)
+            });
+
+            test(`when password is empty for 'Basic' authenticationMode`, () => {
+                expect(() => {
+                    Credentials.validateCredentials({basicUsername: 'foo', basicPassword: '      ', authenticationMode: AuthenticationMode.BASIC});
+                }).toThrow(`The password for basic authentication cannot be empty`)
+             });
+
+            test(`when the APIKEY environment variable is not defined`, () => {
+                expect(() => Credentials.validateCredentials({})).
+                toThrow('The DI API key must be defined');
+            });
+
+            test(`when the APIKEY environment variable is empty`, () => {
+                process.env.DI_APIKEY = '          ';
+                expect(() => Credentials.validateCredentials({})).
+                toThrow('The DI API key cannot be empty');
+            });
+
+            test(`when the APIKEY environment variable is not defined for the 'Zen Api Key' authentication mode`, () => {
+                expect(() => Credentials.validateCredentials({authenticationMode: AuthenticationMode.ZEN_API_KEY})).
+                toThrow('The Zen API key must be defined');
+            });
+
+            test(`when the APIKEY environment variable is empty for the 'Zen Api Key' authentication mode`, () => {
+                process.env.ZEN_APIKEY = '          ';
+                expect(() => Credentials.validateCredentials({authenticationMode: AuthenticationMode.ZEN_API_KEY})).
+                toThrow('The Zen API key cannot be empty');
+            });
+
+            test(`when the BASIC_USERNAME environment variable`, () => {
+                expect(() => Credentials.validateCredentials({authenticationMode: AuthenticationMode.BASIC })).
+                toThrow('The username for basic authentication must be defined');
+            });
+
+            test(`when the BASIC_USERNAME environment variable is empty`, () => {
+                process.env.BASIC_USERNAME = '          ';
+                expect(() => Credentials.validateCredentials({authenticationMode: AuthenticationMode.BASIC })).
+                toThrow('The username for basic authentication cannot be empty');
+            });
+
+            test(`when the PASSWORD environment variable not defined`, () => {
+                process.env.BASIC_USERNAME = 'the.password';
+                expect(() => Credentials.validateCredentials({authenticationMode: AuthenticationMode.BASIC })).
+                toThrow('The password for basic authentication must be defined');
+            });
+
+            test(`when the PASSWORD environment variable is empty`, () => {
+                process.env.BASIC_PASSWORD = '          ';
+                process.env.BASIC_USERNAME = 'the.password';
+                expect(() => Credentials.validateCredentials({authenticationMode: AuthenticationMode.BASIC })).
+                toThrow('The password for basic authentication cannot be empty');
+            });
+        });
+
+        describe('when command line arguments are not provided, should use', () => {
+
+            test('DI_APIKEY environment variable', () => {
+                const apiKey = 'the api key';
+                process.env.DI_APIKEY = apiKey;
+                expect(Credentials.validateCredentials({})).toMatchObject({
+                    apikey: apiKey,
+                    authenticationMode: AuthenticationMode.DI_API_KEY
+                });
+            });
+
+            test('AUTHENTICATION_MODE, ZEN_APIKEY and ZEN_USERNAME environment variables', () => {
+                const apiKey = 'the api key';
+                process.env.ZEN_APIKEY = apiKey;
+                const username = 'the username';
+                process.env.ZEN_USERNAME = username;
+                const authenticationMode = AuthenticationMode.ZEN_API_KEY;
+                process.env.AUTHENTICATION_MODE = authenticationMode;
+                expect(Credentials.validateCredentials({})).toMatchObject({
+                    apikey: apiKey,
+                    username: username,
+                    authenticationMode: authenticationMode
+                });
+            });
+
+            test('AUTHENTICATION_MODE, BASIC_USERNAME and BASIC_PASSWORD environment variables', () => {
+                const username = 'the username';
+                process.env.BASIC_USERNAME = username;
+                const password = 'the password';
+                process.env.BASIC_PASSWORD = password;
+                const authenticationMode = AuthenticationMode.BASIC;
+                process.env.AUTHENTICATION_MODE = authenticationMode;
+                expect(Credentials.validateCredentials({})).toMatchObject({
+                    username: username,
+                    password: password,
+                    authenticationMode: authenticationMode
+                });
+            });
+        });
+
+
+        const otherUsername = 'the other username';
+        const otherApiKey = 'the other API key';
+
+        describe('should prioritize command line arguments over environment variables', () => {
+
+            test('for DI API key', () => {
+                const diApikey = 'the api key'
+                process.env.DI_APIKEY = otherApiKey;
+                expect(Credentials.validateCredentials({diApikey})).toMatchObject({
+                    apikey: diApikey,
+                    authenticationMode: AuthenticationMode.DI_API_KEY
+                });
+            });
+
+            test('for Zen API key', () => {
+                const zenApikey = 'the api key'
+                process.env.ZEN_APIKEY = otherApiKey;
+                const authenticationMode = AuthenticationMode.ZEN_API_KEY;
+                const zenUsername = 'Antonio Dela Vega'
+                expect(Credentials.validateCredentials({zenApikey, zenUsername, authenticationMode})).toMatchObject({
+                    apikey: zenApikey,
+                    username: zenUsername,
+                    authenticationMode: authenticationMode
+                });
+            });
+
+            test('for Zen username', () => {
+                const zenApikey = 'the api key'
+                const zenUsername = 'Antonio Dela Vega';
+                process.env.ZEN_USERNAME = otherUsername;
+                const authenticationMode = AuthenticationMode.ZEN_API_KEY.toLowerCase();
+                expect(Credentials.validateCredentials({zenApikey, zenUsername, authenticationMode})).toMatchObject({
+                    apikey: zenApikey,
+                    username: zenUsername,
+                    authenticationMode: AuthenticationMode.ZEN_API_KEY
+                });
+            });
+
+            test('for authentication mode', () => {
+                const zenApikey = 'the api key';
+                const zenUsername = 'John Smith';
+                const authenticationMode = AuthenticationMode.ZEN_API_KEY.toLowerCase();
+                process.env.AUTHENTICATION_MODE = AuthenticationMode.DI_API_KEY;
+                expect(Credentials.validateCredentials({zenApikey, zenUsername, authenticationMode: authenticationMode})).toMatchObject({
+                    apikey: zenApikey,
+                    username: zenUsername,
+                    authenticationMode: AuthenticationMode.ZEN_API_KEY
+                });
+            });
+
+            test('for basic authentication username', () => {
+                const basicUsername = 'Antonio Dela Vega';
+                const basicPassword = 'password';
+                process.env.BASIC_USERNAME = 'the other username';
+                const authenticationMode = AuthenticationMode.BASIC.toLowerCase();
+                expect(Credentials.validateCredentials({basicPassword, basicUsername, authenticationMode})).toMatchObject({
+                    password: basicPassword,
+                    username: basicUsername,
+                    authenticationMode: AuthenticationMode.BASIC
+                });
+            });
+
+            test('for basic authentication password', () => {
+                const basicUsername = 'Foo Babar';
+                const basicPassword = 'yet another password';
+                process.env.BASIC_PASSWORD = 'the other password';
+                const authenticationMode = AuthenticationMode.BASIC;
+                expect(Credentials.validateCredentials({basicPassword, basicUsername, authenticationMode})).toMatchObject({
+                    password: basicPassword,
+                    username: basicUsername,
+                    authenticationMode: authenticationMode
+                });
             });
         });
 
         test('can combine both command line arguments and environment variables', () => {
-            const apikey = 'the api key'
-            const envUsername = 'the other username';
-            process.env.USERNAME = envUsername;
-            expect(Credentials.validateCredentials({apikey})).toMatchObject({
-                apikey: apikey,
-                username: envUsername,
-                kind: CredentialKinds.ZEN_API_KEY
-            });
-
             const envApiKey = 'the other API key';
-            process.env.APIKEY = envApiKey;
-            const username = 'Antonio Dela Vega'
-            expect(Credentials.validateCredentials({username})).toMatchObject({
+            process.env.ZEN_APIKEY = envApiKey;
+            const username = 'Antonio Dela Vega';
+            process.env.AUTHENTICATION_MODE = AuthenticationMode.ZEN_API_KEY;
+            expect(Credentials.validateCredentials({zenUsername: username})).toMatchObject({
                 apikey: envApiKey,
                 username: username,
-                kind: CredentialKinds.ZEN_API_KEY
+                authenticationMode: AuthenticationMode.ZEN_API_KEY
             });
 
-            const password = 'password'
-            process.env.APIKEY = undefined;
-            process.env.PASSWORD = 'the other password';
-            expect(Credentials.validateCredentials({password})).toMatchObject({
-                password: password,
-                username: envUsername,
-                kind: CredentialKinds.BASIC_AUTH
+            const basicPassword = 'password'
+            process.env.BASIC_USERNAME = otherUsername;
+            const otherPassword = 'the other password';
+            process.env.BASIC_PASSWORD = otherPassword;
+            process.env.AUTHENTICATION_MODE = AuthenticationMode.BASIC.toLowerCase();
+            expect(Credentials.validateCredentials({basicPassword})).toMatchObject({
+                password: basicPassword,
+                username: otherUsername,
+                authenticationMode: AuthenticationMode.BASIC
             });
 
-            process.env.APIKEY = undefined;
-            const envPassword = 'the other password';
-            process.env.PASSWORD = envPassword;
-            expect(Credentials.validateCredentials({username})).toMatchObject({
-                password: envPassword,
+            expect(Credentials.validateCredentials({basicUsername: username})).toMatchObject({
+                password: otherPassword,
                 username: username,
-                kind: CredentialKinds.BASIC_AUTH
+                authenticationMode: AuthenticationMode.BASIC
+            });
+
+            process.env.AUTHENTICATION_MODE = undefined;
+            expect(Credentials.validateCredentials({basicPassword, authenticationMode: AuthenticationMode.BASIC})).toMatchObject({
+                password: basicPassword,
+                username: otherUsername,
+                authenticationMode: AuthenticationMode.BASIC
+            });
+
+            expect(Credentials.validateCredentials({basicUsername: username, authenticationMode: AuthenticationMode.BASIC})).toMatchObject({
+                password: otherPassword,
+                username: username,
+                authenticationMode: AuthenticationMode.BASIC
             });
         });
-        test(`should throw an error if the APIKEY environment variable is empty`, () => {
-            process.env.APIKEY = '          ';
-            expect(() => Credentials.validateCredentials({})).
-                toThrow('The DI decision runtime API key cannot be empty');
-        });
 
-        test(`should throw an error if the USERNAME environment variable is empty`, () => {
-            process.env.USERNAME = '          ';
-            process.env.PASSWORD = 'the.password';
-            expect(() => Credentials.validateCredentials({})).
-                toThrow('The decision runtime username cannot be empty');
-        });
+        describe('should not take into account environment variables used by other authentication modes', () => {
 
-        test(`should throw an error if the PASSWORD environment variable is empty`, () => {
-            process.env.PASSWORD = '          ';
-            process.env.USERNAME = 'the.password';
-            expect(() => Credentials.validateCredentials({})).
-                toThrow('The decision runtime password cannot be empty');
-        });
+            test(`for DI API key authentication`, () => {
+                process.env.USERNAME = 'OS dependant username';
+                process.env.BASIC_USERNAME = 'username for basic authentication';
+                process.env.PASSWORD = 'password for basic authentication';
+                process.env.ZEN_USERNAME = 'username for Zen API key authentication';
+                const diApikey = 'the DI API key';
+                const authenticationMode = AuthenticationMode.DI_API_KEY.toLowerCase();
+                expect(Credentials.validateCredentials({diApikey})).toMatchObject({
+                    apikey: diApikey,
+                    username: undefined,
+                    password: undefined,
+                    authenticationMode: AuthenticationMode.DI_API_KEY
+                });
 
-        test(`should throw an error if both APIKEY and PASSWORD environment variables are defined`, () => {
-            process.env.APIKEY = 'the.api.key';
-            process.env.PASSWORD = 'the.password';
-            expect(() => Credentials.validateCredentials({})).
-                toThrow('Decision runtime credentials: cannot provide both API key and password');
-        });
+                expect(Credentials.validateCredentials({diApikey, authenticationMode})).toMatchObject({
+                    apikey: diApikey,
+                    username: undefined,
+                    password: undefined,
+                    authenticationMode: AuthenticationMode.DI_API_KEY
+                });
 
-        test(`should throw an error if all three APIKEY, USERNAME and PASSWORD environment variables are defined`, () => {
-            process.env.APIKEY = 'the.api.key';
-            process.env.USERNAME = 'the.username';
-            process.env.PASSWORD = 'the.password';
-            expect(() => Credentials.validateCredentials({})).
-                toThrow('Decision runtime credentials: cannot provide both API key and password');
-        });
+                process.env.AUTHENTICATION_MODE = authenticationMode;
+                expect(Credentials.validateCredentials({diApikey})).toMatchObject({
+                    apikey: diApikey,
+                    username: undefined,
+                    password: undefined,
+                    authenticationMode: AuthenticationMode.DI_API_KEY
+                });
 
-        test('should use USERNAME/PASSWORD environment variables when command line arguments are not provided', () => {
-            const username = 'foo.bar.bra';
-            const password = 'babar';
-            process.env.USERNAME = username;
-            process.env.PASSWORD = password;
-            expect(Credentials.validateCredentials({})).toMatchObject({
-                username: username,
-                password: password
+                process.env.DI_APIKEY = diApikey;
+                expect(Credentials.validateCredentials({})).toMatchObject({
+                    apikey: diApikey,
+                    username: undefined,
+                    password: undefined,
+                    authenticationMode: AuthenticationMode.DI_API_KEY
+                });
+            });
+
+            test(`for Zen API key authentication`, () => {
+                process.env.USERNAME = 'OS dependant username';
+                process.env.DI_APIKEY = 'API key for DI API key authentication';
+                process.env.BASIC_USERNAME = 'username for basic authentication';
+                process.env.BASIC_PASSWORD = 'password for basic authentication';
+                const zenApikey = 'the Zen API key';
+                const zenUsername = 'the Zen user name';
+                const authenticationMode = AuthenticationMode.ZEN_API_KEY;
+                expect(Credentials.validateCredentials({zenApikey, zenUsername, authenticationMode})).toMatchObject({
+                    apikey: zenApikey,
+                    username: zenUsername,
+                    password: undefined,
+                    authenticationMode: authenticationMode
+                });
+
+                process.env.ZEN_USERNAME = zenUsername;
+                process.env.ZEN_APIKEY = zenApikey;
+                process.env.AUTHENTICATION_MODE = authenticationMode;
+                expect(Credentials.validateCredentials({})).toMatchObject({
+                    apikey: zenApikey,
+                    username: zenUsername,
+                    password: undefined,
+                    authenticationMode: authenticationMode
+                });
+            });
+
+            test(`for basic authentication`, () => {
+                process.env.USERNAME = 'OS dependant username';
+                process.env.DI_APIKEY = 'API key for dI API key authentication';
+                process.env.ZEN_APIKEY = 'API key for Zen API key authentication';
+                process.env.ZEN_USERNAME = 'username for Zen API key authentication';
+                const basicUsername = 'username for basic authentication';
+                const basicPassword = 'password for basic authentication';
+                const authenticationMode = AuthenticationMode.BASIC;
+                expect(Credentials.validateCredentials({basicUsername, basicPassword, authenticationMode})).toMatchObject({
+                    apikey: undefined,
+                    username: basicUsername,
+                    password: basicPassword,
+                    authenticationMode: authenticationMode
+                });
+
+                process.env.BASIC_USERNAME = basicUsername;
+                process.env.BASIC_PASSWORD = basicPassword;
+                process.env.AUTHENTICATION_MODE = authenticationMode;
+                expect(Credentials.validateCredentials({})).toMatchObject({
+                    apikey: undefined,
+                    username: basicUsername,
+                    password: basicPassword,
+                    authenticationMode: authenticationMode
+                });
             });
         });
     });

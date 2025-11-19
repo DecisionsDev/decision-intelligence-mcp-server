@@ -1,6 +1,6 @@
 import {createConfiguration, Configuration} from '../src/command-line.js';
 import {debug, setDebug} from '../src/debug.js';
-import {DecisionRuntime, parseDecisionRuntime} from '../src/decision-runtime.js';
+import {AuthenticationMode, parseAuthenticationMode, defaultAuthenticationMode} from '../src/authentication-mode.js';
 import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
 
 // Mock the debug function and setDebug function
@@ -12,14 +12,17 @@ const mockDebug = debug as jest.MockedFunction<typeof debug>;
 const mockSetDebug = setDebug as jest.MockedFunction<typeof setDebug>;
 
 // Mock the DecisionRuntime enum and parseDecisionRuntime function
-jest.mock('../src/decision-runtime', () => ({
-    DecisionRuntime: {
-        DI: 'DI',
-        ADS: 'ADS'
+jest.mock('../src/authentication-mode', () => ({
+    AuthenticationMode: {
+        DI_API_KEY: 'DiApiKey',
+        ZEN_API_KEY: 'ZenApiKey',
+        BASIC: 'Basic'
     },
-    parseDecisionRuntime: jest.fn(),
+    parseAuthenticationMode: jest.fn(),
+    defaultAuthenticationMode: jest.fn()
 }));
-const mockParseDecisionRuntime = parseDecisionRuntime as jest.MockedFunction<typeof parseDecisionRuntime>;
+const mockParseAuthenticationMode = parseAuthenticationMode as jest.MockedFunction<typeof parseAuthenticationMode>;
+const mockDefaultAuthenticationMode = defaultAuthenticationMode as jest.MockedFunction<typeof defaultAuthenticationMode>;
 
 describe('CLI Configuration', () => {
     let originalEnv: NodeJS.ProcessEnv;
@@ -34,11 +37,22 @@ describe('CLI Configuration', () => {
         jest.clearAllMocks();
 
         // Setup default mock implementations
-        mockParseDecisionRuntime.mockImplementation((runtime: string) => {
-            if (runtime === 'DI' || runtime === 'ADS') {
-                return runtime as DecisionRuntime;
+        mockParseAuthenticationMode.mockImplementation((authenticationMode: string) => {
+            const normalizedInput = authenticationMode.toLowerCase();
+            if (normalizedInput === 'DiApiKey'.toLowerCase()) {
+                return AuthenticationMode.DI_API_KEY;
+            }
+            if (normalizedInput === 'ZenApiKey'.toLowerCase()) {
+                return AuthenticationMode.ZEN_API_KEY;
+            }
+            if (normalizedInput === 'Basic'.toLowerCase()) {
+                return AuthenticationMode.BASIC;
             }
             return undefined;
+        });
+
+        mockDefaultAuthenticationMode.mockImplementation(() => {
+            return AuthenticationMode.DI_API_KEY;
         });
     });
 
@@ -57,7 +71,7 @@ describe('CLI Configuration', () => {
             const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO'
             ]);
 
@@ -69,8 +83,8 @@ describe('CLI Configuration', () => {
             expect(() => {
                 createConfiguration(version, [
                     'node', 'cli.js',
-                    '--apikey', 'validkey123',
-                    '--transport', 'STDIO'
+                    '--di-apikey', 'validkey123',
+                    '--transport', 'stdio'
                 ]);
             }).toThrow('The decision runtime REST API URL is not defined');
         });
@@ -80,8 +94,8 @@ describe('CLI Configuration', () => {
                 createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', 'invalid-url',
-                    '--apikey', 'validkey123',
-                    '--transport', 'STDIO'
+                    '--di-apikey', 'validkey123',
+                    '--transport', 'StDiO'
                 ]);
             }).toThrow('Invalid URL format: \'invalid-url\'');
         });
@@ -92,7 +106,7 @@ describe('CLI Configuration', () => {
 
             const config = createConfiguration(version, [
                 'node', 'cli.js',
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO'
             ]);
 
@@ -103,7 +117,7 @@ describe('CLI Configuration', () => {
             createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO'
             ]);
 
@@ -116,15 +130,15 @@ describe('CLI Configuration', () => {
             const stdioConfig = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO'
             ]);
 
             const httpConfig = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
-                '--transport', 'HTTP'
+                '--di-apikey', 'validkey123',
+                '--transport', 'hTtP'
             ]);
 
             expect(stdioConfig.transport).toBeInstanceOf(StdioServerTransport);
@@ -132,14 +146,15 @@ describe('CLI Configuration', () => {
         });
 
         test('should throw error for invalid transport', () => {
+            const invalid = 'INVALID';
             expect(() => {
                 createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', url,
-                    '--apikey', 'validkey123',
-                    '--transport', 'INVALID'
+                    '--di-apikey', 'validkey123',
+                    '--transport', invalid
                 ]);
-            }).toThrow('Invalid transport protocol: \'INVALID\'. Must be one of: \'STDIO\', \'HTTP\'');
+            }).toThrow(`Invalid transport protocol: '${invalid}'. Must be one of: 'stdio', 'http'`);
         });
 
         test('should use transport from environment variable', () => {
@@ -148,7 +163,7 @@ describe('CLI Configuration', () => {
             const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123'
+                '--di-apikey', 'validkey123'
             ]);
 
             expect(config.transport).toBe(undefined);
@@ -161,7 +176,7 @@ describe('CLI Configuration', () => {
             const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123'
+                '--di-apikey', 'validkey123'
             ]);
 
             expect(config.transport).toBeInstanceOf(StdioServerTransport);
@@ -171,7 +186,7 @@ describe('CLI Configuration', () => {
             createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'HTTP'
             ]);
 
@@ -180,87 +195,100 @@ describe('CLI Configuration', () => {
     });
 
     describe('validateDecisionRuntime', () => {
-        test('should accept valid decision runtimes', () => {
-            const diConfig = createConfiguration(version, [
+        test('should accept valid authentication modes', () => {
+            const diApiKeyConfig = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO',
-                '--runtime', 'DI'
+                '--authentication-mode', 'DiApiKey'
             ]);
+            expect(diApiKeyConfig.credentials.authenticationMode).toBe(AuthenticationMode.DI_API_KEY);
 
-            const adsConfig = createConfiguration(version, [
+            const zenApiKeyConfig = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--zen-apikey', 'validkey123',
+                '--zen-username', 'foobar',
                 '--transport', 'STDIO',
-                '--runtime', 'ADS'
+                '--authentication-mode', 'ZenApiKey'
             ]);
+            expect(zenApiKeyConfig.credentials.authenticationMode).toBe(AuthenticationMode.ZEN_API_KEY);
 
-            expect(diConfig.runtime).toBe(DecisionRuntime.DI);
-            expect(adsConfig.runtime).toBe(DecisionRuntime.ADS);
+            const basiconfig = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--basic-username', 'foobar',
+                '--basic-password', 'babar',
+                '--transport', 'STDIO',
+                '--authentication-mode', 'Basic'
+            ]);
+            expect(basiconfig.credentials.authenticationMode).toBe(AuthenticationMode.BASIC);
         });
 
         test('should default to DI when not specified', () => {
             const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO'
             ]);
 
-            expect(config.runtime).toBe(DecisionRuntime.DI);
+            expect(config.credentials.authenticationMode).toBe(AuthenticationMode.DI_API_KEY);
         });
 
         test('should throw error for invalid decision runtime', () => {
-            mockParseDecisionRuntime.mockReturnValue(undefined);
+            const invalid = 'INVALID';
+            mockParseAuthenticationMode.mockReturnValue(undefined);
 
             expect(() => {
                 createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', url,
-                    '--apikey', 'validkey123',
+                    '--di-apikey', 'validkey123',
                     '--transport', 'STDIO',
-                    '--runtime', 'INVALID'
+                    '--authentication-mode', invalid
                 ]);
-            }).toThrow('Invalid target decision runtime: \'undefined\'. Must be one of: \'DI\', \'ADS\'');
+            }).toThrow(`Invalid authentication mode: '${invalid}'. Must be one of: 'diapikey', 'zenapikey', 'basic'`);
         });
 
-        test('should use decision runtime from environment variable', () => {
-            process.env.RUNTIME = 'ADS';
+        test('should read authentication mode from environment variable', () => {
+            process.env.AUTHENTICATION_MODE = 'Basic';
 
             const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--basic-username', 'toto',
+                '--basic-password', 'tutu',
                 '--transport', 'STDIO'
             ]);
 
-            expect(config.runtime).toBe(DecisionRuntime.ADS);
+            expect(config.credentials.authenticationMode).toBe(AuthenticationMode.BASIC);
         });
 
-        test('should call debug function with decision runtime', () => {
+        test('should call debug function with authentication mode', () => {
             createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO',
-                '--runtime', 'DI'
+                '--authentication-mode', 'DiApiKey'
             ]);
 
-            expect(mockDebug).toHaveBeenCalledWith('RUNTIME=DI');
+            expect(mockDebug).toHaveBeenCalledWith('AUTHENTICATION_MODE=DiApiKey');
         });
 
         test('should call parseDecisionRuntime function', () => {
+            const diApiKey = 'DiApiKey';
             createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO',
-                '--runtime', 'DI'
+                '--authentication-mode', diApiKey
             ]);
 
-            expect(mockParseDecisionRuntime).toHaveBeenCalledWith('DI');
+            expect(mockParseAuthenticationMode).toHaveBeenCalledWith('DiApiKey');
         });
     });
 
@@ -273,16 +301,16 @@ describe('CLI Configuration', () => {
                     '--url', url,
                     '--transport', 'STDIO'
                 ]);
-            }).toThrow('Decision runtime credentials are missing: please provide either an API key, a username and a Zen API key, or a username and a password');
+            }).toThrow('The DI API key must be defined');
         });
 
-        describe('With API key', () => {
+        describe('With DI API key', () => {
             const apiKey = 'validkey123';
             test('should accept valid API keys', () => {
                 const config = createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', url,
-                    '--apikey', apiKey,
+                    '--di-apikey', apiKey,
                     '--transport', 'STDIO'
                 ]);
 
@@ -293,20 +321,30 @@ describe('CLI Configuration', () => {
                 });
             });
 
+            test('should throw error for undefined DI API key', () => {
+                expect(() => {
+                    createConfiguration(version, [
+                        'node', 'cli.js',
+                        '--url', url,
+                        '--transport', 'STDIO'
+                    ]);
+                }).toThrow('The DI API key must be define');
+            });
+
             test('should throw error for empty API key', () => {
                 expect(() => {
                     createConfiguration(version, [
                         'node', 'cli.js',
                         '--url', url,
-                        '--apikey', '   ',
+                        '--di-apikey', '   ',
                         '--transport', 'STDIO'
                     ]);
-                }).toThrow('The DI decision runtime API key cannot be empty');
+                }).toThrow('The DI API key cannot be empty');
             });
 
             test('should use API key from environment variable', () => {
                 const envApiKey = 'env-api-key-123';
-                process.env.APIKEY = envApiKey;
+                process.env.DI_APIKEY = envApiKey;
 
                 const config = createConfiguration(version, [
                     'node', 'cli.js',
@@ -321,11 +359,27 @@ describe('CLI Configuration', () => {
                 });
             });
 
-            test('should call debug function with API key', () => {
+            test('should read authentication mode from environment variable', () => {
+                process.env.AUTHENTICATION_MODE = 'DIAPIKEY'
+                const config = createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--di-apikey', apiKey,
+                    '--transport', 'STDIO'
+                ]);
+
+                expect(config).toMatchObject({
+                    credentials: {
+                        apikey: apiKey
+                    },
+                });
+            });
+
+            test('should call debug function with DI API key', () => {
                 createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', url,
-                    '--apikey', apiKey,
+                    '--di-apikey', apiKey,
                     '--transport', 'STDIO'
                 ]);
 
@@ -333,27 +387,291 @@ describe('CLI Configuration', () => {
             });
         });
 
-        describe('with username/password', () => {
+        describe('With Zen API key', () => {
+
+            const apiKey = 'validkey123';
+            const username = 'foo bar bra';
+
+            test('should accept valid API keys', () => {
+                const config = createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--zen-apikey', apiKey,
+                    '--zen-username', username,
+                    '--authentication-mode', 'zenApiKEY',
+                    '--transport', 'STDIO'
+                ]);
+
+                expect(config).toMatchObject({
+                    credentials: {
+                        apikey: apiKey,
+                        username: username
+                    },
+                });
+            });
+
+            test('should throw error for undefined Zen API key', () => {
+                expect(() => {
+                    createConfiguration(version, [
+                        'node', 'cli.js',
+                        '--url', url,
+                        '--authentication-mode', 'zenApiKEY',
+                        '--transport', 'STDIO'
+                    ]);
+                }).toThrow('The Zen API key must be defined');
+            });
+
+            test('should throw error for empty Zen API key', () => {
+                expect(() => {
+                    createConfiguration(version, [
+                        'node', 'cli.js',
+                        '--url', url,
+                        '--zen-apikey', '   ',
+                        '--authentication-mode', 'ZENAPIKEY',
+                        '--transport', 'STDIO'
+                    ]);
+                }).toThrow('The Zen API key cannot be empty');
+            });
+
+            test('should throw error for undefined Zen username', () => {
+                expect(() => {
+                    createConfiguration(version, [
+                        'node', 'cli.js',
+                        '--url', url,
+                        '--zen-apikey', apiKey,
+                        '--authentication-mode', 'zenApiKEY',
+                        '--transport', 'STDIO'
+                    ]);
+                }).toThrow('The Zen username must be defined');
+            });
+
+            test('should throw error for empty Zen username', () => {
+                expect(() => {
+                    createConfiguration(version, [
+                        'node', 'cli.js',
+                        '--url', url,
+                        '--zen-apikey', apiKey,
+                        '--zen-username', '   ',
+                        '--authentication-mode', 'ZENAPIKEY',
+                        '--transport', 'STDIO'
+                    ]);
+                }).toThrow('The Zen username cannot be empty');
+            });
+
+            test('should use API key from environment variable', () => {
+                const envApiKey = 'env-api-key-123';
+                process.env.ZEN_APIKEY = envApiKey;
+
+                const config = createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--transport', 'STDIO',
+                    '--zen-username', username,
+                    '--authentication-mode', 'ZENAPIKEY'
+                ]);
+
+                expect(config).toMatchObject({
+                    credentials: {
+                        apikey: envApiKey,
+                        username: username
+                    },
+                });
+            });
+
+            test('should read authentication mode from environment variable', () => {
+                process.env.AUTHENTICATION_MODE = 'ZENapiKEY';
+                const config = createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--zen-apikey', apiKey,
+                    '--zen-username', username,
+                    '--transport', 'STDIO'
+                ]);
+
+                expect(config).toMatchObject({
+                    credentials: {
+                        apikey: apiKey,
+                        username: username
+                    },
+                });
+            });
+
+            test('should call debug function with Zen API key', () => {
+                createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--zen-apikey', apiKey,
+                    '--zen-username', username,
+                    '--authentication-mode', 'zenAPIkey',
+                    '--transport', 'STDIO'
+                ]);
+
+                expect(mockDebug).toHaveBeenCalledWith(`Zen API Key(username: ${username}, API key: ***)`);
+            });
         });
+
+        describe('with basic authentication credentials', () => {
+            const password = 'the password';
+            const username = 'foo bar bra';
+
+            test('should accept valid API keys', () => {
+                const config = createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--basic-username', username,
+                    '--basic-password', password,
+                    '--authentication-mode', 'BASIC',
+                    '--transport', 'STDIO'
+                ]);
+
+                expect(config).toMatchObject({
+                    credentials: {
+                        username: username,
+                        password: password
+                    },
+                });
+            });
+
+            test('should throw error for undefined basic authentication username', () => {
+                expect(() => {
+                    createConfiguration(version, [
+                        'node', 'cli.js',
+                        '--url', url,
+                        '--authentication-mode', 'bAsIc',
+                        '--transport', 'STDIO'
+                    ]);
+                }).toThrow('The username for basic authentication must be defined');
+            });
+
+            test('should throw error for empty basic authentication username', () => {
+                expect(() => {
+                    createConfiguration(version, [
+                        'node', 'cli.js',
+                        '--url', url,
+                        '--basic-username', '   ',
+                        '--basic-password', password,
+                        '--authentication-mode', 'basic',
+                        '--transport', 'STDIO'
+                    ]);
+                }).toThrow('The username for basic authentication cannot be empty');
+            });
+
+            test('should throw error for undefined basic authentication password', () => {
+                expect(() => {
+                    createConfiguration(version, [
+                        'node', 'cli.js',
+                        '--url', url,
+                        '--basic-username', username,
+                        '--authentication-mode', 'BAsic',
+                        '--transport', 'STDIO'
+                    ]);
+                }).toThrow('The password for basic authentication must be defined');
+            });
+
+            test('should throw error for empty basic authentication password', () => {
+                expect(() => {
+                    createConfiguration(version, [
+                        'node', 'cli.js',
+                        '--url', url,
+                        '--basic-username', username,
+                        '--basic-password', '   ',
+                        '--authentication-mode', 'BAsic',
+                        '--transport', 'STDIO'
+                    ]);
+                }).toThrow('The password for basic authentication cannot be empty');
+            });
+
+            test('should use username from environment variable', () => {
+                const envUsername= 'env-username';
+                process.env.BASIC_USERNAME = envUsername;
+
+                const config = createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--transport', 'STDIO',
+                    '--basic-password', password,
+                    '--authentication-mode', 'Basic'
+                ]);
+
+                expect(config).toMatchObject({
+                    credentials: {
+                        username: envUsername,
+                        password: password
+                    },
+                });
+            });
+
+            test('should use password from environment variable', () => {
+                const envPassword = 'env password';
+                process.env.BASIC_PASSWORD = envPassword;
+                const config = createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--transport', 'STDIO',
+                    '--basic-username', username,
+                    '--authentication-mode', 'Basic'
+                ]);
+
+                expect(config).toMatchObject({
+                    credentials: {
+                        password: envPassword,
+                        username: username
+                    },
+                });
+            });
+
+            test('should read authentication mode from environment variable', () => {
+                process.env.AUTHENTICATION_MODE = 'BaSiC';
+                const config = createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--basic-username', username,
+                    '--basic-password', password,
+                    '--transport', 'STDIO'
+                ]);
+
+                expect(config).toMatchObject({
+                    credentials: {
+                        username: username,
+                        password: password
+                    },
+                });
+            });
+
+            test('should call debug function with basic authentication', () => {
+                createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--basic-username', username,
+                    '--basic-password', password,
+                    '--authentication-mode', 'BASiC',
+                    '--transport', 'STDIO'
+                ]);
+
+                expect(mockDebug).toHaveBeenCalledWith(`Basic Authentication(username: ${username}, password: ***)`);
+            });        });
     });
 
     describe('createConfiguration', () => {
         const apiKey = 'validkey123';
         test('should create complete configuration object', () => {
+            const username = 'blah blah blah';
             const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--debug',
                 '--url', url,
-                '--apikey', apiKey,
+                '--zen-apikey', apiKey,
+                '--zen-username', username,
                 '--transport', 'HTTP',
-                '--runtime', 'ADS'
+                '--authentication-mode', 'ZenApiKey'
             ]);
 
             expect(config).toMatchObject({
                 credentials: {
-                    apikey: apiKey
+                    apikey: apiKey,
+                    username: username,
+                    authenticationMode: AuthenticationMode.ZEN_API_KEY
                 },
-                runtime: DecisionRuntime.ADS,
                 transport: undefined,
                 url: url,
                 version: version,
@@ -363,16 +681,16 @@ describe('CLI Configuration', () => {
 
         test('should create configuration with defaults', () => {
             process.env.URL = url;
-            process.env.APIKEY = apiKey;
+            process.env.DI_APIKEY = apiKey;
             process.env.TRANSPORT = 'STDIO';
 
             const config = createConfiguration(version, ['node', 'cli.js']);
 
             expect(config).toMatchObject({
                 credentials: {
-                    apikey: apiKey
+                    apikey: apiKey,
+                    authenticationMode: AuthenticationMode.DI_API_KEY
                 },
-                runtime: DecisionRuntime.DI,
                 transport: expect.any(StdioServerTransport),
                 url: url,
                 version: version,
@@ -383,7 +701,7 @@ describe('CLI Configuration', () => {
 
         test('should handle debug flag from CLI argument', () => {
             process.env.URL = url;
-            process.env.APIKEY = apiKey;
+            process.env.DI_APIKEY = apiKey;
             process.env.TRANSPORT = 'STDIO';
 
             const config = createConfiguration(version, ['node', 'cli.js', '--debug']);
@@ -395,7 +713,7 @@ describe('CLI Configuration', () => {
         test('should handle debug flag from environment variable', () => {
             process.env.DEBUG = 'true';
             process.env.URL = url;
-            process.env.APIKEY = apiKey;
+            process.env.DI_APIKEY = apiKey;
             process.env.TRANSPORT = 'STDIO';
 
             const config = createConfiguration(version, ['node', 'cli.js']);
@@ -406,65 +724,91 @@ describe('CLI Configuration', () => {
 
         test('should prioritize CLI arguments over environment variables', () => {
             process.env.URL = 'https://env-api.example.com';
-            process.env.APIKEY = 'env-api-key';
+            process.env.ZEN_APIKEY = 'env-api-key';
             process.env.TRANSPORT = 'STDIO';
             process.env.RUNTIME = 'DI';
+            process.env.ZEN_USERNAME = 'env username';
+            process.env.AUTHENTICATION_MODE =  AuthenticationMode.BASIC;
             process.env.DEPLOYMENT_SPACES = 'prod,dev,staging';
 
             const urlFromCli = 'https://cli-api.example.com';
             const cliApiKey = 'cli-api-key-123';
             const deploymentSpaces = ['toto','titi','tutu'];
+            const cliUserName = 'the CLI username';
+            const cliAuthenticationMode = AuthenticationMode.ZEN_API_KEY;
             const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', urlFromCli,
-                '--apikey', cliApiKey,
+                '--zen-apikey', cliApiKey,
+                '--zen-username', cliUserName,
                 '--transport', 'HTTP',
-                '--runtime', 'ADS',
+                '--authentication-mode', cliAuthenticationMode,
                 '--deployment-spaces', deploymentSpaces.join(',')
             ]);
 
             expect(config).toMatchObject({
                 credentials: {
-                    apikey: cliApiKey
+                    apikey: cliApiKey,
+                    authenticationMode: cliAuthenticationMode,
                 },
-                runtime: DecisionRuntime.ADS,
                 transport: undefined,
                 url: urlFromCli,
                 deploymentSpaces: deploymentSpaces
             });
         });
 
-        test('should set helper properties correctly for DI runtime', () => {
-            process.env.URL = url;
-            process.env.APIKEY = apiKey;
-            process.env.TRANSPORT = 'STDIO';
+        describe(`should set helper properties correctly for`, ()=> {
 
-            const config = createConfiguration(version, [
-                'node', 'cli.js',
-                '--runtime', 'DI'
-            ]);
+            test(`'DiApiKey' authentication mod`, () => {
+                process.env.URL = url;
+                process.env.DI_APIKEY = apiKey;
+                process.env.TRANSPORT = 'STDIO';
 
-            expect(config.isDiRuntime()).toBe(true);
-            expect(config.isAdsRuntime()).toBe(false);
-        });
+                const config = createConfiguration(version, [
+                    'node', 'cli.js'
+                ]);
 
-        test('should set helper properties correctly for ADS runtime', () => {
-            process.env.URL = url;
-            process.env.APIKEY = apiKey;
-            process.env.TRANSPORT = 'STDIO';
+                expect(config.isDiApiKeyAuthentication()).toBe(true);
+                expect(config.isZenAPiKeyAuthentication()).toBe(false);
+                expect(config.isBasicAuthentication()).toBe(false);
+            });
 
-            const config = createConfiguration(version, [
-                'node', 'cli.js',
-                '--runtime', 'ADS'
-            ]);
+            test(`'ZenApiKey' authentication mode`, () => {
+                process.env.URL = url;
+                process.env.ZEN_APIKEY = apiKey;
+                process.env.TRANSPORT = 'STDIO';
 
-            expect(config.isDiRuntime()).toBe(false);
-            expect(config.isAdsRuntime()).toBe(true);
+                const config = createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--zen-username', 'the username',
+                    '--authentication-mode', 'ZenApiKey'
+                ]);
+
+                expect(config.isDiApiKeyAuthentication()).toBe(false);
+                expect(config.isZenAPiKeyAuthentication()).toBe(true);
+                expect(config.isBasicAuthentication()).toBe(false);
+            });
+
+            test(`'Basic' authentication mode`, () => {
+                process.env.URL = url;
+                process.env.BASIC_USERNAME = 'foo bar bra';
+                process.env.TRANSPORT = 'STDIO';
+
+                const config = createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--basic-password', 'the password',
+                    '--authentication-mode', 'Basic'
+                ]);
+
+                expect(config.isDiApiKeyAuthentication()).toBe(false);
+                expect(config.isZenAPiKeyAuthentication()).toBe(false);
+                expect(config.isBasicAuthentication()).toBe(true);
+            });
         });
 
         test('should set transport helper properties correctly', () => {
             process.env.URL = url;
-            process.env.APIKEY = apiKey;
+            process.env.DI_APIKEY = apiKey;
 
             const stdioConfig = createConfiguration(version, [
                 'node', 'cli.js',
@@ -488,7 +832,7 @@ describe('CLI Configuration', () => {
             try {
                 process.argv = [originalArgv[0], originalArgv[1]];
                 process.env.URL = url;
-                process.env.APIKEY = apiKey;
+                process.env.DI_APIKEY = apiKey;
 
                 // Should use process.argv when no arguments provided
                 const config = createConfiguration(version);
@@ -496,9 +840,9 @@ describe('CLI Configuration', () => {
                 expect(config).toBeDefined();
                 expect(config).toMatchObject({
                     credentials: {
-                        apikey: apiKey
+                        apikey: apiKey,
+                        authenticationMode: defaultAuthenticationMode(),
                     },
-                    runtime: Configuration.defaultRuntime(),
                     transport: expect.any(StdioServerTransport),
                     url: url,
                     deploymentSpaces: ['development']
@@ -517,7 +861,7 @@ describe('CLI Configuration', () => {
             const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO',
                 '--deployment-spaces', deploymentSpaces.join(',')
             ]);
@@ -530,7 +874,7 @@ describe('CLI Configuration', () => {
             const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO',
                 '--deployment-spaces', `  ${deploymentSpace}        `
             ]);
@@ -542,7 +886,7 @@ describe('CLI Configuration', () => {
             const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO',
                 '--deployment-spaces', '     development         ,  production     ,  test  '
             ]);
@@ -554,7 +898,7 @@ describe('CLI Configuration', () => {
             const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO',
                 '--deployment-spaces', '     ,     ,       ,     '
             ]);
@@ -566,7 +910,7 @@ describe('CLI Configuration', () => {
             const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO'
             ]);
 
@@ -592,7 +936,7 @@ describe('CLI Configuration', () => {
                     createConfiguration(version, [
                         'node', 'cli.js',
                         '--url', url,
-                        '--apikey', 'validkey123',
+                        '--di-apikey', 'validkey123',
                         '--transport', 'STDIO',
                         '--deployment-spaces', `development,${invalidSpace}`
                     ]);
@@ -623,7 +967,7 @@ describe('CLI Configuration', () => {
                     createConfiguration(version, [
                         'node', 'cli.js',
                         '--url', url,
-                        '--apikey', 'validkey123',
+                        '--di-apikey', 'validkey123',
                         '--transport', 'STDIO',
                         '--deployment-spaces', `development,${invalidSpace1},${invalidSpace2},${invalidSpace3},production`
                     ]);
@@ -641,7 +985,7 @@ describe('CLI Configuration', () => {
             const config = createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO'
             ]);
 
@@ -653,7 +997,7 @@ describe('CLI Configuration', () => {
             createConfiguration(version, [
                 'node', 'cli.js',
                 '--url', url,
-                '--apikey', 'validkey123',
+                '--di-apikey', 'validkey123',
                 '--transport', 'STDIO',
                 '--deployment-spaces', deploymentSpaces
             ]);
@@ -664,26 +1008,25 @@ describe('CLI Configuration', () => {
 
     describe('Error handling', () => {
         test('should fail fast on first validation error', () => {
-            const apiKey = ' ';
             expect(() => {
                 createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', 'invalid-url',
-                    '--apikey', apiKey,
                     '--transport', 'INVALID'
                 ]);
-            }).toThrow(`The DI decision runtime API key cannot be empty`); // Should throw on invalid API key first
+            }).toThrow(`The DI API key must be defined`); // Should throw on invalid API key first
         });
 
         test('should provide descriptive error messages', () => {
+            const invalid = 'WEBSOCKET';
             expect(() => {
                 createConfiguration(version, [
                     'node', 'cli.js',
                     '--url', url,
-                    '--apikey', 'validkey123',
-                    '--transport', 'WEBSOCKET'
+                    '--di-apikey', 'validkey123',
+                    '--transport', invalid
                 ]);
-            }).toThrow('Invalid transport protocol: \'WEBSOCKET\'. Must be one of: \'STDIO\', \'HTTP\'');
+            }).toThrow(`Invalid transport protocol: '${invalid}'. Must be one of: 'stdio', 'http'`);
         });
     });
 });
