@@ -113,7 +113,7 @@ You can use the connection setting to specity the API key and URL environment va
 
 4. In the **Configure draft connection** panel:
    - Select **Key Value Pair** as **Authentication Type**.
-   - Enter the **Key** and **Value** fields to define the `APIKEY` environment variable.
+   - Enter the **Key** and **Value** fields to define the `DI_APIKEY` environment variable.
    - Click **Add key value pair**.
 
    [![Thumbnail](./doc/wxO-connection-04-thumbnail.png)](doc/wxO-connection-04.png)
@@ -132,7 +132,7 @@ You can use the connection setting to specity the API key and URL environment va
 
 8. In the **Add MCP Server** wizard:
    - Select the display name corresponding to the connection you just configured.
-   - Enter the `npx` command **WITHOUT** the `--apikey` and `--url` arguments.
+   - Enter the `npx` command **WITHOUT** the `--di-apikey` and `--url` arguments.
    - Click **Connect**, and then click  **Done**.
 
     [![Thumbnail](./doc/wxO-connection-08-thumbnail.png)](doc/wxO-connection-08.png)
@@ -162,7 +162,7 @@ You can integrate decision services into Claude Desktop by adding the MCP server
                   "args": [
                       "-y",
                       "di-mcp-server",
-                      "--apikey",
+                      "--di-apikey",
                       "<APIKEY>",
                       "--url",
                       "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
@@ -182,7 +182,7 @@ You can integrate decision services into Claude Desktop by adding the MCP server
                   "command": "npx",
                   "args": ["-y", "di-mcp-server"],
                   "env": {
-                      "APIKEY": "<APIKEY>",
+                      "DI_APIKEY": "<APIKEY>",
                       "URL": "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
                   }
               }
@@ -220,7 +220,7 @@ You can integrate decision services into Cursor by adding the MCP server.
                   "args": [
                       "-y",
                       "di-mcp-server",
-                      "--apikey",
+                      "--di-apikey",
                       "<APIKEY>",
                       "--url",
                       "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
@@ -239,7 +239,7 @@ You can integrate decision services into Cursor by adding the MCP server.
                   "command": "npx",
                   "args": ["-y", "di-mcp-server"],
                   "env": {
-                      "APIKEY": "<APIKEY>",
+                      "DI_APIKEY": "<APIKEY>",
                       "URL": "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
                   }
               }
