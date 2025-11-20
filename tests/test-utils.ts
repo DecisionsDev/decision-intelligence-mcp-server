@@ -27,8 +27,11 @@ export function setupNockMocks(configuration: Configuration): void {
     for(const deploymentSpace of configuration.deploymentSpaces) {
         const deploymentSpaceId = encodeURIComponent(deploymentSpace);
         const decisionService = encodeURIComponent(decisionServiceId);
+        const userAgentHeader = 'User-Agent';
+        const userAgentValue = `IBM-DI-MCP-Server/${configuration.version}`;
         nock(configuration.url)
         .get(`/deploymentSpaces/${deploymentSpaceId}/metadata?names=decisionServiceId`)
+        .matchHeader(userAgentHeader, userAgentValue)
         .matchHeader(headerKey, headerValue)
         .reply(200, [{
             'decisionServiceId': {
@@ -39,6 +42,7 @@ export function setupNockMocks(configuration: Configuration): void {
             }
         }])
         .get(`/deploymentSpaces/${deploymentSpaceId}/decisions/${encodeURIComponent(decisionId)}/metadata`)
+        .matchHeader(userAgentHeader, userAgentValue)
         .matchHeader(headerKey, headerValue)
         .reply(200, {
             map : {
@@ -51,9 +55,11 @@ export function setupNockMocks(configuration: Configuration): void {
             }
         })
         .get(`/selectors/lastDeployedDecisionService/deploymentSpaces/${deploymentSpaceId}/openapi?decisionServiceId=${decisionService}&outputFormat=JSON/openapi`)
+        .matchHeader(userAgentHeader, userAgentValue)
         .matchHeader(headerKey, headerValue)
         .replyWithFile(200, 'tests/loanvalidation-openapi.json')
         .post(`/selectors/lastDeployedDecisionService/deploymentSpaces/${deploymentSpaceId}/operations/${encodeURIComponent(operationId)}/execute?decisionServiceId=${decisionService}`)
+        .matchHeader(userAgentHeader, userAgentValue)
         .matchHeader(headerKey, headerValue)
         .reply(200, executionOutput);
     }
