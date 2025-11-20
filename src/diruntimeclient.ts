@@ -80,6 +80,7 @@ function getHeaders(configuration: Configuration) {
     const authorizationHeaderValue = configuration.credentials.getAuthorizationHeaderValue();
     const authorizationHeaderKey = configuration.credentials.getAuthorizationHeaderKey()
     return {
+        ["User-Agent"]: `IBM-DI-MCP-Server/${configuration.version}`,
         "accept": "application/json",
         [authorizationHeaderKey] : authorizationHeaderValue
     };
