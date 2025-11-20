@@ -710,5 +710,16 @@ describe('CLI Configuration', () => {
 
             expect(config.decisionServiceIds).toEqual(["A", "B"]);
         });
+
+        test('should not split escaped commas', () => {
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--decision-service-ids', "A,B\\,C,D"
+            ]);
+            expect(config.decisionServiceIds).toEqual(["A", "B,C", "D"]);
+        });
     });
 });

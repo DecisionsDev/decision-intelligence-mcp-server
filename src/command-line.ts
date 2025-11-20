@@ -128,12 +128,35 @@ function parseDeploymentSpaces(deploymentSpaces: string | undefined): string[] {
     return Configuration.defaultDeploymentSpaces();
 }
 
+function splitCommaIgnoringEscaped(input: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let i = 0;
+    
+    while (i < input.length) {
+        if (input[i] === '\\' && i + 1 < input.length && input[i + 1] === ',') {
+            current += ',';
+            i += 2;
+        } else if (input[i] === ',') {
+            result.push(current.trim());
+            current = '';
+            i++;
+        } else {
+            current += input[i];
+            i++;
+        }
+    }
+    
+    if (current.length > 0) {
+        result.push(current.trim());
+    }
+    
+    return result.filter(item => item.length > 0);
+}
+
 function parseDecisionServiceIds(decisionServiceIds: string | undefined): string[] | undefined {
     if (decisionServiceIds !== undefined) {
-        const ret = decisionServiceIds
-            .split(',')
-            .map(ids => ids.trim())
-            .filter(ids => ids.length > 0);
+        const ret = splitCommaIgnoringEscaped(decisionServiceIds);
         if (ret.length > 0) {
             return ret;
         }
