@@ -33,7 +33,7 @@ You can run the MCP server with npx to expose each operation of the last deploye
 
 Create the MCP server using decisions deployed in IBM Decision Intelligence:
 ```bash
-npx -y di-mcp-server --apikey <YOUR_DI_APIKEY> --url https://mytenant.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1
+npx -y di-mcp-server --di-apikey <YOUR_DI_API_KEY> --url https://mytenant.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1
 ```
 
 ### For IBM Automation Decision Services
@@ -43,7 +43,7 @@ npx -y di-mcp-server --apikey <YOUR_DI_APIKEY> --url https://mytenant.decision-p
 Create the MCP server using decisions deployed in IBM Automation Decision Services using the Zen APIKey authentication:
 
 ```bash
-npx -y di-mcp-server --username <YOUR_USERNAME> --apikey <YOUR_ZEN_APIKEY> --url https://myads-hostname/ads/runtime/api/v1
+npx -y di-mcp-server --authentication-mode zenapikey --zen-username <YOUR_ZEN_USERNAME> --zen-apikey <YOUR_ZEN_API_KEY> --url https://myads-hostname/ads/runtime/api/v1
 ```
 
 #### Basic authentication
@@ -51,39 +51,41 @@ npx -y di-mcp-server --username <YOUR_USERNAME> --apikey <YOUR_ZEN_APIKEY> --url
 Create the MCP server using decisions deployed in IBM Automation Decision Services using the basic authentication:
 
 ```bash
-npx -y di-mcp-server --username <YOUR_USERNAME> --password <YOUR_PASSWORD> --url https://myads-hostname/ads/runtime/api/v1
+npx -y di-mcp-server --authentication-mode basic --basic-username <YOUR_USERNAME> --basic-password <YOUR_PASSWORD> --url https://myads-hostname/ads/runtime/api/v1
 ```
 
 ### Command line syntax
 
 Syntax of the command line:
 ```bash
-npx -y di-mcp-server <CREDENTIALS> --url <RUNTIME_BASE_URL> [--transport <TRANSPORT>] [--runtime <RUNTIME>] [--deployment-spaces <DEPLOYMENT_SPACES>]
+npx -y di-mcp-server [--authentication-mode <AUTHENTICATION_MODE>] <CREDENTIALS> --url <RUNTIME_BASE_URL> [--transport <TRANSPORT>] [--deployment-spaces <DEPLOYMENT_SPACES>]
 ```
 
 where
-- `CREDENTIALS` is one of the following options:
-   - `--apikey <DI_API_KEY>` where `DI_API_KEY` is the API key to access the decision runtime for Decision Intelligence.
-   - `--username <USERNAME> --password <PASSWORD>` where `USERNAME` and `PASSWORD` are the basic authentication credentials to connect to the decision runtime for Automation Decision Services. 
-   - `--username <USERNAME> --apikey <ZEN_API_KEY>` where `USERNAME` and `ZEN_API_KEY` are the Zen API key credentials to access the decision runtime for Automation Decision Services (see [Authorizing HTTP requests by using the Zen API key](https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/25.0.0?topic=administering-authorizing-http-requests-by-using-zen-api-key))
+- `AUTHENTICATION_MODE` (optional) is the authentication mode to access the decision runtime; either `diapikey` (default), `zenapikey` or `basic` respectively for authenticating with Decision Intelligence API key, Zen API key or basic credentials (i.e. username and password)
+- `CREDENTIALS` is one of the following options, depending on the chosen authentication mode:
+    - For DI API key authentication: `--di-apikey <DI_API_KEY>` where `DI_API_KEY` is the API key to access the decision runtime for Decision Intelligence.
+    - For Zen API key authentication: `--zen-username <ZEN_USERNAME> --apikey <ZEN_API_KEY>` where `ZEN_USERNAME` and `ZEN_API_KEY` are the Zen API key credentials to access the decision runtime for Automation Decision Services (see [Authorizing HTTP requests by using the Zen API key](https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/25.0.0?topic=administering-authorizing-http-requests-by-using-zen-api-key))
+    - For basic authentication: `--basic-username <BASIC_USERNAME> --basic-password <BASIC_PASSWORD>` where `BASIC_USERNAME` and `BASIC_PASSWORD` are the basic authentication credentials to connect to the decision runtime for Automation Decision Services.
 - `RUNTIME_BASE_URL` is the base URL of the decision runtime REST API. For Decision Intelligence its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant.
-- `TRANSPORT` (optional) is the transport protocol, either `STDIO` (default) or `HTTP`.
-- `RUNTIME` (optional) is the decision runtime, either `DI` (default) or `ADS` for using the decision runtime for respectively Decision Intelligence or Automation Decision Services.
+- `TRANSPORT` (optional) is the transport protocol, either `stdio` (default) or `http`.
 - `DEPLOYMENT_SPACES` (optional) is a comma-separated list of deployment spaces to scan (defaults to `development`).
 - `DECISION_SERVICE_IDS` (optional) If defined, comma-separated list of decision service ids to be exposed as tools
 
 The following environment variables can be used in addition to the command line options.
-| Name              | Description                                                                                                                      |
-|-------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| APIKEY            | API key to access the decision runtime for either Decision Intelligence or Automation Decision Services                   |
-| DEPLOYMENT_SPACES | Optional comma-separated list of deployment spaces to scan (default: `development`)                                              |
-| DEBUG             | When the value is `true`, the debug messages are written to the `stderr` of the MCP server                                       |
-| PASSWORD          | Password to access the decision runtime for Automation Decision Services with basic authentication                            |
-| RUNTIME           | Optional target decision runtime: `DI` (default) or `ADS`                                                                        |
-| TRANSPORT         | Optional transport protocol: `STDIO` (default) or `HTTP`                                                                         |
-| URL               | Base URL of the decision runtime                                                                                                 |
-| USERNAME          | Username to access the decision runtime for Automation Decision Services either with basic authentication or Zen API key</br> |
 
+| CLI Option | Environment Variable | Description                                                                                                   |
+|------------|---------------------|---------------------------------------------------------------------------------------------------------------|
+| --authentication-mode | AUTHENTICATION_MODE | Optional authentication mode to connect to the decision runtime: `diapikey` (default), `zenapikey` or `basic` |
+| --di-apikey           | DI_APIKEY           | Decision Intelligence API key                                                                                 |
+| --zen-username        | ZEN_USERNAME        | Zen username                                                                                                  |
+| --zen-apikey          | ZEN_APIKEY          | Zen API key                                                                                                   |
+| --basic-username      | BASIC_USERNAME      | Basic authentication username                                                                                 |
+| --basic-password      | BASIC_PASSWORD      | Basic authentication password                                                                                 |
+| --deployment-spaces   | DEPLOYMENT_SPACES   | Optional comma-separated list of deployment spaces to scan (default: `development`)                           |
+| --debug               | DEBUG               | When the value is `true`, the debug messages are written to the `stderr` of the MCP server                    |
+| --transport           | TRANSPORT           | Optional transport protocol: `stdio` (default) or `http`                                                      |
+| --url                 | URL                 | Base URL of the decision runtime </br>                                                                        |
 
 <a id="ai_applications"></a>
 ## Integrating decision services into AI applications
@@ -112,7 +114,7 @@ You can use the connection setting to specity the API key and URL environment va
 
 4. In the **Configure draft connection** panel:
    - Select **Key Value Pair** as **Authentication Type**.
-   - Enter the **Key** and **Value** fields to define the `APIKEY` environment variable.
+   - Enter the **Key** and **Value** fields to define the `DI_APIKEY` environment variable.
    - Click **Add key value pair**.
 
    [![Thumbnail](./doc/wxO-connection-04-thumbnail.png)](doc/wxO-connection-04.png)
@@ -131,7 +133,7 @@ You can use the connection setting to specity the API key and URL environment va
 
 8. In the **Add MCP Server** wizard:
    - Select the display name corresponding to the connection you just configured.
-   - Enter the `npx` command **WITHOUT** the `--apikey` and `--url` arguments.
+   - Enter the `npx` command **WITHOUT** the `--di-apikey` and `--url` arguments.
    - Click **Connect**, and then click  **Done**.
 
     [![Thumbnail](./doc/wxO-connection-08-thumbnail.png)](doc/wxO-connection-08.png)
@@ -161,7 +163,7 @@ You can integrate decision services into Claude Desktop by adding the MCP server
                   "args": [
                       "-y",
                       "di-mcp-server",
-                      "--apikey",
+                      "--di-apikey",
                       "<APIKEY>",
                       "--url",
                       "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
@@ -181,7 +183,7 @@ You can integrate decision services into Claude Desktop by adding the MCP server
                   "command": "npx",
                   "args": ["-y", "di-mcp-server"],
                   "env": {
-                      "APIKEY": "<APIKEY>",
+                      "DI_APIKEY": "<APIKEY>",
                       "URL": "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
                   }
               }
@@ -219,7 +221,7 @@ You can integrate decision services into Cursor by adding the MCP server.
                   "args": [
                       "-y",
                       "di-mcp-server",
-                      "--apikey",
+                      "--di-apikey",
                       "<APIKEY>",
                       "--url",
                       "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
@@ -238,7 +240,7 @@ You can integrate decision services into Cursor by adding the MCP server.
                   "command": "npx",
                   "args": ["-y", "di-mcp-server"],
                   "env": {
-                      "APIKEY": "<APIKEY>",
+                      "DI_APIKEY": "<APIKEY>",
                       "URL": "https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1"
                   }
               }

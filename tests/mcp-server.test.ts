@@ -3,7 +3,6 @@ import {McpServer} from "@modelcontextprotocol/sdk/server/mcp.js";
 import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
 import type {Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
 import {Configuration} from "../src/command-line.js";
-import {DecisionRuntime} from "../src/decision-runtime.js";
 import {createMcpServer} from "../src/mcp-server.js";
 import {PassThrough, Readable, Writable} from 'stream';
 import {Credentials} from "../src/credentials.js";
@@ -69,7 +68,7 @@ describe('Mcp Server', () => {
     const fakeStdout = new PassThrough();
     const transport = new StdioServerTransport(fakeStdin, fakeStdout);
     const clientTransport = new StreamClientTransport(fakeStdout, fakeStdin);
-    const configuration = new Configuration(Credentials.createDiApiKeyCredentials('dummy.api.key'),  DecisionRuntime.DI,  transport, 'https://example.com', '1.2.3', true, ['staging', 'production']);
+    const configuration = new Configuration(Credentials.createDiApiKeyCredentials('dummy.api.key'), transport, 'https://example.com', '1.2.3', true, ['staging', 'production']);
 
     beforeAll(() => {
         setupNockMocks(configuration);
