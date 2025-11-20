@@ -70,6 +70,7 @@ where
 - `RUNTIME_BASE_URL` is the base URL of the decision runtime REST API. For Decision Intelligence its pattern is: `https://<TENANT_NAME>.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1` where TENANT_NAME is the name of the tenant.
 - `TRANSPORT` (optional) is the transport protocol, either `stdio` (default) or `http`.
 - `DEPLOYMENT_SPACES` (optional) is a comma-separated list of deployment spaces to scan (defaults to `development`).
+- `DECISION_SERVICE_IDS` (optional) If defined, comma-separated list of decision service ids to be exposed as tools
 
 The following environment variables can be used in addition to the command line options.
 

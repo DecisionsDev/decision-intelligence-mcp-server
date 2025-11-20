@@ -115,9 +115,16 @@ export async function createMcpServer(name: string, configuration: Configuration
     const toolNames: string[] = [];
     for (const deploymentSpace of configuration.deploymentSpaces) {
         debug("deploymentSpace", deploymentSpace);
-        const spaceMetadata = await getMetadata(configuration, deploymentSpace);
-        debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
-        const serviceIds = getDecisionServiceIds(spaceMetadata);
+        
+        let serviceIds = configuration.decisionServiceIds;
+        debug("decisionServiceIds", JSON.stringify(configuration.decisionServiceIds));
+
+        if (serviceIds === undefined || serviceIds.length === 0) {
+            const spaceMetadata = await getMetadata(configuration, deploymentSpace);
+            debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
+             
+            serviceIds = getDecisionServiceIds(spaceMetadata);
+        }
         debug("serviceIds", JSON.stringify(serviceIds, null, " "));
 
         for (const serviceId of serviceIds) {

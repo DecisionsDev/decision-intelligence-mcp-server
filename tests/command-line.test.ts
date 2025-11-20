@@ -1029,4 +1029,40 @@ describe('CLI Configuration', () => {
             }).toThrow(`Invalid transport protocol: '${invalid}'. Must be one of: 'stdio', 'http'`);
         });
     });
+
+    describe('getDecisionServiceIds', () => {
+        test('should get no decisionServiceIds', () => {
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--di-apikey', 'validkey123',
+                '--transport', 'STDIO'
+            ]);
+
+            expect(config.decisionServiceIds).toEqual(undefined);
+        });
+
+        test('should get decisionServiceIds', () => {
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--di-apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--decision-service-ids', "A,B"
+            ]);
+
+            expect(config.decisionServiceIds).toEqual(["A", "B"]);
+        });
+
+        test('should not split escaped commas', () => {
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--di-apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--decision-service-ids', "A,B\\,C,D"
+            ]);
+            expect(config.decisionServiceIds).toEqual(["A", "B,C", "D"]);
+        });
+    });
 });

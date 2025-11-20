@@ -16,7 +16,8 @@ export class Configuration {
         public url: string,
         public version: string,
         public debugEnabled: boolean,
-        public deploymentSpaces: string[] = Configuration.defaultDeploymentSpaces()
+        public deploymentSpaces: string[] = Configuration.defaultDeploymentSpaces(),
+        public decisionServiceIds: string[] | undefined = undefined
     ) {
     }
 
@@ -115,6 +116,42 @@ function parseDeploymentSpaces(deploymentSpaces: string | undefined): string[] {
     return Configuration.defaultDeploymentSpaces();
 }
 
+function splitCommaIgnoringEscaped(input: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let i = 0;
+    
+    while (i < input.length) {
+        if (input[i] === '\\' && i + 1 < input.length && input[i + 1] === ',') {
+            current += ',';
+            i += 2;
+        } else if (input[i] === ',') {
+            result.push(current.trim());
+            current = '';
+            i++;
+        } else {
+            current += input[i];
+            i++;
+        }
+    }
+    
+    if (current.length > 0) {
+        result.push(current.trim());
+    }
+    
+    return result.filter(item => item.length > 0);
+}
+
+function parseDecisionServiceIds(decisionServiceIds: string | undefined): string[] | undefined {
+    if (decisionServiceIds !== undefined) {
+        const ret = splitCommaIgnoringEscaped(decisionServiceIds);
+        if (ret.length > 0) {
+            return ret;
+        }
+    }
+    return undefined;
+}
+
 export function createConfiguration(version: string, cliArguments?: readonly string[]): Configuration {
     const program = new Command();
     program
@@ -130,7 +167,8 @@ export function createConfiguration(version: string, cliArguments?: readonly str
         .option('--basic-username <string>', "Username for the basic authentication")
         .option('--basic-password <string>', "Password for the basic authentication")
         .option('--transport <transport>', "Transport mode: 'stdio' or 'http'")
-        .option('--deployment-spaces <list>', "Comma-separated list of deployment spaces to scan (default: 'development')");
+        .option('--deployment-spaces <list>', "Comma-separated list of deployment spaces to scan (default: 'development')")
+        .option('--decision-service-ids <list>', 'If defined, comma-separated list of decision service ids to be exposed as tools');
 
     program.parse(cliArguments);
 
@@ -143,7 +181,8 @@ export function createConfiguration(version: string, cliArguments?: readonly str
     const transport = validateTransport(options.transport || process.env.TRANSPORT);
     const url = validateUrl(options.url || process.env.URL);
     const deploymentSpaces = validateDeploymentSpaces(options.deploymentSpaces || process.env.DEPLOYMENT_SPACES);
-
+    const decisionServiceIds = parseDecisionServiceIds(options.decisionServiceIds || process.env.DECISION_SERVICE_IDS);
+ 
     // Create and return configuration object
-    return new Configuration(credentials, transport, url, version, debugFlag, deploymentSpaces);
+    return new Configuration(credentials, transport, url, version, debugFlag, deploymentSpaces, decisionServiceIds);
 }
