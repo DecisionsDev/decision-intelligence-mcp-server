@@ -1,10 +1,16 @@
 import {McpServer} from "@modelcontextprotocol/sdk/server/mcp.js";
 import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
-    executeLastDeployedDecisionService,
+    executeLastDeployedDecisionService,    
+    getDecisionMetadata,
     getDecisionServiceIds,
+    getDecisionServiceOperations,
+    getDecisionServices,
     getDecisionServiceOpenAPI,
-    getMetadata
+    getDeploymentSpaceMetadata,
+    getDecisionServiceOperationSchema,
+    getDecisionRuntimeOpenAPI,
+    setDecisionMetadata
 } from './diruntimeclient.js';
 import {runHTTPServer} from "./httpserver.js";
 import {debug} from "./debug.js";
@@ -16,6 +22,7 @@ import { OpenAPIV3_1 } from "openapi-types";
 import { ZodRawShape } from "zod";
 import { Configuration } from "./command-line.js";
 import http from "node:http";
+import {z} from 'zod/v3';
 
 function getParameters(jsonSchema: OpenAPIV3_1.SchemaObject): ZodRawShape {
     const params: ZodRawShape = {}
@@ -111,6 +118,144 @@ export async function createMcpServer(name: string, configuration: Configuration
         name: name,
         version: version
     });
+ 
+    await server.registerTool(
+        'getDecisionRuntimeOpenAPI',
+        {
+            title: 'get the openapi of the decision runtime', 
+            description: 'get the openapi of the decision runtime',
+            inputSchema: {}
+        },
+        async () => {
+            const output = await getDecisionRuntimeOpenAPI(configuration);
+            return {
+                content: [{ type: 'text', text: JSON.stringify(output) }],
+            };
+        }
+    );
+
+    await server.registerTool(
+        'getDecisionServices',
+        {
+            title: 'list all decision services in a deployment space', 
+            description: 'list all decision services in a deployment space',
+            inputSchema: {
+                deploymentSpace: z.string().describe("deployment space. The only deployment space for DI is development")
+            }
+        },
+        async ({ deploymentSpace }) => {
+            debug(deploymentSpace);
+            const output: object[] = await getDecisionServices(configuration, deploymentSpace);
+            return {
+                content: [{ type: 'text', text: JSON.stringify(output) }],
+            };
+        }
+    );
+
+    await server.registerTool(
+        'getDecisionServiceOperations',
+        {
+            title: 'list all operations of a decision service of a deployment space', 
+            description: 'list all operations of a decision service of a deployment space',
+            inputSchema: {
+                decisionServiceId: z.string().describe("the decision service id"),
+                deploymentSpace: z.string().describe("deployment space")
+            }
+        },
+        async ({ deploymentSpace, decisionServiceId }) => {
+            debug(deploymentSpace);
+            const output: object[] = await getDecisionServiceOperations(configuration, deploymentSpace, decisionServiceId);
+            return {
+                content: [{ type: 'text', text: JSON.stringify(output) }],
+            };
+        }
+    );
+
+   await server.registerTool(
+        'getDecisionMetadata',
+        {
+            title: 'Get all metadata of a decision in a deployment space', 
+            description: 'Get all metadata of a decision in a deployment space',
+            inputSchema: {
+                decisionId: z.string().describe("the decision id"),
+                deploymentSpace: z.string().describe("the deployment space")
+            }
+        },
+        async ({ deploymentSpace, decisionId }) => {
+            debug(deploymentSpace);
+            const output: object[] = await getDecisionMetadata(configuration, deploymentSpace, decisionId);
+            return {
+                content: [{ type: 'text', text: JSON.stringify(output) }],
+            };
+        }
+    );
+
+    await server.registerTool(
+        'getDecisionServiceOperationSchema',
+        {
+            title: 'get the schema of the operation of a decision service of a deployment space', 
+            description: 'get the schema of the operation of a decision service of a deployment space',
+            inputSchema: {
+                deploymentSpace: z.string().describe("deployment space"),
+                decisionServiceId: z.string().describe("the decision service id"),
+                operationId: z.string().describe("the operationId")
+            }
+        },
+        async ({ deploymentSpace, decisionServiceId, operationId }) => {
+            debug(deploymentSpace);
+            const output: object[] = await getDecisionServiceOperationSchema(configuration, deploymentSpace, decisionServiceId, operationId);
+            return {
+                content: [{ type: 'text', text: JSON.stringify(output) }],
+            };
+        }
+    );
+
+    await server.registerTool(
+        'updateDecisionMetadata',
+        {
+            title: 'change the value of a metadata of a decision in a deployment space', 
+            description: 'change the value of a metadata of a decision in a deployment space',
+            inputSchema: {
+                deploymentSpace: z.string().describe("deployment space"),
+                decisionId: z.string().describe("the decision id"),
+                metadataKey: z.string().describe("the key of the metadata"),
+                metadataValue: z.string().describe("the new value of the metadata")
+            }
+        },
+        async ({ deploymentSpace, decisionId, metadataKey, metadataValue }) => {
+            debug(deploymentSpace);
+            const metadata = await getDecisionMetadata(configuration, deploymentSpace, decisionId);
+
+            metadata[metadataKey] = {value: metadataValue, name: metadataKey, kind: "PLAIN", readOnly: false};
+
+            await setDecisionMetadata(configuration, deploymentSpace, decisionId, metadata);
+            return {
+                content: [{ type: 'text', text: JSON.stringify("done") }],
+            };
+        }
+    );
+
+    await server.registerTool(
+        'executeDecisionServiceOperation',
+        {
+            title: 'execute the operation of a decision service of a deployment space', 
+            description: 'execute the operation of a decision service of a deployment space',
+            inputSchema: {
+                deploymentSpace: z.string().describe("deployment space"),
+                decisionServiceId: z.string().describe("the decision service id"),
+                operationId: z.string().describe("the operationId"),
+                input: z.any().describe("the input of the operation")
+            }
+        },
+        async ({ deploymentSpace, decisionServiceId, operationId, input }) => {
+            debug(deploymentSpace);
+            const output: string = await executeLastDeployedDecisionService(configuration, deploymentSpace, decisionServiceId, operationId, input);
+            return {
+                content: [{ type: 'text', text: output }]
+            };
+        }
+    );
+
 
     const toolNames: string[] = [];
     for (const deploymentSpace of configuration.deploymentSpaces) {
@@ -120,7 +265,7 @@ export async function createMcpServer(name: string, configuration: Configuration
         debug("decisionServiceIds", JSON.stringify(configuration.decisionServiceIds));
 
         if (serviceIds === undefined || serviceIds.length === 0) {
-            const spaceMetadata = await getMetadata(configuration, deploymentSpace);
+            const spaceMetadata = await getDeploymentSpaceMetadata(configuration, deploymentSpace);
             debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
              
             serviceIds = getDecisionServiceIds(spaceMetadata);

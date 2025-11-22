@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { OpenAPIV3_1 } from "openapi-types";
 import {Configuration} from "./command-line.js";
+import { debug } from './debug.js';
 
 export function executeDecision(configuration: Configuration, deploymentSpace: string, decisionId: string, operation: string, input: object|undefined) {
     const url = configuration.url + "/deploymentSpaces/" + deploymentSpace + "/decisions/"
@@ -40,10 +41,22 @@ export async function getDecisionMetadata(configuration: Configuration, deployme
     return response.data;
 }
 
-export function getMetadata(configuration: Configuration, deploymentSpace:string) {
+export function setDecisionMetadata(configuration: Configuration, deploymentSpace: string, decisionId: string, metadata: {[key: string]: object}) {
+    const url = configuration.url + "/deploymentSpaces/" + deploymentSpace
+      + "/decisions/" + encodeURIComponent(decisionId)
+      + "/metadata";
+
+    return axios.put(url, {map: metadata}, { headers: getJsonContentTypeHeaders(configuration) })
+        .then(function (response) {          
+            return JSON.stringify(response.data);
+      });
+}
+
+
+export function getDeploymentSpaceMetadata(configuration: Configuration, deploymentSpace:string) {
     const url = configuration.url + "/deploymentSpaces"
         + "/" + deploymentSpace
-        + "/metadata?names=decisionServiceId";
+        + "/metadata?names=decisionServiceId,decisionServiceName,decisionServiceVersion,deploymentTime,decisionId";
 
     return axios.get(url, { headers: getHeaders(configuration) })
         .then(function (response) {          
@@ -52,7 +65,41 @@ export function getMetadata(configuration: Configuration, deploymentSpace:string
     );
 }
 
-type MetadataType = {decisionServiceId: {value: string}};
+export async function getDecisionServices(configuration: Configuration, deploymentSpaceId: string) {
+
+    return getDeploymentSpaceMetadata(configuration, deploymentSpaceId)
+        .then(metadata =>  {
+            const ids: object[] = [];
+
+            metadata.forEach((m: MetadataType) => {
+            const id = m.decisionServiceId.value;
+            if (!ids.includes({
+                    decisionServiceId: id,
+                    decisionServiceName: m.decisionServiceName.value,
+                    decisionServiceVersion: m.decisionServiceVersion.value,
+                    deploymentTime: m.deploymentTime.value,
+                    decisionId: m.decisionId.value
+                }))
+                ids.push({
+                    decisionServiceId: id,
+                    decisionServiceName: m.decisionServiceName,
+                    decisionServiceVersion: m.decisionServiceVersion,
+                    deploymentTime: m.deploymentTime,
+                    decisionId: m.decisionId
+                });
+            });
+
+            return ids;
+        });
+}
+
+type MetadataType = {
+    decisionServiceId: {value: string},
+    decisionServiceName: {value: string},
+    decisionServiceVersion: {value: string},
+    deploymentTime: {value: string},
+    decisionId: {value: string}
+};
 export function getDecisionServiceIds(metadata: MetadataType[]): string[] {
     const ids: string[] = [];
 
@@ -63,6 +110,46 @@ export function getDecisionServiceIds(metadata: MetadataType[]): string[] {
     });
 
     return ids;
+}
+
+export function getDecisionRuntimeOpenAPI(configuration: Configuration) {
+    const url = configuration.url + "/openapi.yaml";
+    
+    debug("getDecisionRuntimeOpenAPI");
+
+    const authorizationHeaderValue = configuration.credentials.getAuthorizationHeaderValue();
+    const authorizationHeaderKey = configuration.credentials.getAuthorizationHeaderKey()
+    const headers = {
+        ["User-Agent"]: `IBM-DI-MCP-Server/${configuration.version}`,
+        [authorizationHeaderKey] : authorizationHeaderValue
+    };
+
+    return axios.get(url, { headers: headers })
+        .then(function (response) {        
+            debug("openapi runtime: ", response.data);
+            return response.data;
+    });
+}
+
+export function getDecisionServiceOperations(configuration: Configuration, deploymentSpace: string, decisionServiceId: string) {
+    const url = configuration.url + "/selectors/lastDeployedDecisionService/deploymentSpaces/" + deploymentSpace
+        + "/operations?decisionServiceId=" + encodeURIComponent(decisionServiceId);
+
+    return axios.get(url, { headers: getHeaders(configuration) })
+        .then(function (response) {          
+            return response.data;
+    });
+}
+
+export function getDecisionServiceOperationSchema(configuration: Configuration, deploymentSpace: string, decisionServiceId: string, operationId: string) {
+    const url = configuration.url + "/selectors/lastDeployedDecisionService/deploymentSpaces/" + deploymentSpace
+        + "/operations/" + operationId
+        + "/schemas?decisionServiceId=" + decisionServiceId + "&format=OPEN_API";
+
+    return axios.get(url, { headers: getHeaders(configuration) })
+        .then(function (response) {          
+            return response.data;
+    });
 }
 
 export function getDecisionOpenapi(configuration: Configuration, deploymentSpace: string, decisionId: string) {
