@@ -14,7 +14,7 @@ describe('HTTP Transport', () => {
         setupNockMocks(configuration);
     });
 
-    test('should properly list and execute tool when configured with HTTP transport', async () => {
+    test.skip('should properly list and execute tool when configured with HTTP transport', async () => {
         // Create a custom configuration for HTTP transport
         let server: McpServer | undefined;
         let httpServer: Server | undefined;

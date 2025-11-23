@@ -1,4 +1,4 @@
-import {executeDecision, executeLastDeployedDecisionService, getDecisionMetadata, getDecisionOpenapi, getDecisionServiceIds, getDecisionServiceOpenAPI, getMetadata} from '../src/diruntimeclient.js';
+import {executeDecision, executeLastDeployedDecisionService, getDecisionMetadata, getDecisionOpenapi, getDecisionServiceIds, getDecisionServiceOpenAPI, getDeploymentSpaceMetadata} from '../src/diruntimeclient.js';
 import nock from 'nock';
 import { default as loanValidationOpenapi } from '../tests/loanvalidation-openapi.json';
 import {Credentials} from "../src/credentials.js";
@@ -53,10 +53,10 @@ const decisionMetadata = {
 
 const deploymentSpaceWithWhiteSpaces = `toto    toto`;
 nock(url)
-    .get('/deploymentSpaces/test/metadata?names=decisionServiceId')
+    .get('/deploymentSpaces/test/metadata?names=decisionServiceId,decisionServiceName,decisionServiceVersion,deploymentTime,decisionId')
     .matchHeader('authorization', `Basic ${encodedUsernamePassword}`)
     .reply(200, metadata)
-    .get('/deploymentSpaces/nonexistent/metadata?names=decisionServiceId')
+    .get('/deploymentSpaces/nonexistent/metadata?names=decisionServiceId,decisionServiceName,decisionServiceVersion,deploymentTime,decisionId')
     .reply(404)
     .get('/selectors/lastDeployedDecisionService/deploymentSpaces/production/openapi?decisionServiceId=ID1&outputFormat=JSON/openapi')
     .matchHeader('apikey', apikey)
@@ -77,18 +77,34 @@ nock(url)
     .reply(200, decisionMetadata);
 
 test('getDecisionServiceIds', () => {
+    const metadata = [
+        { 
+            decisionServiceId: {value: "ID1"},
+            decisionServiceName: {value: "A"},
+            decisionServiceVersion: {value: "B"},
+            deploymentTime: {value: "1"},
+            decisionId: {value:"id1"}
+        },
+        { 
+            decisionServiceId: {value: "ID2"},
+            decisionServiceName: {value: "A"},
+            decisionServiceVersion: {value: "B"},
+            deploymentTime: {value: "1"},
+            decisionId: {value:"id1"}
+        } 
+    ]
     expect(getDecisionServiceIds(metadata)).toEqual(["ID1", "ID2"]);
 });
 
 test(`getMetadata with 'test' deployment space`, async () => {
-    return getMetadata(basicAuthConfiguration, 'test')
+    return getDeploymentSpaceMetadata(basicAuthConfiguration, 'test')
         .then(data => {
             expect(data).toEqual(metadata);
     });
 });
 
 test('getMetadata with non existent deploymentSpace', async () => {
-    await expect(getMetadata(zenApiKeyConfiguration, 'nonexistent'))
+    await expect(getDeploymentSpaceMetadata(zenApiKeyConfiguration, 'nonexistent'))
         .rejects.toThrow('Request failed with status code 404');
 });
 

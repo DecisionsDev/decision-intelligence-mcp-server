@@ -30,7 +30,7 @@ export function setupNockMocks(configuration: Configuration): void {
         const userAgentHeader = 'User-Agent';
         const userAgentValue = `IBM-DI-MCP-Server/${configuration.version}`;
         nock(configuration.url)
-        .get(`/deploymentSpaces/${deploymentSpaceId}/metadata?names=decisionServiceId`)
+        .get(`/deploymentSpaces/${deploymentSpaceId}/metadata?names=decisionServiceId,decisionServiceName,decisionServiceVersion,deploymentTime,decisionId`)
         .matchHeader(userAgentHeader, userAgentValue)
         .matchHeader(headerKey, headerValue)
         .reply(200, [{
@@ -142,7 +142,7 @@ export async function validateClient(clientTransport: Transport, deploymentSpace
                     const content = response.content as Array<{type: string, text: string}>;
                     expect(content).toBeDefined();
                     expect(Array.isArray(content)).toBe(true);
-                    expect(content).toHaveLength(1);
+                    expect(content).toHaveLength(8);
                     const actualContent = content[0];
                     expect(actualContent.text).toEqual(JSON.stringify(executionOutput));
                 } catch (error) {

@@ -256,26 +256,27 @@ export async function createMcpServer(name: string, configuration: Configuration
         }
     );
 
+    if (configuration.decisionServiceToolsEnabled) {
+        const toolNames: string[] = [];
+        for (const deploymentSpace of configuration.deploymentSpaces) {
+            debug("deploymentSpace", deploymentSpace);
+            
+            let serviceIds = configuration.decisionServiceIds;
+            debug("decisionServiceIds", JSON.stringify(configuration.decisionServiceIds));
 
-    const toolNames: string[] = [];
-    for (const deploymentSpace of configuration.deploymentSpaces) {
-        debug("deploymentSpace", deploymentSpace);
-        
-        let serviceIds = configuration.decisionServiceIds;
-        debug("decisionServiceIds", JSON.stringify(configuration.decisionServiceIds));
+            if (serviceIds === undefined || serviceIds.length === 0) {
+                const spaceMetadata = await getDeploymentSpaceMetadata(configuration, deploymentSpace);
+                debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
+                
+                serviceIds = getDecisionServiceIds(spaceMetadata);
+            }
+            debug("serviceIds", JSON.stringify(serviceIds, null, " "));
 
-        if (serviceIds === undefined || serviceIds.length === 0) {
-            const spaceMetadata = await getDeploymentSpaceMetadata(configuration, deploymentSpace);
-            debug("spaceMetadata", JSON.stringify(spaceMetadata, null, " "));
-             
-            serviceIds = getDecisionServiceIds(spaceMetadata);
-        }
-        debug("serviceIds", JSON.stringify(serviceIds, null, " "));
-
-        for (const serviceId of serviceIds) {
-            debug("serviceId", serviceId);
-            const openapi = await getDecisionServiceOpenAPI(configuration, deploymentSpace, serviceId);
-            await registerTool(server, configuration, deploymentSpace, openapi, serviceId, toolNames);
+            for (const serviceId of serviceIds) {
+                debug("serviceId", serviceId);
+                const openapi = await getDecisionServiceOpenAPI(configuration, deploymentSpace, serviceId);
+                await registerTool(server, configuration, deploymentSpace, openapi, serviceId, toolNames);
+            }
         }
     }
 

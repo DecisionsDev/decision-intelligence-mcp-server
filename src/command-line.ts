@@ -17,7 +17,8 @@ export class Configuration {
         public version: string,
         public debugEnabled: boolean,
         public deploymentSpaces: string[] = Configuration.defaultDeploymentSpaces(),
-        public decisionServiceIds: string[] | undefined = undefined
+        public decisionServiceIds: string[] | undefined = undefined,
+        public decisionServiceToolsEnabled: boolean = true
     ) {
     }
 
@@ -168,7 +169,8 @@ export function createConfiguration(version: string, cliArguments?: readonly str
         .option('--basic-password <string>', "Password for the basic authentication")
         .option('--transport <transport>', "Transport mode: 'stdio' or 'http'")
         .option('--deployment-spaces <list>', "Comma-separated list of deployment spaces to scan (default: 'development')")
-        .option('--decision-service-ids <list>', 'If defined, comma-separated list of decision service ids to be exposed as tools');
+        .option('--decision-service-ids <list>', 'If defined, comma-separated list of decision service ids to be exposed as tools')
+        .option('--disable-decision-service-tools', 'Disable the decision service tools');
 
     program.parse(cliArguments);
 
@@ -182,7 +184,8 @@ export function createConfiguration(version: string, cliArguments?: readonly str
     const url = validateUrl(options.url || process.env.URL);
     const deploymentSpaces = validateDeploymentSpaces(options.deploymentSpaces || process.env.DEPLOYMENT_SPACES);
     const decisionServiceIds = parseDecisionServiceIds(options.decisionServiceIds || process.env.DECISION_SERVICE_IDS);
- 
+    const decisionServiceToolsEnabled = !options.disableDecisionServiceTools;
+
     // Create and return configuration object
-    return new Configuration(credentials, transport, url, version, debugFlag, deploymentSpaces, decisionServiceIds);
+    return new Configuration(credentials, transport, url, version, debugFlag, deploymentSpaces, decisionServiceIds, decisionServiceToolsEnabled);
 }
