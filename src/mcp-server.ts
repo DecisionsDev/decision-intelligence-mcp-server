@@ -191,6 +191,33 @@ export async function createMcpServer(name: string, configuration: Configuration
     );
 
     await server.registerTool(
+        'ActivateOrDesactivateBusinessMonitoring',
+        {
+            title: 'Activate or desactivate the business monitoring.', 
+            description: 'Activate the business monitoring. Default is true. Status is stored in the metadata businessMonitoringEnabled',
+            inputSchema: {
+                decisionId: z.string().describe("the decision id"),
+                deploymentSpace: z.string().describe("the deployment space"),
+                enable: z.boolean().describe("whether the business monitoring must be activated. True to activate the businessMonitoring, false to desactivate.")
+            }
+        },
+        async ({ deploymentSpace, decisionId, enable }) => {
+            debug(deploymentSpace);
+            let metadata = await getDecisionMetadata(configuration, deploymentSpace, decisionId);
+            metadata.businessMonitoringEnabled = {
+                "name": "businessMonitoringEnabled",
+                "kind": "PLAIN",
+                "readOnly": false,
+                "value": "" + enable
+            };
+            setDecisionMetadata(configuration, deploymentSpace, decisionId, metadata);
+            return {
+                content: [{ type: 'text', text: JSON.stringify("done") }],
+            };
+        }
+    );
+
+    await server.registerTool(
         'getDecisionServiceOperationSchema',
         {
             title: 'get the schema of the operation of a decision service of a deployment space', 
