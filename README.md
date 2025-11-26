@@ -58,7 +58,7 @@ npx -y di-mcp-server --authentication-mode basic --basic-username <YOUR_USERNAME
 
 Syntax of the command line:
 ```bash
-npx -y di-mcp-server [--authentication-mode <AUTHENTICATION_MODE>] <CREDENTIALS> --url <RUNTIME_BASE_URL> [--transport <TRANSPORT>] [--deployment-spaces <DEPLOYMENT_SPACES>]
+npx -y di-mcp-server [--authentication-mode <AUTHENTICATION_MODE>] <CREDENTIALS> --url <RUNTIME_BASE_URL> [--transport <TRANSPORT>] [--deployment-spaces <DEPLOYMENT_SPACES>] [--decision-service-ids <DECISION_SERVICE_IDS>]
 ```
 
 where
@@ -74,18 +74,19 @@ where
 
 The following environment variables can be used in addition to the command line options.
 
-| CLI Option | Environment Variable | Description                                                                                                   |
-|------------|---------------------|---------------------------------------------------------------------------------------------------------------|
-| --authentication-mode | AUTHENTICATION_MODE | Optional authentication mode to connect to the decision runtime: `diapikey` (default), `zenapikey` or `basic` |
-| --di-apikey           | DI_APIKEY           | Decision Intelligence API key                                                                                 |
-| --zen-username        | ZEN_USERNAME        | Zen username                                                                                                  |
-| --zen-apikey          | ZEN_APIKEY          | Zen API key                                                                                                   |
-| --basic-username      | BASIC_USERNAME      | Basic authentication username                                                                                 |
-| --basic-password      | BASIC_PASSWORD      | Basic authentication password                                                                                 |
-| --deployment-spaces   | DEPLOYMENT_SPACES   | Optional comma-separated list of deployment spaces to scan (default: `development`)                           |
-| --debug               | DEBUG               | When the value is `true`, the debug messages are written to the `stderr` of the MCP server                    |
-| --transport           | TRANSPORT           | Optional transport protocol: `stdio` (default) or `http`                                                      |
-| --url                 | URL                 | Base URL of the decision runtime </br>                                                                        |
+| CLI Option             | Environment Variable | Description                                                                                                  |
+|------------------------|----------------------|--------------------------------------------------------------------------------------------------------------|
+| --authentication-mode  | AUTHENTICATION_MODE  | Optional authentication mode to connect to the decision runtime: `diapikey` (default), `zenapikey` or `basic` |
+| --di-apikey            | DI_APIKEY            | Decision Intelligence API key                                                                                |
+| --zen-username         | ZEN_USERNAME         | Zen username                                                                                                 |
+| --zen-apikey           | ZEN_APIKEY           | Zen API key                                                                                                  |
+| --basic-username       | BASIC_USERNAME       | Basic authentication username                                                                                |
+| --basic-password       | BASIC_PASSWORD       | Basic authentication password                                                                                |
+| --decision-service-ids | DECISION_SERVICE_IDS | Optional comma-separated list of decision services (default: fetch all decision services)                    |
+| --deployment-spaces    | DEPLOYMENT_SPACES    | Optional comma-separated list of deployment spaces to scan (default: `development`)                          |
+| --debug                | DEBUG                | When the value is `true`, the debug messages are written to the `stderr` of the MCP server                   |
+| --transport            | TRANSPORT            | Optional transport protocol: `stdio` (default) or `http`                                                     |
+| --url                  | URL                  | Base URL of the decision runtime </br>                                                                       |
 
 <a id="ai_applications"></a>
 ## Integrating decision services into AI applications
