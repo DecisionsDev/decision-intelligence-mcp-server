@@ -77,3 +77,85 @@ test('expandJSONSchemaDefinition $ref using definitions for properties', () => {
     expect(expandJSONSchemaDefinition(schema, defs)).toEqual(schemaRef);
 });
 
+test('expandJSONSchemaDefinition removes $ref definition from attribute', () => {
+    const schema = {
+        type: 'object',
+        properties: {
+            borrower: {
+                type: 'object',
+                properties: {
+                    name: { type: 'string' },
+                    spouse: { $ref: "#/components/schemas/toto" }
+                }
+            }
+        }
+    };
+    const expected = {
+        type: 'object',
+        properties: {
+            borrower: {
+                type: 'object',
+                properties: {
+                    name: { type: 'string' },
+                    spouse: { }
+                }
+            }
+        }
+    };
+    const result = expandJSONSchemaDefinition(schema, {});
+    expect(result).toEqual(expected);
+
+    // Explicitly verify that borrower.spouse is an empty object
+    const spouse = result.properties.borrower.properties.spouse;
+    expect(spouse).toEqual({});
+    expect(Object.keys(spouse).length).toBe(0);
+});
+
+test('expandJSONSchemaDefinition removes attributes with circular $ref definition', () => {
+    const defs = {
+        borrower: {
+            type: 'object',
+            properties: {
+                name: { type: 'string' },
+                spouse: { $ref: "#/components/schemas/borrower" }
+            }
+        }
+    };
+
+    const schema = {
+        type: 'object',
+        properties: {
+            input: {
+                type: "object",
+                properties: {
+                    borrower: {
+                        "$ref": "#/components/schemas/borrower"
+                    }
+                }
+            },
+        }
+    };
+
+    const expected = {
+        type: 'object',
+        properties: {
+            input: {
+                type: "object",
+                properties: {
+                    borrower: {
+                        type: 'object',
+                        properties: {
+                            name: { type: 'string' },
+                        }
+                    }
+                }
+            }
+        }
+    };
+    const result = expandJSONSchemaDefinition(schema, defs);
+    expect(result).toEqual(expected);
+
+    // Explicitly verify that borrower.spouse is undefined
+    const spouse = result.properties.input.properties.borrower.properties.spouse;
+    expect(spouse).toBeUndefined();
+});
