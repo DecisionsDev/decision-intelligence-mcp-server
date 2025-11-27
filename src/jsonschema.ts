@@ -2,16 +2,20 @@
 import { OpenAPIV3_1 } from "openapi-types";
 import { debug } from "./debug.js";
 
-function walk(schema: OpenAPIV3_1.SchemaObject, defs: any, history: any): void {
+function walk(schema: OpenAPIV3_1.SchemaObject, defs: any, history: any): boolean {
     
     if (schema.type === 'object') {
         if (schema.properties) {
             for (const key in schema.properties) {
                 const property = schema.properties[key];
-                walk(property, defs, history);
+                if (walk(property, defs, history)) {
+                    delete((schema.properties as any)[key]);
+                }
             }   
         }
-    } else if ((schema as any)["$ref"]) {
+        return false;
+    }
+    if ((schema as any)["$ref"]) {
         const canonicalRef = (schema as any)['$ref'];
 
         const paths = canonicalRef.split('/');
@@ -20,17 +24,17 @@ function walk(schema: OpenAPIV3_1.SchemaObject, defs: any, history: any): void {
         if (history.includes(ref)) {
             debug("Circular reference detected for " + ref + " in history: " + history);
             delete((schema as any)["$ref"]);
-        } else {
-            const def = defs[ref];
-            for (const k in def) {
-                (schema as any)[k] = def[k];
-            }
-
-            delete((schema as any)["$ref"]);
-
-            walk(schema, defs, [...history, ref]);
-        }       
+            return true;
+        }
+        const def = defs[ref];
+        for (const k in def) {
+            (schema as any)[k] = def[k];
+        }
+        delete((schema as any)["$ref"]);
+        walk(schema, defs, [...history, ref]);
+        return false
     }
+    return false
 }
 
 export function expandJSONSchemaDefinition(schema: any, defs: any): any {
