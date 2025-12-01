@@ -65,18 +65,19 @@ export function setupNockMocks(configuration: Configuration): void {
     }
 }
 
-export async function validateClient(clientTransport: Transport, deploymentSpaces: string[]): Promise<void> {
+export async function createAndConnectClient(clientTransport: Transport, name: string = "client", version: string = "1.0.0") {
     const client = new Client({
-            name: "client",
-            version: "1.0.0",
-        },
-        {
-            capabilities: {},
-        }
-    );
+        name: name,
+        version: version,
+    });
+    await client.connect(clientTransport);
+    return client;
+}
 
+
+export async function validateClient(clientTransport: Transport, deploymentSpaces: string[]): Promise<void> {
+    const client = await createAndConnectClient(clientTransport);
     try {
-        await client.connect(clientTransport);
         const toolList = await client.listTools();
         const tools = toolList.tools;
 

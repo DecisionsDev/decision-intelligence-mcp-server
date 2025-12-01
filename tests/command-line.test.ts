@@ -1065,4 +1065,105 @@ describe('CLI Configuration', () => {
             expect(config.decisionServiceIds).toEqual(["A", "B,C", "D"]);
         });
     });
+
+    describe('validatePollInterval', () => {
+        test('should accept valid poll interval', () => {
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--di-apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--poll-interval', '60000'
+            ]);
+
+            expect(config.pollInterval).toBe(60000);
+        });
+
+        test('should use default poll interval when not specified', () => {
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--di-apikey', 'validkey123',
+                '--transport', 'STDIO'
+            ]);
+
+            expect(config.pollInterval).toBe(Configuration.defaultPollInterval());
+            expect(config.pollInterval).toBe(30000);
+        });
+
+        test('should throw error for non-numeric poll interval', () => {
+            expect(() => {
+                createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--di-apikey', 'validkey123',
+                    '--transport', 'STDIO',
+                    '--poll-interval', 'invalid'
+                ]);
+            }).toThrow("Invalid poll interval: 'invalid'. Must be a valid number in milliseconds.");
+        });
+
+        test('should throw error for poll interval less than 1000ms', () => {
+            expect(() => {
+                createConfiguration(version, [
+                    'node', 'cli.js',
+                    '--url', url,
+                    '--di-apikey', 'validkey123',
+                    '--transport', 'STDIO',
+                    '--poll-interval', '500'
+                ]);
+            }).toThrow("Invalid poll interval: '500'. Must be at least 1000 milliseconds (1 second).");
+        });
+
+        test('should accept minimum valid poll interval of 1000ms', () => {
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--di-apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--poll-interval', '1000'
+            ]);
+
+            expect(config.pollInterval).toBe(1000);
+        });
+
+        test('should use poll interval from environment variable', () => {
+            process.env.POLL_INTERVAL = '45000';
+
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--di-apikey', 'validkey123',
+                '--transport', 'STDIO'
+            ]);
+
+            expect(config.pollInterval).toBe(45000);
+        });
+
+        test('should prioritize CLI argument over environment variable', () => {
+            process.env.POLL_INTERVAL = '45000';
+
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--di-apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--poll-interval', '60000'
+            ]);
+
+            expect(config.pollInterval).toBe(60000);
+        });
+
+        test('should call debug function with poll interval', () => {
+            createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--di-apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--poll-interval', '60000'
+            ]);
+
+            expect(mockDebug).toHaveBeenCalledWith('POLL_INTERVAL=60000');
+        });
+    });
 });

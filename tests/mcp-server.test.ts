@@ -6,9 +6,33 @@ import {Configuration} from "../src/command-line.js";
 import {createMcpServer} from "../src/mcp-server.js";
 import {PassThrough, Readable, Writable} from 'stream';
 import {Credentials} from "../src/credentials.js";
-import {setupNockMocks, validateClient} from "./test-utils.js";
+import {setupNockMocks, validateClient, createAndConnectClient} from "./test-utils.js";
 
 describe('Mcp Server', () => {
+
+    function createTestEnvironment(deploymentSpaces: string[] = ['staging', 'production']) {
+        const fakeStdin = new PassThrough();
+        const fakeStdout = new PassThrough();
+        const transport = new StdioServerTransport(fakeStdin, fakeStdout);
+        const clientTransport = new StreamClientTransport(fakeStdout, fakeStdin);
+        const configuration = new Configuration(
+            Credentials.createDiApiKeyCredentials('dummy.api.key'),
+            transport,
+            'https://example.com',
+            '1.2.3',
+            true,
+            deploymentSpaces,
+            undefined,
+            30000 // default poll interval
+        );
+        setupNockMocks(configuration);
+        
+        return {
+            transport,
+            clientTransport,
+            configuration
+        };
+    }
 
     class StreamClientTransport implements Transport {
         public onmessage?: (message: JSONRPCMessage, extra?: MessageExtraInfo) => void;
@@ -64,17 +88,8 @@ describe('Mcp Server', () => {
         }
     }
 
-    const fakeStdin = new PassThrough();
-    const fakeStdout = new PassThrough();
-    const transport = new StdioServerTransport(fakeStdin, fakeStdout);
-    const clientTransport = new StreamClientTransport(fakeStdout, fakeStdin);
-    const configuration = new Configuration(Credentials.createDiApiKeyCredentials('dummy.api.key'), transport, 'https://example.com', '1.2.3', true, ['staging', 'production']);
-
-    beforeAll(() => {
-        setupNockMocks(configuration);
-    });
-
     test('should properly list and execute tool when configured with STDIO transport', async () => {
+        const { transport, clientTransport, configuration } = createTestEnvironment();
         let server: McpServer | undefined;
         try {
             const result = await createMcpServer('toto', configuration);
@@ -87,4 +102,88 @@ describe('Mcp Server', () => {
             await server?.close();
         }
     });
+
+    test('should advertise tools.listChanged capability', async () => {
+        const { transport, clientTransport, configuration } = createTestEnvironment();
+        let server: McpServer | undefined;
+        try {
+            const result = await createMcpServer('test-server', configuration);
+            server = result.server;
+            expect(server.isConnected()).toEqual(true);
+
+            const client = await createAndConnectClient(clientTransport);
+
+            // Check that the server advertises the tools.listChanged capability
+            const serverCapabilities = (client as any)._serverCapabilities;
+            expect(serverCapabilities).toBeDefined();
+            expect(serverCapabilities.tools).toBeDefined();
+            expect(serverCapabilities.tools.listChanged).toBe(true);
+
+            await client.close();
+        } finally {
+            await clientTransport?.close();
+            await transport?.close();
+            await server?.close();
+        }
+    });
+
+    function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+        let timeoutId: NodeJS.Timeout;
+
+        const timeoutPromise = new Promise<never>((_, reject) => {
+            timeoutId = setTimeout(() => {
+                reject(new Error('Expected notification not received'));
+            }, ms);
+        });
+
+        return Promise.race([promise, timeoutPromise]).finally(() => {
+            clearTimeout(timeoutId);
+        });
+    }    
+
+    test('should send notification when sendToolListChanged is called', async () => {
+        const { transport, clientTransport, configuration } = createTestEnvironment();
+        let server: McpServer | undefined;
+
+        try {
+            const result = await createMcpServer('test-server', configuration);
+            server = result.server;
+            expect(server.isConnected()).toEqual(true);
+
+            // Set up a promise to capture the notification
+            let notificationReceived = false;
+
+            const notificationPromise = new Promise<void>((resolve) => {
+                const originalOnMessage = clientTransport.onmessage;
+
+                clientTransport.onmessage = (message: JSONRPCMessage) => {
+                    if (originalOnMessage) {
+                        originalOnMessage(message);
+                    }
+
+                    // Detect the notification
+                    if ('method' in message && message.method === 'notifications/tools/list_changed') {
+                        notificationReceived = true;
+                        resolve();
+                    }
+                };
+            });
+
+            const client = await createAndConnectClient(clientTransport);
+
+            // Trigger the server notification manually
+            server.sendToolListChanged();
+
+            // Wait for the notification with safe timeout (no timer leaks)
+            await withTimeout(notificationPromise, 1000);
+
+            expect(notificationReceived).toBe(true);
+
+            await client.close();
+        } finally {
+            await clientTransport?.close();
+            await transport?.close();
+            await server?.close();
+        }
+    });    
 });
