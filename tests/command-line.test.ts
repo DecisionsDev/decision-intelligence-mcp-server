@@ -1064,6 +1064,39 @@ describe('CLI Configuration', () => {
             ]);
             expect(config.decisionServiceIds).toEqual(["A", "B,C", "D"]);
         });
+
+        test('should handle escaped commas at the end of string', () => {
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--di-apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--decision-service-ids', "A,B\\,"
+            ]);
+            expect(config.decisionServiceIds).toEqual(["A", "B,"]);
+        });
+
+        test('should handle multiple consecutive escaped commas', () => {
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--di-apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--decision-service-ids', "A\\,\\,B,C"
+            ]);
+            expect(config.decisionServiceIds).toEqual(["A,,B", "C"]);
+        });
+
+        test('should handle empty string after trimming', () => {
+            const config = createConfiguration(version, [
+                'node', 'cli.js',
+                '--url', url,
+                '--di-apikey', 'validkey123',
+                '--transport', 'STDIO',
+                '--decision-service-ids', "   ,   ,   "
+            ]);
+            expect(config.decisionServiceIds).toEqual(undefined);
+        });
     });
 
     describe('validatePollInterval', () => {
