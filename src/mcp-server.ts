@@ -69,6 +69,65 @@ function getToolDefinition(path: OpenAPIV3_1.PathItemObject, components: OpenAPI
     };
 }
 
+// Helper function to process OpenAPI paths and extract tool definitions
+async function processOpenAPIPaths(
+    configuration: Configuration,
+    deploymentSpace: string,
+    openapi: OpenAPIV3_1.Document,
+    serviceId: string,
+    toolNames: string[]
+): Promise<ToolDefinition[]> {
+    const toolDefinitions: ToolDefinition[] = [];
+
+    for (const key in openapi.paths) {
+        const value = openapi.paths[key];
+
+        if (value == undefined || value.post == undefined) {
+            debug("Invalid openapi for path", key);
+            continue;
+        }
+
+        const operationId = value.post.operationId;
+
+        if (operationId == undefined) {
+            debug("No operationId for ", JSON.stringify(value));
+            continue;
+        }
+
+        const toolDef = getToolDefinition(value, openapi.components);
+
+        if (toolDef == null) {
+            debug("No tooldef for ", key);
+            continue;
+        }
+
+        const body = value.post.requestBody;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const operation = (body as any).content["application/json"];
+        const inputSchema = operation.schema;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const toolName = await getToolName(configuration, deploymentSpace, (openapi as any).info, operationId, serviceId, toolNames);
+        toolNames.push(toolName);
+
+        // Store tool definition for change detection
+        const schemas = openapi.components == undefined ? null : openapi.components.schemas;
+        const operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, schemas);
+
+        toolDefinitions.push({
+            name: toolName,
+            title: toolDef.title,
+            description: toolDef.description,
+            inputSchemaHash: hashInputSchema(operationJsonInputSchema),
+            deploymentSpace,
+            decisionServiceId: serviceId,
+            operationId
+        });
+    }
+
+    return toolDefinitions;
+}
+
 async function registerTool(
     server: McpServer,
     configuration: Configuration,
@@ -78,67 +137,54 @@ async function registerTool(
     toolNames: string[],
     toolDefinitions: ToolDefinition[]
 ) {
-    for (const key in decisionOpenAPI.paths) {
-        debug("Found operationName", key);
+    const newToolDefs = await processOpenAPIPaths(
+        configuration,
+        deploymentSpace,
+        decisionOpenAPI,
+        decisionServiceId,
+        toolNames
+    );
 
-        const value = decisionOpenAPI.paths[key];
-
-        if (value == undefined || value.post == undefined) {           
-            debug("Invalid openapi for path", key)
-            continue ;
+    // Register each tool with the server
+    for (const toolDef of newToolDefs) {
+        if (!decisionOpenAPI.paths) {
+            continue;
         }
 
-        const operationId = value.post.operationId;
-
-        if (operationId == undefined) {
-            debug("No operationId for ", JSON.stringify(value))
-            continue ;
-        }
-        
-        const toolDef = getToolDefinition(value, decisionOpenAPI.components);
-
-        if (toolDef == null) {
-            debug("No tooldef for ", key);
-            continue ;
-        }
-
-        const body = value.post.requestBody;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const operation = (body as any).content["application/json"];
-        const inputSchema = operation.schema;
-        debug("operation", operation);
-        debug("inputSchema", inputSchema);
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const toolName = await getToolName(configuration, deploymentSpace, (decisionOpenAPI as any).info, operationId, decisionServiceId, toolNames);
-        debug("toolName", toolName, toolNames);
-        toolNames.push(toolName);
-
-        // Store tool definition for change detection
-        const schemas = decisionOpenAPI.components == undefined ? null: decisionOpenAPI.components.schemas;
-        const operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, schemas);
-        toolDefinitions.push({
-            name: toolName,
-            title: toolDef.title,
-            description: toolDef.description,
-            inputSchemaHash: hashInputSchema(operationJsonInputSchema),
-            deploymentSpace,
-            decisionServiceId,
-            operationId
+        const pathKey = Object.keys(decisionOpenAPI.paths).find(key => {
+            const value = decisionOpenAPI.paths![key];
+            return value?.post?.operationId === toolDef.operationId;
         });
 
-        server.registerTool(
-            toolName,
-            toolDef,
-            async (input) => {
-                const decInput = input;
-                debug("Execute decision with", JSON.stringify(decInput, null, " "))
-                const str = await executeLastDeployedDecisionService(configuration, deploymentSpace, decisionServiceId, operationId, decInput);
-                return {
-                    content: [{ type: "text", text: str}]
-                };
-            }
-        );
+        if (!pathKey) {
+            continue;
+        }
+
+        const pathItem = decisionOpenAPI.paths[pathKey];
+        const mcpToolDef = getToolDefinition(pathItem!, decisionOpenAPI.components);
+
+        if (mcpToolDef) {
+            server.registerTool(
+                toolDef.name,
+                mcpToolDef,
+                async (input) => {
+                    const decInput = input;
+                    debug("Execute decision with", JSON.stringify(decInput, null, " "));
+                    const str = await executeLastDeployedDecisionService(
+                        configuration,
+                        toolDef.deploymentSpace,
+                        toolDef.decisionServiceId,
+                        toolDef.operationId,
+                        decInput
+                    );
+                    return {
+                        content: [{ type: "text", text: str }]
+                    };
+                }
+            );
+        }
+
+        toolDefinitions.push(toolDef);
     }
 }
 
@@ -162,46 +208,17 @@ async function checkForToolChanges(
 
             for (const serviceId of serviceIds) {
                 const openapi = await getDecisionServiceOpenAPI(configuration, deploymentSpace, serviceId);
-
+                
                 // Extract tool definitions without registering
-                for (const key in openapi.paths) {
-                    const value = openapi.paths[key];
-                    if (value == undefined || value.post == undefined) {
-                        continue;
-                    }
-
-                    const operationId = value.post.operationId;
-                    if (operationId == undefined) {
-                        continue;
-                    }
-
-                    const toolDef = getToolDefinition(value, openapi.components);
-                    if (toolDef == null) {
-                        continue;
-                    }
-
-                    const body = value.post.requestBody;
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const operation = (body as any).content["application/json"];
-                    const inputSchema = operation.schema;
-
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const toolName = await getToolName(configuration, deploymentSpace, (openapi as any).info, operationId, serviceId, toolNames);
-                    toolNames.push(toolName);
-
-                    const schemas = openapi.components == undefined ? null: openapi.components.schemas;
-                    const operationJsonInputSchema = expandJSONSchemaDefinition(inputSchema, schemas);
-
-                    newToolDefinitions.push({
-                        name: toolName,
-                        title: toolDef.title,
-                        description: toolDef.description,
-                        inputSchemaHash: hashInputSchema(operationJsonInputSchema),
-                        deploymentSpace,
-                        decisionServiceId: serviceId,
-                        operationId
-                    });
-                }
+                const toolDefs = await processOpenAPIPaths(
+                    configuration,
+                    deploymentSpace,
+                    openapi,
+                    serviceId,
+                    toolNames
+                );
+                
+                newToolDefinitions.push(...toolDefs);
             }
         }
 
