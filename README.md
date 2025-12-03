@@ -31,7 +31,7 @@ You can run the MCP server with npx to expose each operation of the last deploye
 
 ### For IBM Decision Intelligence
 
-Create the MCP server by using decisions that are deployed in IBM Decision Intelligence:
+Create the MCP server by using decisions that are deployed in Decision Intelligence:
 ```bash
 npx -y di-mcp-server --di-apikey <YOUR_DI_API_KEY> --url https://mytenant.decision-prod-us-south.decision.saas.ibm.com/ads/runtime/api/v1
 ```
@@ -40,7 +40,7 @@ npx -y di-mcp-server --di-apikey <YOUR_DI_API_KEY> --url https://mytenant.decisi
 
 #### Zen API key authentication
 
-Create the MCP server by using decisions that are deployed in IBM Automation Decision Services that uses the Zen API key authentication:
+Create the MCP server by using decisions that are deployed in Automation Decision Services that uses the Zen API key authentication:
 
 ```bash
 npx -y di-mcp-server --authentication-mode zenapikey --zen-username <YOUR_ZEN_USERNAME> --zen-apikey <YOUR_ZEN_API_KEY> --url https://myads-hostname/ads/runtime/api/v1
@@ -48,7 +48,7 @@ npx -y di-mcp-server --authentication-mode zenapikey --zen-username <YOUR_ZEN_US
 
 #### Basic authentication
 
-Create the MCP server by using decisions that are deployed in IBM Automation Decision Services that uses the basic authentication:
+Create the MCP server by using decisions that are deployed in Automation Decision Services that uses the basic authentication:
 
 ```bash
 npx -y di-mcp-server --authentication-mode basic --basic-username <YOUR_USERNAME> --basic-password <YOUR_PASSWORD> --url https://myads-hostname/ads/runtime/api/v1
@@ -83,7 +83,7 @@ The following environment variables can be used in addition to the command line 
 | --basic-username       | BASIC_USERNAME       | Basic authentication username                                                                                |
 | --basic-password       | BASIC_PASSWORD       | Basic authentication password                                                                                |
 | --decision-service-ids | DECISION_SERVICE_IDS | (Optional) Comma-separated list of decision services (default: fetch all decision services)                    |
-| --deployment-spaces    | DEPLOYMENT_SPACES    | (Optional) comma-separated list of deployment spaces to scan (default: `development`)                          |
+| --deployment-spaces    | DEPLOYMENT_SPACES    | (Optional) Comma-separated list of deployment spaces to scan (default: `development`)                          |
 | --debug                | DEBUG                | When the value is `true`, the debug messages are written to the `stderr` of the MCP server                   |
 | --transport            | TRANSPORT            | (Optional) Transport protocol: `stdio` (default) or `http`                                                     |
 | --url                  | URL                  | Base URL of the decision runtime </br>                                                                       |
