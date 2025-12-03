@@ -97,7 +97,7 @@ The MCP server for Decision Intelligence extends its capability by enabling AI a
 
 The article [Enrich your watsonx Orchestrate chat experience with IBM Decision Intelligence](https://medium.com/@orsinije/decision-intelligence-mcp-server-tutorial-watsonx-orchestrate-4d5a200fbe08) demontrates how to integrate the capability to discover and execute decisions in an IBM watsonx Orchestrate agent by using the Decision Intelligence MCP server.
 
-See the [watsonx Orchestrate integration page](./doc/integration-wxo.md) for passing sensitive configuration settings to the Decision Intelligence MCP Server.
+See the [IBM watsonx Orchestrate integration page](./doc/integration-wxo.md) for passing sensitive configuration settings to the IBM Decision Intelligence MCP Server.
 
 ### Integrating decision services into Claude Desktop
 
