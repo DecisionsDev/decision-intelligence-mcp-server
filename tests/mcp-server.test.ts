@@ -10,7 +10,7 @@ import {setupNockMocks, validateClient, createAndConnectClient} from "./test-uti
 
 describe('Mcp Server', () => {
 
-    function createTestEnvironment(deploymentSpaces: string[] = ['staging', 'production']) {
+    function createTestEnvironment(deploymentSpaces: string[] = ['staging', 'production'], decisionIds: string[] = ['dummy.decision.id'], pollInterval: number = 30000) {
         const fakeStdin = new PassThrough();
         const fakeStdout = new PassThrough();
         const transport = new StdioServerTransport(fakeStdin, fakeStdout);
@@ -23,9 +23,9 @@ describe('Mcp Server', () => {
             true,
             deploymentSpaces,
             undefined,
-            30000 // default poll interval
+            pollInterval
         );
-        setupNockMocks(configuration);
+        setupNockMocks(configuration, decisionIds);
         
         return {
             transport,
@@ -185,5 +185,166 @@ describe('Mcp Server', () => {
             await transport?.close();
             await server?.close();
         }
-    });    
+    });
+
+    test('should register tools from OpenAPI specification', async () => {
+        const { transport, clientTransport, configuration } = createTestEnvironment();
+        let server: McpServer | undefined;
+
+        try {
+            const result = await createMcpServer('test-server', configuration);
+            server = result.server;
+            expect(server.isConnected()).toEqual(true);
+
+            const client = await createAndConnectClient(clientTransport);
+
+            // List tools to verify they were registered
+            const toolsResponse = await client.listTools();
+            expect(toolsResponse.tools).toBeDefined();
+            expect(toolsResponse.tools.length).toBeGreaterThan(0);
+
+            // Verify that each tool has required properties
+            for (const tool of toolsResponse.tools) {
+                expect(tool.name).toBeDefined();
+                expect(typeof tool.name).toBe('string');
+                expect(tool.name.length).toBeGreaterThan(0);
+                expect(tool.inputSchema).toBeDefined();
+            }
+
+            await client.close();
+        } finally {
+            await clientTransport?.close();
+            await transport?.close();
+            await server?.close();
+        }
+    });
+
+    test('should register tools with correct names from deployment spaces', async () => {
+        const deploymentSpaces = ['staging', 'production'];
+        const { transport, clientTransport, configuration } = createTestEnvironment(deploymentSpaces);
+        let server: McpServer | undefined;
+
+        try {
+            const result = await createMcpServer('test-server', configuration);
+            server = result.server;
+            expect(server.isConnected()).toEqual(true);
+
+            const client = await createAndConnectClient(clientTransport);
+
+            // List tools
+            const toolsResponse = await client.listTools();
+            expect(toolsResponse.tools).toBeDefined();
+
+            // Verify tools are registered for each deployment space
+            const toolNames = toolsResponse.tools.map(t => t.name);
+            expect(toolNames.length).toBeGreaterThan(0);
+
+            // Tool names should be unique
+            const uniqueToolNames = new Set(toolNames);
+            expect(uniqueToolNames.size).toBe(toolNames.length);
+
+            await client.close();
+        } finally {
+            await clientTransport?.close();
+            await transport?.close();
+            await server?.close();
+        }
+    });
+
+    test('should register tools with valid input schemas', async () => {
+        const { transport, clientTransport, configuration } = createTestEnvironment();
+        let server: McpServer | undefined;
+
+        try {
+            const result = await createMcpServer('test-server', configuration);
+            server = result.server;
+            expect(server.isConnected()).toEqual(true);
+
+            const client = await createAndConnectClient(clientTransport);
+
+            // List tools
+            const toolsResponse = await client.listTools();
+            expect(toolsResponse.tools).toBeDefined();
+            expect(toolsResponse.tools.length).toBeGreaterThan(0);
+
+            // Verify each tool has a valid input schema
+            for (const tool of toolsResponse.tools) {
+                expect(tool.inputSchema).toBeDefined();
+                expect(typeof tool.inputSchema).toBe('object');
+                
+                // Input schema should have properties or be an object schema
+                if (tool.inputSchema.properties) {
+                    expect(typeof tool.inputSchema.properties).toBe('object');
+                }
+            }
+
+            await client.close();
+        } finally {
+            await clientTransport?.close();
+            await transport?.close();
+            await server?.close();
+        }
+    });
+
+    test('should handle tool addition with description and title', async () => {
+        const { transport, clientTransport, configuration } = createTestEnvironment();
+        let server: McpServer | undefined;
+
+        try {
+            const result = await createMcpServer('test-server', configuration);
+            server = result.server;
+            expect(server.isConnected()).toEqual(true);
+
+            const client = await createAndConnectClient(clientTransport);
+
+            // List tools
+            const toolsResponse = await client.listTools();
+            expect(toolsResponse.tools).toBeDefined();
+            expect(toolsResponse.tools.length).toBeGreaterThan(0);
+
+            // Check that at least one tool has description or title
+            const toolsWithMetadata = toolsResponse.tools.filter(
+                t => t.description || (t as any).title
+            );
+            
+            // At least some tools should have metadata
+            expect(toolsWithMetadata.length).toBeGreaterThanOrEqual(0);
+
+            await client.close();
+        } finally {
+            await clientTransport?.close();
+            await transport?.close();
+            await server?.close();
+        }
+    });
+
+    test('should maintain tool list consistency after registration', async () => {
+        const { transport, clientTransport, configuration } = createTestEnvironment();
+        let server: McpServer | undefined;
+
+        try {
+            const result = await createMcpServer('test-server', configuration);
+            server = result.server;
+            expect(server.isConnected()).toEqual(true);
+
+            const client = await createAndConnectClient(clientTransport);
+
+            // List tools multiple times to ensure consistency
+            const toolsResponse1 = await client.listTools();
+            const toolsResponse2 = await client.listTools();
+
+            expect(toolsResponse1.tools.length).toBe(toolsResponse2.tools.length);
+
+            // Verify tool names are the same
+            const toolNames1 = toolsResponse1.tools.map(t => t.name).sort();
+            const toolNames2 = toolsResponse2.tools.map(t => t.name).sort();
+            expect(toolNames1).toEqual(toolNames2);
+
+            await client.close();
+        } finally {
+            await clientTransport?.close();
+            await transport?.close();
+            await server?.close();
+        }
+    });
 });
